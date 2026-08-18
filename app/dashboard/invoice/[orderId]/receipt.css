@@ -1,0 +1,16 @@
+@media print {
+
+  body {
+    background: white;
+  }
+
+  #receipt {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+}

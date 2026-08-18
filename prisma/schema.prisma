@@ -1,0 +1,459 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id                        Int            @id @default(autoincrement())
+  email                     String         @unique
+  emailVerified             Boolean        @default(false)
+  emailVerifiedAt           DateTime?
+  emailVerificationToken    String?        @unique
+  emailVerificationExpires  DateTime?
+  emailResendCooldown       DateTime?
+  emailVerificationAttempts Int            @default(0)
+  resetPasswordToken        String?        @unique @db.VarChar(255)
+  resetPasswordExpires      DateTime?
+  phonenumber               String?        @unique(map: "User_phonenumber_key")
+  phoneVerified             Boolean        @default(false)
+  phoneVerificationCode     String?
+  phoneVerificationExpires  DateTime?
+  username                  String         @unique
+  name                      String         @db.VarChar(255)
+  password                  String?        @db.VarChar(250)
+  bio                       String?
+  jobTitle                  String?
+  jobName                   String?
+  gender                    user_gender?
+  companies                 CompanyUser[]
+  order                     Order[]
+  notifications             Notification[]
+  publicId    String     @db.VarChar(255)
+  photo       String     @db.VarChar(255)
+  instagram   String?    @db.VarChar(250)
+  facebook    String?    @db.VarChar(250)
+  role        UserRole   @default(USER)
+  isactive    Boolean    @default(true)
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  
+ 
+}
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  USER
+  INSTITUTION
+  PENDING_INSTITUTION
+}
+
+enum user_gender {
+  male
+  female
+  other
+}
+
+model Categories {
+  id            Int             @id @default(autoincrement())
+  slug          String          @db.VarChar(255)
+  title         String          @db.VarChar(255)
+  publicId      String?         @db.VarChar(255)
+  photo         String?
+  content       String?         @db.Text
+  isactive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  CategoriesSub CategoriesSub[]
+}
+
+model CategoriesSub {
+  id           Int         @id @default(autoincrement())
+  categoriesId Int
+  slug         String      @db.VarChar(255)
+  title        String      @db.VarChar(255)
+  content      String?     @db.Text
+  isactive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  categories   Categories? @relation(fields: [categoriesId], references: [id])
+
+  @@unique([categoriesId, slug])
+  @@index([categoriesId])
+}
+
+model Company {
+  id          Int     @id @default(autoincrement())
+  name        String
+  slug        String  @unique
+  logo        String?
+  publicId    String?   @db.VarChar(255)
+  description String?   @db.Text
+  isActive    Boolean   @default(true)
+  location    String? @db.VarChar(255)
+  website     String? @db.VarChar(255)
+  phone       String? @db.VarChar(50)
+  email       String? @db.VarChar(50)
+  instagram   String? @db.VarChar(255)
+  linkedln    String? @db.VarChar(255)
+  users  CompanyUser[]
+  events Event[]
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model CompanyUser {
+  id        Int               @id @default(autoincrement())
+  userId    Int
+  companyId Int
+  role      CompanyRole
+  status    CompanyUserStatus @default(PENDING)
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, companyId])
+  @@index([companyId])
+  @@index([userId])
+}
+
+model Notification {
+  id      Int              @id @default(autoincrement())
+  userId  Int
+  type    NotificationType
+  title   String
+  message String
+  data      Json?
+  isRead  Boolean          @default(false)
+  status NotificationStatus @default(PENDING)
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum NotificationStatus {
+  PENDING
+  ACTIVE
+  DECLINED
+  READ
+} 
+
+enum NotificationType {
+  COMPANY_INVITE
+  COMPANY_ACCEPTED
+  COMPANY_DECLINED
+  GENERAL
+}
+
+enum CompanyUserStatus {
+  PENDING
+  ACTIVE
+  DECLINED
+}
+
+enum CompanyRole {
+  OWNER
+  ADMIN
+  TRAINER
+  FINANCE
+}
+
+model HeroSlider {
+  id          Int       @id @default(autoincrement())
+  title       String?   @db.VarChar(255)
+  subtitle    String?   @db.VarChar(255)
+  description String?   @db.Text
+  image       String?   @db.VarChar(255)
+  publicId    String?   @db.VarChar(255)
+  button_text String?   @db.VarChar(255)
+  button_url  String?   @db.VarChar(255)
+  align_text  String?   @db.VarChar(20) // misal 'center', 'left', 'right'
+  order       Int       @default(0)
+  is_active   Boolean   @default(true)
+  created_at  DateTime? @default(now())
+  updated_at  DateTime? @db.Timestamp(6)
+}
+
+model WhyUs {
+  id            Int       @id @default(autoincrement())
+  title         String
+  description   String?   @db.Text
+  image         String?   @db.VarChar(255)
+  publicId      String?   @db.VarChar(255)
+  hoverImg      String?   @db.VarChar(255) // hover image
+  hoverPublicId String?   @db.VarChar(255) // hover image publicId
+  type          WhyUsType @default(WHY_US)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum WhyUsType {
+  WHY_US
+  SERVICES
+  VISION
+  MISSION
+  OTHER
+}
+
+model AboutSection {
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String   @db.Text
+  imageUrl      String
+   publicId     String?  @db.VarChar(255)
+  orderIndex    Int      @default(0)
+  imagePosition String   @default("left") // bisa pakai enum juga
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  description String   @db.LongText
+  location    String?
+  startDate   DateTime
+  endDate     DateTime
+  timeZone    String    @default("Asia/Jakarta")
+  price       Int      @default(0) // 0 = free
+  quota       Int?
+  externalUrl String?  @db.VarChar(500) // terisi = pendaftaran di situs lain, platform tidak jual tiket
+  coverImage  String?
+  publicId    String?  @db.VarChar(255)
+  isPublished Boolean  @default(false)
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
+  categoryId Int
+  category   EventCategory @relation(fields: [categoryId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  orders  Order[]
+  attendeeFields EventAttendeeField[]
+  industries     EventIndustry[] 
+
+  @@index([categoryId]) 
+  @@index([companyId, deletedAt, isPublished]) 
+  @@index([companyId, startDate, endDate])  
+  @@index([deletedAt, isPublished, startDate]) 
+   
+}
+
+model EventCategory {
+  id       Int     @id @default(autoincrement())
+  name     String
+  slug     String  @unique
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events Event[]
+}
+
+model Industry {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique @db.VarChar(255)
+  slug     String  @unique @db.VarChar(255)
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events EventIndustry[]
+}
+
+
+//many to many data
+model EventIndustry {
+  eventId    Int
+  industryId Int
+
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  industry Industry @relation(fields: [industryId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, industryId])
+  @@index([industryId]) 
+}
+
+model Article {
+  id         Int     @id @default(autoincrement())
+  publicId   String  @unique @default(uuid())
+  slug       String  @unique @db.VarChar(255)
+  title      String  @db.VarChar(255)
+  content    String? @db.Text
+  coverImage String?
+
+  type     ArticleType     @default(BLOG)
+  category ArticleCategory
+
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([type, category, published])
+}
+
+enum ArticleCategory {
+  CORPORATE
+  EXECUTIVE
+  INSIGHT
+  UPDATE
+  EVENT
+}
+
+enum ArticleType {
+  BLOG // konten utama (default)
+  NEWS // pengumuman / press release
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  eventId       Int
+  event         Event       @relation(fields: [eventId], references: [id])
+
+  userId       Int
+  user          User        @relation(fields: [userId], references: [id])
+
+  amount        Int
+  currency      String      @default("IDR")
+
+  status        OrderStatus @default(PENDING)
+
+  // Xendit
+  invoiceId     String?     @unique
+  invoiceUrl    String?
+
+  createdAt     DateTime    @default(now())
+  paidAt        DateTime?
+
+  paymentLogs   PaymentLog[]
+  ticket        Ticket[]
+
+  @@index([eventId])
+  @@index([status])
+}
+enum OrderStatus {
+  PENDING     // baru buat, belum bayar
+  PAID        // sukses
+  EXPIRED     // invoice expired
+  CANCELED
+}
+
+model PaymentLog {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+
+  provider    String   // "XENDIT"
+  payload     Json     // raw webhook
+  status      String
+
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+}
+
+model Ticket {
+  id          String   @id @default(cuid())
+
+  orderId     String
+  order     Order    @relation(fields: [orderId], references: [id])
+
+  // ===== Attendee Info =====
+  attendeeName   String
+  attendeeEmail  String
+  attendeePhone  String?
+
+  attendeeData  Json
+
+  // ===== Ticket Identity =====
+  code        String   @unique
+  qrCode      String   @db.Text   // base64 / data URL / external URL
+
+  // ===== Check-in =====
+  isCheckedIn Boolean  @default(false)
+  checkedAt   DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([attendeeEmail])
+}
+
+model EventAttendeeField {
+  id          String   @id @default(cuid())
+
+  eventId     Int
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  label       String            // "Company Name"
+  key    String            // "company"
+  type        AttendeeFieldType // TEXT, EMAIL, PHONE, SELECT
+  required    Boolean           @default(false)
+
+  options     Json?             // untuk select / radio
+  order       Int               @default(0)
+
+  createdAt   DateTime @default(now())
+
+  @@index([eventId])
+}
+
+enum AttendeeFieldType {
+  TEXT
+  EMAIL
+  PHONE
+  NUMBER
+  DATE
+  SELECT
+}
+
+model ContactMessage {
+  id          Int                   @id @default(autoincrement())
+  name        String                @db.VarChar(255)
+  email       String                @db.VarChar(255)
+  phoneNumber String?               @db.VarChar(50)
+  subject     String                @db.VarChar(255)
+  message     String                @db.Text
+  status      ContactMessageStatus  @default(UNREAD)
+  repliedAt   DateTime?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum ContactMessageStatus {
+  UNREAD
+  READ
+  REPLIED
+}

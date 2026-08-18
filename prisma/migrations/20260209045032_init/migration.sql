@@ -1,0 +1,33 @@
+-- CreateTable
+CREATE TABLE `User` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(191) NOT NULL,
+    `emailVerified` BOOLEAN NOT NULL DEFAULT false,
+    `emailVerifiedAt` DATETIME(3) NULL,
+    `emailVerificationToken` VARCHAR(191) NULL,
+    `emailVerificationExpires` DATETIME(3) NULL,
+    `emailResendCooldown` DATETIME(3) NULL,
+    `emailVerificationAttempts` INTEGER NOT NULL DEFAULT 0,
+    `phonenumber` VARCHAR(191) NULL,
+    `phoneVerified` BOOLEAN NOT NULL DEFAULT false,
+    `phoneVerificationCode` VARCHAR(191) NULL,
+    `phoneVerificationExpires` DATETIME(3) NULL,
+    `username` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `password` VARCHAR(250) NULL,
+    `bio` VARCHAR(191) NULL,
+    `publicId` VARCHAR(255) NOT NULL,
+    `photo` VARCHAR(255) NOT NULL,
+    `instagram` VARCHAR(250) NULL,
+    `facebook` VARCHAR(250) NULL,
+    `role` ENUM('SUPERADMIN', 'ADMIN', 'USER', 'INSTITUTION') NOT NULL DEFAULT 'USER',
+    `isactive` BOOLEAN NOT NULL DEFAULT true,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    `gender` ENUM ("male","female","other")NULL,
+
+    UNIQUE INDEX `User_email_key`(`email`),
+    UNIQUE INDEX `User_emailVerificationToken_key`(`emailVerificationToken`),
+    UNIQUE INDEX `User_username_key`(`username`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

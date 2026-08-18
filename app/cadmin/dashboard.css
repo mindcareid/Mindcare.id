@@ -1,0 +1,69 @@
+/* Tailwind CSS adjustments */
+.container {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Table styles */
+table {
+    width: 100%;
+    border-spacing: 0;
+    border-collapse: collapse;
+}
+
+th, td {
+    text-align: left;
+    padding: 12px;
+}
+
+th {
+    background-color: #f7fafc;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+tr {
+    transition: background-color 0.3s ease;
+}
+
+/* Hover effect for rows */
+tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Button and action styling */
+button, .update-btn, .delete-btn {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+/* 
+button:hover, .update-btn:hover, .delete-btn:hover {
+    background-color: #45a049;
+} */
+
+/* Content text for better visibility */
+.content-text {
+    word-wrap: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    th, td {
+        padding: 8px;
+    }
+
+    .table-auto {
+        font-size: 14px;
+    }
+
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
