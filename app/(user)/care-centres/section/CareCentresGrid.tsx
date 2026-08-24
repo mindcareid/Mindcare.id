@@ -5,21 +5,35 @@ import EntityCard, {
 import EmptyState from "@/app/components/reusable/EmptyState";
 import type { MetaItem } from "@/app/components/reusable/MetaRow";
 import { cn } from "@/lib/utils";
+import { isOpenAt, summariseTodayHours } from "../data/centreHours";
 import type { CareCentre } from "../type/careCentre";
 
 // Server-safe: tidak ada state di sini. State pencarian dan filter dipegang
 // `CareCentres.tsx`, sesuai rules.md pasal 4 (dorong batas client sedalam
 // mungkin).
+//
+// `now` wajib diterima sebagai prop, bukan dibaca sendiri lewat `new Date()`.
+// Dua alasan: satu halaman harus punya SATU acuan waktu supaya status buka dan
+// baris jam tidak saling bertentangan, dan komponen ini dipakai halaman daftar
+// maupun home — dua-duanya yang memfiksasi waktunya, bukan komponen ini.
 
-function metaOf(centre: CareCentre): MetaItem[] {
+function metaOf(centre: CareCentre, now: string): MetaItem[] {
+  // Kartu menampilkan jam HARI INI, bukan ringkasan sepekan. Tabel tujuh baris
+  // tinggal di halaman detail: satu baris di kartu tidak cukup untuk jadwal yang
+  // tidak seragam, dan "jam hari ini" justru yang dicari orang yang sedang
+  // memutuskan mau datang sekarang atau tidak.
+  const listed = centre.professionalSlugs.length;
+
   return [
     { icon: MapPin, text: centre.address.city },
-    { icon: Clock, text: centre.openingHours },
+    { icon: Clock, text: summariseTodayHours(centre, now) },
     {
+      // "listed" ditulis eksplisit karena angkanya jumlah profesional yang
+      // TERDAFTAR di Mindcare, bukan jumlah orang yang bekerja di sana. Untuk
+      // rumah sakit bedanya besar, dan tanpa kata itu angkanya jadi klaim yang
+      // tidak bisa dipertanggungjawabkan.
       icon: Users,
-      text: `${centre.professionalCount} ${
-        centre.professionalCount === 1 ? "professional" : "professionals"
-      }`,
+      text: `${listed} ${listed === 1 ? "professional" : "professionals"} listed`,
     },
   ];
 }
@@ -44,11 +58,14 @@ function tagsOf(centre: CareCentre): EntityCardTag[] {
 
 type CareCentresGridProps = {
   centres: CareCentre[];
+  /** Acuan waktu tunggal dari halaman, ISO string. */
+  now: string;
   className?: string;
 };
 
 export default function CareCentresGrid({
   centres,
+  now,
   className,
 }: CareCentresGridProps) {
   if (centres.length === 0) {
@@ -72,9 +89,9 @@ export default function CareCentresGrid({
           imageUrl={centre.photoUrl}
           imageAlt={centre.name}
           verified={centre.isVerified}
-          status={centre.isOpenNow ? "open" : undefined}
+          status={isOpenAt(centre, now) ? "open" : undefined}
           tags={tagsOf(centre)}
-          meta={metaOf(centre)}
+          meta={metaOf(centre, now)}
           actionLabel="View Centre"
           actionVariant="primary"
         />

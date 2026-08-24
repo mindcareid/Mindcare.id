@@ -1,4 +1,4 @@
-// PERINGATAN: SEMBILAN PROFIL DI FILE INI FIKTIF.
+// PERINGATAN: LIMA BELAS PROFIL DI FILE INI FIKTIF.
 //
 // Nama, gelar, riwayat pendidikan, tahun pengalaman, daftar layanan, dan seluruh
 // harga di bawah adalah karangan. Tidak ada satu pun orang sungguhan di sini.
@@ -14,6 +14,11 @@
 // `services`, `bookingUrl`) ditambahkan 20 Agustus 2026. Alasan tiap field ada di
 // `design.md` bagian 16. Nomor STR/SIPP sengaja tidak ada — diaze
 // mengecualikannya.
+//
+// `prof-10` sampai `prof-15` ditambahkan 24 Agustus 2026 supaya ada kota yang
+// berisi lebih dari satu orang — tanpa itu relasi centre ↔ profesional selalu
+// satu-satu. Alasan lengkap dan cara mengembalikannya ada di `design.md`
+// bagian 20.
 
 import type {
   AreaOfSupport,
@@ -598,6 +603,342 @@ const professionals: Professional[] = [
       },
     ],
     bookingUrl: "https://example.com/booking/intan-larasati",
+  },
+  {
+    id: "prof-10",
+    slug: "jelita-anggraini",
+    fullName: "Jelita Anggraini",
+    credentials: "M.Psi., Psikolog",
+    profession: "Psikolog",
+    photoUrl: null,
+    isVerified: true,
+    isAvailableNow: true,
+    areasOfSupport: [areas.pengasuhan, areas.hubungan, areas.pengembanganDiri],
+    sessionModes: ["Online", "In Person"],
+    location: { city: "Jakarta Selatan", province: "DKI Jakarta" },
+    languages: ["Indonesia", "English"],
+    yearsOfExperience: 8,
+    startingPriceIdr: 350000,
+    createdAt: "2026-04-20T02:00:00.000Z",
+    headline:
+      "Psikolog yang mendampingi orang tua dan remaja membicarakan hal yang biasanya dihindari di rumah.",
+    bio: [
+      "Jelita banyak bekerja dengan keluarga yang percakapannya sudah lama berhenti — orang tua yang merasa tidak lagi dibutuhkan, remaja yang merasa tidak pernah didengar. Sesi awal biasanya dipakai untuk mendengar kedua sisi secara terpisah sebelum mempertemukannya.",
+      "Ia terbiasa bekerja daring untuk sesi bersama orang tua, dan menyarankan tatap muka kalau anak atau remajanya ikut hadir, karena banyak hal yang lebih mudah terbaca dari cara orang duduk daripada dari layar.",
+    ],
+    approaches: [approaches.keluarga, approaches.humanistik, approaches.cbt],
+    education: [
+      {
+        id: "edu-10-1",
+        degree: "S1 Psikologi",
+        institution: "Universitas Gadjah Mada",
+        year: 2014,
+      },
+      {
+        id: "edu-10-2",
+        degree: "Magister Psikologi Profesi, Klinis Anak",
+        institution: "Universitas Indonesia",
+        year: 2018,
+      },
+    ],
+    services: [
+      {
+        id: "svc-10-1",
+        slug: "konsultasi-individu",
+        name: "Konsultasi Individu",
+        mode: "Online",
+        durationMinutes: 60,
+        priceIdr: 350000,
+      },
+      {
+        id: "svc-10-2",
+        slug: "konsultasi-pengasuhan",
+        name: "Konsultasi Pengasuhan",
+        mode: "In Person",
+        durationMinutes: 75,
+        priceIdr: 480000,
+      },
+    ],
+    bookingUrl: "https://example.com/booking/jelita-anggraini",
+  },
+  {
+    id: "prof-11",
+    slug: "kurniawan-adiputra",
+    fullName: "Kurniawan Adiputra",
+    credentials: "dr., Sp.KJ",
+    profession: "Psikiater",
+    photoUrl: null,
+    isVerified: true,
+    isAvailableNow: false,
+    areasOfSupport: [areas.depresi, areas.polaTidur, areas.kecemasan],
+    sessionModes: ["Online", "In Person"],
+    location: { city: "Surabaya", province: "Jawa Timur" },
+    languages: ["Indonesia"],
+    yearsOfExperience: 13,
+    startingPriceIdr: 520000,
+    createdAt: "2026-04-29T02:00:00.000Z",
+    headline:
+      "Psikiater yang menangani depresi dan keluhan tidur yang sudah berlangsung bertahun-tahun.",
+    bio: [
+      "Kurniawan menerima orang yang keluhannya sudah lama dibawa sendiri — sulit tidur yang berubah jadi sulit bekerja, suasana hati yang turun dan tidak pulih-pulih. Pemeriksaan awalnya memakan waktu lebih panjang dari sesi biasa karena ia menelusuri riwayatnya dulu.",
+      "Sebagai psikiater ia dapat meresepkan obat, tapi tidak setiap orang yang datang keluar dengan resep. Untuk yang juga menjalani psikoterapi, ia berkoordinasi dengan psikolog atau konselor yang menangani supaya keduanya tidak berjalan sendiri-sendiri.",
+    ],
+    approaches: [
+      approaches.farmakoterapi,
+      approaches.cbt,
+      approaches.mindfulness,
+    ],
+    education: [
+      {
+        id: "edu-11-1",
+        degree: "Pendidikan Dokter",
+        institution: "Universitas Airlangga",
+        year: 2009,
+      },
+      {
+        id: "edu-11-2",
+        degree: "Spesialis Kedokteran Jiwa",
+        institution: "Universitas Airlangga",
+        year: 2016,
+      },
+    ],
+    services: [
+      {
+        id: "svc-11-1",
+        slug: "konsultasi-psikiatri",
+        name: "Konsultasi Psikiatri",
+        mode: "Online",
+        durationMinutes: 45,
+        priceIdr: 520000,
+      },
+      {
+        id: "svc-11-2",
+        slug: "konsultasi-dan-asesmen",
+        name: "Konsultasi dan Asesmen Lengkap",
+        mode: "In Person",
+        durationMinutes: 90,
+        priceIdr: 800000,
+      },
+    ],
+    bookingUrl: "https://example.com/booking/kurniawan-adiputra",
+  },
+  {
+    id: "prof-12",
+    slug: "laila-fitriani",
+    fullName: "Laila Fitriani",
+    credentials: "S.Psi., Konselor",
+    profession: "Konselor",
+    photoUrl: null,
+    isVerified: false,
+    isAvailableNow: true,
+    areasOfSupport: [areas.stres, areas.burnout, areas.hubungan],
+    sessionModes: ["Online"],
+    location: { city: "Surabaya", province: "Jawa Timur" },
+    languages: ["Indonesia"],
+    yearsOfExperience: 3,
+    startingPriceIdr: 175000,
+    createdAt: "2026-05-11T02:00:00.000Z",
+    headline:
+      "Konselor untuk tekanan kerja yang menumpuk dan hubungan dengan rekan yang mulai terasa berat.",
+    bio: [
+      "Laila bekerja dengan orang yang pekerjaannya masih jalan tapi tenaganya sudah habis — masih menyelesaikan tugas, tapi tidak ingat lagi kapan terakhir merasa cukup. Sesinya berisi percakapan terarah untuk memisahkan mana yang bisa diubah dari mana yang harus diterima dulu.",
+      "Ia tidak melakukan diagnosis maupun psikoterapi klinis. Kalau dari percakapan terlihat keluhannya sudah melampaui kelelahan biasa, ia mengatakannya terus terang dan membantu mencari psikolog atau psikiater.",
+    ],
+    approaches: [approaches.berfokusSolusi, approaches.humanistik],
+    education: [
+      {
+        id: "edu-12-1",
+        degree: "S1 Psikologi",
+        institution: "Universitas Negeri Surabaya",
+        year: 2022,
+      },
+    ],
+    services: [
+      {
+        id: "svc-12-1",
+        slug: "sesi-konseling",
+        name: "Sesi Konseling",
+        mode: "Online",
+        durationMinutes: 50,
+        priceIdr: 175000,
+      },
+      {
+        id: "svc-12-2",
+        slug: "konseling-tekanan-kerja",
+        name: "Konseling Tekanan Kerja",
+        mode: "Online",
+        durationMinutes: 90,
+        priceIdr: 300000,
+      },
+    ],
+    bookingUrl: null,
+  },
+  {
+    id: "prof-13",
+    slug: "mahesa-pratama",
+    fullName: "Mahesa Pratama",
+    credentials: "M.Psi., Psikolog",
+    profession: "Psikolog",
+    photoUrl: null,
+    isVerified: true,
+    isAvailableNow: true,
+    areasOfSupport: [areas.trauma, areas.dukaCita, areas.depresi],
+    sessionModes: ["Online", "In Person"],
+    location: { city: "Semarang", province: "Jawa Tengah" },
+    languages: ["Indonesia"],
+    yearsOfExperience: 10,
+    startingPriceIdr: 400000,
+    createdAt: "2026-05-25T02:00:00.000Z",
+    headline:
+      "Psikolog klinis yang bekerja dengan kejadian berat dan kehilangan yang belum selesai diproses.",
+    bio: [
+      "Mahesa menangani orang yang membawa satu kejadian yang tidak mau lewat — kecelakaan, kehilangan, atau masa yang lebih baik tidak diingat. Ia bekerja dengan tempo yang ditentukan kliennya, karena membuka terlalu cepat justru membuat orang berhenti datang.",
+      "Untuk penanganan trauma ia menyarankan tatap muka, terutama pada sesi-sesi awal. Sesi daring ia pakai untuk tindak lanjut dan untuk klien yang sudah stabil tapi jaraknya jauh.",
+    ],
+    approaches: [approaches.emdr, approaches.cbt, approaches.psikodinamik],
+    education: [
+      {
+        id: "edu-13-1",
+        degree: "S1 Psikologi",
+        institution: "Universitas Diponegoro",
+        year: 2012,
+      },
+      {
+        id: "edu-13-2",
+        degree: "Magister Psikologi Profesi, Klinis Dewasa",
+        institution: "Universitas Gadjah Mada",
+        year: 2016,
+      },
+    ],
+    services: [
+      {
+        id: "svc-13-1",
+        slug: "konsultasi-individu-online",
+        name: "Konsultasi Individu",
+        mode: "Online",
+        durationMinutes: 60,
+        priceIdr: 400000,
+      },
+      {
+        id: "svc-13-2",
+        slug: "konsultasi-individu-tatap-muka",
+        name: "Konsultasi Individu",
+        mode: "In Person",
+        durationMinutes: 60,
+        priceIdr: 475000,
+      },
+      {
+        id: "svc-13-3",
+        slug: "sesi-pemulihan-trauma",
+        name: "Sesi Pemulihan Trauma",
+        mode: "In Person",
+        durationMinutes: 90,
+        priceIdr: 700000,
+      },
+    ],
+    bookingUrl: "https://example.com/booking/mahesa-pratama",
+  },
+  {
+    id: "prof-14",
+    slug: "nadia-kusumawardani",
+    fullName: "Nadia Kusumawardani",
+    credentials: "S.Psi., Konselor",
+    profession: "Konselor",
+    photoUrl: null,
+    isVerified: false,
+    isAvailableNow: true,
+    areasOfSupport: [areas.kecemasan, areas.stres, areas.pengasuhan],
+    sessionModes: ["Online", "In Person"],
+    location: { city: "Jakarta Pusat", province: "DKI Jakarta" },
+    languages: ["Indonesia"],
+    yearsOfExperience: 5,
+    startingPriceIdr: 150000,
+    createdAt: "2026-06-08T02:00:00.000Z",
+    headline:
+      "Konselor dengan tarif terjangkau untuk kecemasan sehari-hari dan urusan pengasuhan.",
+    bio: [
+      "Nadia menerima orang yang baru pertama kali mencari bantuan dan belum yakin apakah keluhannya cukup berat untuk dibicarakan. Sesi pertamanya sering habis hanya untuk itu, dan menurutnya itu bukan sesi yang terbuang.",
+      "Ia tidak melakukan diagnosis maupun psikoterapi klinis. Tarifnya ia jaga tetap rendah supaya orang tidak menunggu sampai keadaannya memburuk baru datang, dan ia menyebutkan sejak awal kalau suatu keluhan sebaiknya ditangani psikolog atau psikiater.",
+    ],
+    approaches: [approaches.berfokusSolusi, approaches.humanistik],
+    education: [
+      {
+        id: "edu-14-1",
+        degree: "S1 Psikologi",
+        institution: "Universitas Negeri Jakarta",
+        year: 2019,
+      },
+    ],
+    services: [
+      {
+        id: "svc-14-1",
+        slug: "sesi-konseling-online",
+        name: "Sesi Konseling",
+        mode: "Online",
+        durationMinutes: 50,
+        priceIdr: 150000,
+      },
+      {
+        id: "svc-14-2",
+        slug: "sesi-konseling-tatap-muka",
+        name: "Sesi Konseling",
+        mode: "In Person",
+        durationMinutes: 50,
+        priceIdr: 185000,
+      },
+    ],
+    bookingUrl: null,
+  },
+  {
+    id: "prof-15",
+    slug: "oktavia-rahayu",
+    fullName: "Oktavia Rahayu",
+    credentials: "S.Psi., Konselor",
+    profession: "Konselor",
+    photoUrl: null,
+    isVerified: false,
+    isAvailableNow: false,
+    areasOfSupport: [areas.pengembanganDiri, areas.stres, areas.hubungan],
+    sessionModes: ["Online", "In Person"],
+    location: { city: "Bandung", province: "Jawa Barat" },
+    languages: ["Indonesia", "English"],
+    yearsOfExperience: 6,
+    startingPriceIdr: 185000,
+    createdAt: "2026-06-22T02:00:00.000Z",
+    headline:
+      "Konselor untuk orang yang sedang menimbang perubahan besar dan pasangan yang ingin bicara lebih tenang.",
+    bio: [
+      "Oktavia banyak menemani orang yang sedang di persimpangan: pindah kerja, pindah kota, atau memutuskan hubungan yang sudah lama tidak nyaman. Ia tidak memberi jawaban, tapi membantu memisahkan mana yang benar-benar keinginan sendiri dan mana yang tekanan orang lain.",
+      "Untuk sesi pasangan ia hanya menerima tatap muka, karena dua orang yang sedang berselisih jarang bisa saling mendengar lewat satu layar. Sesi perorangan bisa daring.",
+    ],
+    approaches: [approaches.berfokusSolusi, approaches.humanistik],
+    education: [
+      {
+        id: "edu-15-1",
+        degree: "S1 Psikologi",
+        institution: "Universitas Padjadjaran",
+        year: 2018,
+      },
+    ],
+    services: [
+      {
+        id: "svc-15-1",
+        slug: "sesi-konseling",
+        name: "Sesi Konseling",
+        mode: "Online",
+        durationMinutes: 50,
+        priceIdr: 185000,
+      },
+      {
+        id: "svc-15-2",
+        slug: "konseling-pasangan",
+        name: "Konseling Pasangan",
+        mode: "In Person",
+        durationMinutes: 90,
+        priceIdr: 400000,
+      },
+    ],
+    bookingUrl: "https://example.com/booking/oktavia-rahayu",
   },
 ];
 
