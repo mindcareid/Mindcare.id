@@ -61,7 +61,7 @@ export async function sendTicketEmail({
   eventTitle,
   qrCode,
 }: SendTicketEmailParams) {
-  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.webp`;
+  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
   const qrUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/tickets/qr/${qrCode}`;
 
   await transporter.sendMail({
@@ -171,7 +171,7 @@ export async function sendContactNotification({
   subject,
   message,
 }: SendContactNotificationParams) {
-  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.webp`;
+  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
   const smtpuser = process.env.SMTP_USER;
   const recipient = process.env.CONTACT_FORWARDEMAIL;
   const forward = process.env.CONTACT_FORWARD;
@@ -303,7 +303,7 @@ export async function sendResetPasswordEmail({
   name,
   resetUrl,
 }: SendResetPasswordEmailParams) {
-  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.webp`;
+  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
   await transporter.sendMail({
     from: `"Executive Corner"<${process.env.SMTP_USER}>`,
     to,
@@ -403,7 +403,7 @@ export async function sendVerificationEmail({
   name,
   verifyUrl,
 }: SendVerificationEmailParams) {
-  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.webp`;
+  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
   await transporter.sendMail({
     from: `"Executive Corner" <${process.env.SMTP_USER}>`,
     to,
@@ -505,7 +505,7 @@ export async function sendCompanyInviteEmail({
   role,
   acceptUrl,
 }: SendCompanyInviteEmailParams) {
-  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.webp`;
+  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
 
   await transporter.sendMail({
     from: `"Executive Corner" <${process.env.SMTP_USER}>`,
@@ -609,7 +609,7 @@ export async function sendCompanySubmittedEmail({
   ownerName,
   companyName,
 }: SendCompanySubmittedEmailParams) {
-  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.webp`;
+  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
 
   await transporter.sendMail({
     from: `"Executive Corner" <${process.env.SMTP_USER}>`,
@@ -703,7 +703,7 @@ export async function sendCompanyApprovedEmail({
   companyName,
   dashboardUrl,
 }: SendCompanyStatusEmailParams) {
-  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.webp`;
+  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
 
   await transporter.sendMail({
     from: `"Executive Corner" <${process.env.SMTP_USER}>`,
@@ -802,7 +802,7 @@ export async function sendCompanyRejectedEmail({
   ownerName,
   companyName,
 }: SendCompanyStatusEmailParams) {
-  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.webp`;
+  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
 
   await transporter.sendMail({
     from: `"Executive Corner" <${process.env.SMTP_USER}>`,

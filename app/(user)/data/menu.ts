@@ -8,15 +8,15 @@ export const Menu: Menudata[] = [
   },
   {
     title: "Professional",
-    link: "/proffesional",
+    link: "/professionals",
   },
   {
     title: "Care Center",
-    link: "/care-center",
+    link: "/care-centres",
   },
   {
-    title: "Company",
-    link: "/company",
+    title: "Solutions",
+    link: "/solutions",
   },
   {
     title: "Events",
@@ -24,7 +24,7 @@ export const Menu: Menudata[] = [
   },
   {
     title: "Insight",
-    link: "/insight",
+    link: "/insights",
   },
 ];
 
@@ -38,7 +38,7 @@ export const FooterMenu: FooterSection[] = [
       },
       {
         name: "Care Center",
-        path: "/care-center",
+        path: "/care-centres",
       },
       {
         name: "Company",
@@ -50,7 +50,7 @@ export const FooterMenu: FooterSection[] = [
       },
       {
         name: "Insight",
-        path: "/insight",
+        path: "/insights",
       },
     ],
   },

@@ -97,7 +97,7 @@ export default function SideBarCompany() {
             />
           ) : (
             <Image
-              src="/images/logo/logoNew.webp"
+              src="/images/logo/logoNew.png"
               alt="Execorner"
               width={170}
               height={70}

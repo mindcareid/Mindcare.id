@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FiMenu, FiX, FiChevronDown, FiChevronRight } from "react-icons/fi";
+import Button from "@/app/components/reusable/Button";
 import {
   UserRound,
   LayoutGrid,
@@ -17,6 +18,7 @@ import {
 import { useSession, signOut } from "next-auth/react";
 import { NotificationBell } from "@/app/components/notifications";
 import { Menu } from "../data/menu";
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
@@ -84,7 +86,7 @@ export default function Navbar() {
       <div className="mx-auto px-4 py-2 flex justify-between items-center">
         <Link href="/" className="relative flex items-center h-16 w-40 md:w-60">
           <Image
-            src="/images/logo/logo-execorner.png"
+            src="/images/logo/logoNew.png"
             alt="Execorner"
             fill
             priority
@@ -100,9 +102,9 @@ export default function Navbar() {
             >
               <Link
                 href={link.link}
-                className={`flex items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+                className={`flex items-center gap-1 px-2 py-2 transition-all ${
                   isActive(link.link)
-                    ? "bg-blue-600 text-white font-semibold"
+                    ? " border-b-4 border-secondary text-secondary font-semibold"
                     : " text-neutral-700 hover:bg-white/5 hover:text-neutral-950 font-semibold"
                 }`}
               >
@@ -287,21 +289,14 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
             ) : (
-              <>
+              <div className="mx-4">
                 <Link
                   href="/auth/login"
-                  className="flex items-center gap-2 justify-center px-5 py-2.5 rounded-full border border-black text-sm font-semibold text-neutral-700 hover:text-blue-500 hover:border-blue-500 hover:bg-white/15 transition-all"
+                  className={buttonStyles({ size: "lg" })}
                 >
-                  <UserRound />
-                  Login
+                  Join Mindcare.Id
                 </Link>
-                <Link
-                  href="/auth/register"
-                  className="flex items-center gap-2 justify-center px-5 py-2.5 rounded-full border border-black text-sm font-semibold text-neutral-700 hover:text-blue-500 hover:border-blue-500 hover:bg-white/15 transition-all"
-                >
-                  <UserPlus /> Register
-                </Link>
-              </>
+              </div>
             )}
           </div>
 
@@ -452,7 +447,7 @@ export default function Navbar() {
                             onClick={() => setIsOpen(false)}
                             className={`block px-4 py-3 rounded-lg transition-all font-medium ${
                               pathname === link.link
-                                ? "bg-blue-600 text-white"
+                                ? "bg-secondary text-white"
                                 : "text-neutral-900 hover:bg-white/10 hover:text-blue-500"
                             }`}
                           >
@@ -506,14 +501,21 @@ export default function Navbar() {
                     <Link
                       href="/auth/login"
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2 justify-center px-5 py-3 text-center border border-neutral-900 text-neutral-950 rounded-lg font-medium hover:bg-white/5 transition-all"
+                      className={buttonStyles({
+                        size: "lg",
+                        variant: "outline",
+                      })}
                     >
                       <UserRound /> Login
+                      {/* <Button icon={UserRound} iconPosition="left">
+                        Register
+                      </Button> */}
                     </Link>
+
                     <Link
                       href="/auth/register"
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2 justify-center px-5 py-3 text-center bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/50"
+                      className={buttonStyles({ size: "lg" })}
                     >
                       <UserPlus /> Register
                     </Link>

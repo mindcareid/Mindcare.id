@@ -44,7 +44,7 @@ export default function HomeEvent({ initialEvents, initialMeta }: Props) {
 
       <div className="flex flex-row gap-4 ">
         <Button variant="primary">Simpan</Button>
-        <Button variant="sub">Clear</Button>
+        <Button variant="secondary">Clear</Button>
 
         <Button variant="outline" icon={FiSearch} iconPosition="left">
           spam

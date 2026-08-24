@@ -11,7 +11,7 @@ export default function NavbarAuth() {
             className="relative flex items-center h-16 w-32 md:w-64"
           >
             <Image
-              src="/images/logo/logo-execorner.png"
+              src="/images/logo/logoNew.png"
               alt="Execorner"
               fill
               priority

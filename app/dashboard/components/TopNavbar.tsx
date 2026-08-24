@@ -23,7 +23,7 @@ export default function MobileTopbar() {
       <div className="flex items-center gap-2 flex-1">
         <Link href="/" className="relative flex items-center h-16 w-32 md:w-64">
           <Image
-            src="/images/logo/logoNew.webp"
+            src="/images/logo/logoNew.png"
             alt="Execorner"
             fill
             priority

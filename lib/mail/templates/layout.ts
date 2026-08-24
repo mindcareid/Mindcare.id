@@ -1,17 +1,14 @@
 import { mailTheme } from "../theme";
 
 type EmailLayoutProps = {
-    title?: string;
-    content: string;
+  title?: string;
+  content: string;
 };
 
-export function emailLayout({
-    title,
-    content,
-}: EmailLayoutProps) {
-    const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logo-execorner.png`;
+export function emailLayout({ title, content }: EmailLayoutProps) {
+  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
 
-    return `
+  return `
 <!DOCTYPE html>
 <html lang="en">
 

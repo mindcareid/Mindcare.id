@@ -41,3 +41,8 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+
+# dokumen kerja internal — sengaja tidak masuk repo
+/prd.md
+/design.md
+/rules.md

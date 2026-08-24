@@ -59,8 +59,9 @@ export default function Sidebar() {
     >
       <div className="relative flex items-center p-4">
         <div
-          className={`flex items-center gap-x-2 h-24 w-full ${isCollapsed ? "mx-auto w-full" : ""
-            }`}
+          className={`flex items-center gap-x-2 h-24 w-full ${
+            isCollapsed ? "mx-auto w-full" : ""
+          }`}
         >
           <Link
             href="/"
@@ -79,7 +80,7 @@ export default function Sidebar() {
             ) : (
               <div className="relative w-44 h-32">
                 <Image
-                  src="/images/logo/logo-execorner.png"
+                  src="/images/logo/logoNew.png"
                   alt="Execorner"
                   fill
                   unoptimized
@@ -121,11 +122,13 @@ export default function Sidebar() {
             <Link
               key={item.path}
               href={item.path}
-              className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"
-                } px-2 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
+              className={`flex items-center ${
+                isCollapsed ? "justify-center" : "gap-3"
+              } px-2 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                isActive
                   ? "bg-blue-600 text-white"
                   : "text-neutral-900 hover:bg-white/10 hover:text-blue-500"
-                }`}
+              }`}
             >
               <Icon size={24} />
               {!isCollapsed && <span>{item.name}</span>}
@@ -138,10 +141,11 @@ export default function Sidebar() {
       <div className="relative border-t border-gray-200 p-3">
         <button
           onClick={() => setUserOpen((prev) => !prev)}
-          className={`w-full rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition ${isCollapsed
-            ? "flex justify-center p-2"
-            : "flex items-center gap-3 px-3 py-3"
-            }`}
+          className={`w-full rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition ${
+            isCollapsed
+              ? "flex justify-center p-2"
+              : "flex items-center gap-3 px-3 py-3"
+          }`}
         >
           <div className="relative h-10 w-10 shrink-0">
             {session?.user?.photo ? (
@@ -172,8 +176,9 @@ export default function Sidebar() {
               </div>
 
               <FiChevronDown
-                className={`transition duration-200 ${userOpen ? "rotate-180" : ""
-                  }`}
+                className={`transition duration-200 ${
+                  userOpen ? "rotate-180" : ""
+                }`}
               />
             </>
           )}
