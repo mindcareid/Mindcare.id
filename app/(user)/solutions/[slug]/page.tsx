@@ -12,6 +12,15 @@ type SolutionPageProps = {
   params: { slug: string };
 };
 
+// Halaman ini merender `SolutionLead`, yang memasang badge verifikasi pemimpin
+// programnya — dan badge itu bergantung pada tanggal hari ini. Halaman statis
+// membekukan `new Date()` di waktu build, jadi tanpa baris ini badge-nya tidak
+// akan pernah kedaluwarsa sampai ada deploy berikutnya.
+//
+// Satu jam, mengikuti `/professionals/[slug]`: di halaman ini tidak ada yang
+// berubah lebih cepat dari itu.
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
   const solutions = await getSolutions();
   return solutions.map((solution) => ({ slug: solution.slug }));
@@ -33,6 +42,9 @@ export default async function SolutionPage({ params }: SolutionPageProps) {
   const solution = await getSolutionBySlug(params.slug);
   if (!solution) notFound();
 
+  // Satu acuan waktu untuk seluruh halaman, difiksasi di sini.
+  const now = new Date().toISOString();
+
   // Pemimpin program diambil di sini, bukan lewat accessor baru di folder
   // `professionals/` — pola yang sama dengan halaman detail Professionals,
   // supaya perubahan sesi ini tidak keluar dari folder `solutions/`.
@@ -44,6 +56,11 @@ export default async function SolutionPage({ params }: SolutionPageProps) {
   ]);
 
   return (
-    <SolutionDetail solution={solution} lead={lead} related={related} />
+    <SolutionDetail
+      solution={solution}
+      lead={lead}
+      related={related}
+      now={now}
+    />
   );
 }

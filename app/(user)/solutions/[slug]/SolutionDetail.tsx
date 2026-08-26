@@ -14,12 +14,15 @@ type SolutionDetailProps = {
   solution: Solution;
   lead: Professional | null;
   related: Solution[];
+  /** Acuan waktu tunggal dari `page.tsx`, ISO string. Dipakai badge verifikasi. */
+  now: string;
 };
 
 export default function SolutionDetail({
   solution,
   lead,
   related,
+  now,
 }: SolutionDetailProps) {
   return (
     <div className="min-h-screen">
@@ -31,7 +34,7 @@ export default function SolutionDetail({
 
           <SolutionCurriculum solution={solution} />
 
-          {lead && <SolutionLead professional={lead} />}
+          {lead && <SolutionLead professional={lead} now={now} />}
 
           {solution.partners.length > 0 && (
             <div>

@@ -54,7 +54,7 @@ export default function Home({
         description="Psychologists, psychiatrists, and counsellors with the areas they support and the cities they practise in."
         href="/professionals"
       >
-        <ProfessionalsGrid professionals={professionals} />
+        <ProfessionalsGrid professionals={professionals} now={now} />
       </HomeSection>
 
       <HomeSection

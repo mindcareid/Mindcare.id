@@ -67,7 +67,12 @@ const careCentres: CareCentre[] = [
     name: "Klinik Jiwa Sehat Kemang",
     kind: "Klinik",
     photoUrl: null,
-    isVerified: true,
+    verification: {
+      review: "approved",
+      checkedOn: "2026-03-05",
+      validUntil: "2028-03-04",
+      source: "submission",
+    },
     openingHours: [
       { day: 1, opens: "08:00", closes: "20:00" },
       { day: 2, opens: "08:00", closes: "20:00" },
@@ -103,7 +108,12 @@ const careCentres: CareCentre[] = [
     name: "Pusat Konseling Cakrawala",
     kind: "Pusat Konseling",
     photoUrl: null,
-    isVerified: true,
+    verification: {
+      review: "approved",
+      checkedOn: "2026-01-22",
+      validUntil: "2027-10-31",
+      source: "submission",
+    },
     openingHours: [
       { day: 1, opens: "09:00", closes: "18:00" },
       { day: 2, opens: "09:00", closes: "18:00" },
@@ -139,7 +149,12 @@ const careCentres: CareCentre[] = [
     name: "Klinik Psikologi Adyatma",
     kind: "Klinik",
     photoUrl: null,
-    isVerified: false,
+    verification: {
+      review: "pending",
+      checkedOn: null,
+      validUntil: null,
+      source: null,
+    },
     openingHours: [
       { day: 1, opens: "10:00", closes: "17:00" },
       { day: 2, opens: "10:00", closes: "17:00" },
@@ -175,7 +190,12 @@ const careCentres: CareCentre[] = [
     name: "RSU Bina Nurani",
     kind: "Rumah Sakit",
     photoUrl: null,
-    isVerified: true,
+    verification: {
+      review: "approved",
+      checkedOn: "2026-04-14",
+      validUntil: "2029-04-13",
+      source: "registry",
+    },
     openingHours: [
       { day: 1, opens: "00:00", closes: "24:00" },
       { day: 2, opens: "00:00", closes: "24:00" },
@@ -217,7 +237,12 @@ const careCentres: CareCentre[] = [
     name: "Puskesmas Cempaka Wangi",
     kind: "Puskesmas",
     photoUrl: null,
-    isVerified: true,
+    verification: {
+      review: "approved",
+      checkedOn: "2026-05-20",
+      validUntil: "2029-12-31",
+      source: "registry",
+    },
     openingHours: [
       { day: 1, opens: "07:30", closes: "15:00" },
       { day: 2, opens: "07:30", closes: "15:00" },
@@ -249,7 +274,12 @@ const careCentres: CareCentre[] = [
     name: "Klinik Sahabat Pikiran",
     kind: "Klinik",
     photoUrl: null,
-    isVerified: false,
+    verification: {
+      review: "none",
+      checkedOn: null,
+      validUntil: null,
+      source: null,
+    },
     openingHours: [
       { day: 1, opens: "09:00", closes: "19:00" },
       { day: 2, opens: "09:00", closes: "19:00" },
@@ -285,7 +315,12 @@ const careCentres: CareCentre[] = [
     name: "Pusat Konseling Bali Tenang",
     kind: "Pusat Konseling",
     photoUrl: null,
-    isVerified: true,
+    verification: {
+      review: "approved",
+      checkedOn: "2026-02-09",
+      validUntil: "2027-09-30",
+      source: "submission",
+    },
     openingHours: [
       { day: 1, opens: "09:00", closes: "17:00" },
       { day: 2, opens: "09:00", closes: "17:00" },
@@ -321,7 +356,12 @@ const careCentres: CareCentre[] = [
     name: "RSU Sekar Arum",
     kind: "Rumah Sakit",
     photoUrl: null,
-    isVerified: true,
+    verification: {
+      review: "approved",
+      checkedOn: "2026-06-02",
+      validUntil: "2030-06-01",
+      source: "registry",
+    },
     openingHours: [
       { day: 1, opens: "00:00", closes: "24:00" },
       { day: 2, opens: "00:00", closes: "24:00" },
@@ -359,7 +399,12 @@ const careCentres: CareCentre[] = [
     name: "Klinik Anindya Mandiri",
     kind: "Klinik",
     photoUrl: null,
-    isVerified: false,
+    verification: {
+      review: "approved",
+      checkedOn: "2024-09-11",
+      validUntil: "2026-06-30",
+      source: "submission",
+    },
     openingHours: [
       { day: 1, opens: "08:00", closes: "18:00" },
       { day: 2, opens: "08:00", closes: "18:00" },

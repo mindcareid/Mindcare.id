@@ -3,6 +3,10 @@ import { ArrowRight, Building2, MapPin } from "lucide-react";
 import SectionHeader from "@/app/components/reusable/SectionHeader";
 import Tag from "@/app/components/reusable/Tag";
 import VerifiedBadge from "@/app/components/reusable/VerifiedBadge";
+import {
+  VERIFICATION_POLICY_PATH,
+  verificationLabelOf,
+} from "../../data/verification";
 import type { CareCentre } from "../../care-centres/type/careCentre";
 
 // Tempat praktik seorang profesional. Bentuknya sengaja dibikin sama dengan
@@ -30,11 +34,23 @@ import type { CareCentre } from "../../care-centres/type/careCentre";
 
 type ProfessionalCentreProps = {
   centre: CareCentre;
+  /** Acuan waktu tunggal dari `page.tsx`, ISO string. Dipakai badge verifikasi. */
+  now: string;
 };
 
 export default function ProfessionalCentre({
   centre,
+  now,
 }: ProfessionalCentreProps) {
+  // Label FASILITAS meski kartu ini berada di halaman seorang profesional.
+  // Verifikasi tidak menurun ke bawah: centre yang terverifikasi tidak membuat
+  // orangnya terverifikasi, dan sebaliknya. Yang dilencanai di sini gedungnya.
+  const verifiedLabel = verificationLabelOf(
+    centre.verification,
+    now,
+    "facility",
+  );
+
   return (
     <div>
       <SectionHeader title="Practises at" underline />
@@ -49,7 +65,18 @@ export default function ProfessionalCentre({
             <p className="font-heading text-lg font-semibold text-foreground">
               {centre.name}
             </p>
-            {centre.isVerified && <VerifiedBadge />}
+            {/* Tanggal pemeriksaan SENGAJA tidak ikut di sini. Aturannya: tanggal
+                hanya muncul di halaman yang entitasnya jadi subjek — di halaman
+                ini subjeknya orangnya, centre-nya cuma keterangan. Halaman
+                centre-nya sendiri yang menyajikan tanggalnya, satu klik dari
+                sini, dan itu mencegah satu tanggal punya dua tempat tampil yang
+                bisa menyimpang. */}
+            {verifiedLabel && (
+              <VerifiedBadge
+                label={verifiedLabel}
+                href={VERIFICATION_POLICY_PATH}
+              />
+            )}
           </div>
 
           <p className="mt-1 text-sm text-muted-foreground">{centre.kind}</p>

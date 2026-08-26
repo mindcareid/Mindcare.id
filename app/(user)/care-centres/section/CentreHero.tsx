@@ -5,6 +5,11 @@ import StatusDot from "@/app/components/reusable/StatusDot";
 import Tag from "@/app/components/reusable/Tag";
 import VerifiedBadge from "@/app/components/reusable/VerifiedBadge";
 import { isOpenAt, summariseTodayHours } from "../data/centreHours";
+import {
+  VERIFICATION_POLICY_PATH,
+  formatCheckedOn,
+  verificationLabelOf,
+} from "../../data/verification";
 import type { CareCentre } from "../type/careCentre";
 
 // Hero halaman detail. Bentuknya mengikuti `ProfessionalHero`: `PageHero` dengan
@@ -33,6 +38,9 @@ type CentreHeroProps = {
 export default function CentreHero({ centre, now }: CentreHeroProps) {
   const listed = centre.professionalSlugs.length;
   const open = isOpenAt(centre, now);
+  // Label fasilitas, BUKAN label orang: yang diperiksa di sini izin operasional
+  // dan nomor registrasi fasilitas, bukan surat izin praktik seseorang.
+  const verifiedLabel = verificationLabelOf(centre.verification, now, "facility");
 
   return (
     <PageHero
@@ -41,13 +49,15 @@ export default function CentreHero({ centre, now }: CentreHeroProps) {
       subtitle={`${centre.address.street}, ${centre.address.city}`}
     >
       <div className="flex flex-col gap-5">
-        {(centre.isVerified || open) && (
+        {(verifiedLabel || open) && (
           <div className="flex flex-wrap items-center gap-2">
-            {centre.isVerified && <VerifiedBadge />}
-            {/* Lencana ini muncul HANYA saat memang sedang buka. Tidak ada
-                pasangan "Closed" berwarna merah: pusat layanan yang tutup pukul
-                lima bukan pusat layanan yang bermasalah, dan jam lengkapnya ada
-                di tabel beberapa senti di bawah. */}
+            {verifiedLabel && (
+              <VerifiedBadge
+                label={verifiedLabel}
+                checkedOn={formatCheckedOn(centre.verification)}
+                href={VERIFICATION_POLICY_PATH}
+              />
+            )}
             {open && (
               <span className="inline-flex items-center rounded-sm border border-border bg-card px-2 py-1">
                 <StatusDot status="open" label="Open now" />

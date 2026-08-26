@@ -44,6 +44,7 @@ export default function EventDetail({
             host={event.host}
             professional={host.professional}
             centre={host.centre}
+            now={now}
           />
 
           {/* Catatan ini berubah menurut keadaan acara, bukan satu kalimat untuk

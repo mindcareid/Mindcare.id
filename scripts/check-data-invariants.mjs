@@ -69,6 +69,40 @@ function arrayBlock(source, field) {
 const quotedStrings = (block) =>
   [...block.matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((m) => m[1]);
 
+// Saudara `arrayBlock` untuk objek. Dipakai blok `verification`.
+//
+// Sengaja menghitung kurung, bukan pola `verification: \{([\s\S]*?)\n    \},`.
+// Pola itu jalan untuk data hari ini, tapi lubangnya persis sama dengan lubang
+// yang sudah memakan korban di `arrayBlock`: begitu ada satu objek yang ditulis
+// sebaris, pola itu tidak berhenti di situ melainkan menutup di objek
+// BERIKUTNYA, dan ceknya lolos sambil memeriksa data milik orang lain. Sekali
+// kesalahan itu terjadi dan ketemu lewat sabotase, tidak ada alasan menuliskannya
+// lagi di tempat baru.
+function objectBlock(source, field) {
+  const opener = new RegExp(`\\n\\s*${field}: \\{`).exec(source);
+  if (!opener) return null;
+
+  const start = opener.index + opener[0].length;
+  let depth = 0;
+  let inString = false;
+
+  for (let i = start; i < source.length; i += 1) {
+    const ch = source[i];
+    if (inString) {
+      if (ch === "\\") i += 1;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === "{") depth += 1;
+    else if (ch === "}") {
+      if (depth === 0) return source.slice(start, i);
+      depth -= 1;
+    }
+  }
+  return null;
+}
+
 // --- Professionals -----------------------------------------------------------
 
 const professionalsSource = read("app/(user)/professionals/data/professionals.ts");
@@ -963,6 +997,279 @@ for (const field of ["id", "slug"]) {
   }
 }
 
+// --- Verifikasi: bentuk, konsistensi tanggal, dan cakupan cabang -------------
+
+// Masuk 24 Agustus 2026 bersama penggantian `isVerified: boolean` jadi objek
+// `verification`. Sebelumnya nilainya cuma `true`/`false` dan tidak ada yang bisa
+// salah selain artinya sendiri. Sekarang ada empat field yang saling terikat, dan
+// ikatannya TIDAK dijaga TypeScript:
+//
+//   - `checkedOn: string | null` tetap sah bertipe walau isinya "2026-13-45"
+//   - `validUntil` tetap sah walau tanggalnya lebih dulu daripada `checkedOn`
+//   - `review: "approved"` dengan `validUntil: null` lolos tipe, padahal di
+//     `verificationStateOf` itu jatuh ke "expired" — badge-nya diam-diam hilang
+//   - `source: "registry"` tetap sah dipasang di seorang manusia, padahal
+//     keputusan 4 cuma memberi jalur registry untuk FASILITAS milik publik
+//
+// Semua itu gagal dengan cara yang paling buruk: halamannya tetap terender, tetap
+// rapi, cuma badge-nya tidak muncul — dan badge yang tidak muncul justru sengaja
+// dibuat tidak bersuara supaya tidak terbaca sebagai tuduhan. Jadi bug di sini
+// tidak punya gejala sama sekali. Itulah kenapa ceknya harus di harness.
+
+const VERIFICATION_KEYS = ["review", "checkedOn", "validUntil", "source"];
+
+// Field mana yang WAJIB berisi (true) dan mana yang wajib null (false), per nilai
+// `review`. Tabel ini adalah kontraknya, ditulis sekali supaya profesional dan
+// fasilitas tidak bisa punya aturan yang berbeda tanpa disadari.
+//
+// `pending` sengaja semuanya null: selama belum diputuskan, belum ada tanggal
+// pemeriksaan, dan menuliskan sumbernya lebih dulu berarti mengaku sudah tahu
+// dari mana dokumennya diperiksa padahal belum diperiksa.
+const VERIFICATION_SHAPE = {
+  none: { checkedOn: false, validUntil: false, source: false },
+  pending: { checkedOn: false, validUntil: false, source: false },
+  rejected: { checkedOn: true, validUntil: false, source: true },
+  revoked: { checkedOn: true, validUntil: false, source: true },
+  approved: { checkedOn: true, validUntil: true, source: true },
+};
+
+const VERIFICATION_SOURCES = ["submission", "registry"];
+
+// Hari ini menurut Asia/Jakarta, sama seperti `VERIFICATION_TIME_ZONE` di
+// `app/(user)/data/verification.ts`. Logikanya DIULANG di sini, tidak diimpor,
+// karena harness ini `.mjs` dan tidak bisa mengimpor TypeScript. Konsekuensinya
+// harus disadari: kalau zona waktu di aplikasinya diganti, baris ini tidak ikut
+// berganti dan harness akan menilai dengan hari yang berbeda. Kalau itu terjadi,
+// yang benar adalah mengganti keduanya sekaligus.
+const todayJakarta = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Jakarta",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(new Date());
+
+// Tanggal yang benar-benar ada, bukan cuma yang bentuknya benar. `2026-02-30`
+// lolos pola `\d{4}-\d{2}-\d{2}` tapi bukan tanggal, dan `new Date` akan
+// menggesernya jadi 2 Maret tanpa mengeluh.
+function isRealDate(text) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
+  const parsed = new Date(`${text}T00:00:00Z`);
+  return (
+    !Number.isNaN(parsed.getTime()) &&
+    parsed.toISOString().slice(0, 10) === text
+  );
+}
+
+// Salinan `verificationStateOf`, dengan alasan yang sama seperti `todayJakarta`.
+function verificationState(verification) {
+  switch (verification.review) {
+    case "none":
+      return "unverified";
+    case "pending":
+      return "pending";
+    case "rejected":
+      return "rejected";
+    case "revoked":
+      return "revoked";
+    case "approved":
+      return verification.validUntil && todayJakarta <= verification.validUntil
+        ? "verified"
+        : "expired";
+    default:
+      return "tidak-sah";
+  }
+}
+
+const statesSeen = new Map();
+const expiredBySubject = { person: [], facility: [] };
+let verificationsRead = 0;
+
+function checkVerification(label, body, subject) {
+  const block = objectBlock(body, "verification");
+
+  // Invarian 39: field `verification` harus ada, dan isinya tepat empat kunci
+  // dalam urutan yang sama. Urutan ikut dijaga karena harness ini membaca teks:
+  // data yang ditulis dengan urutan berbeda-beda memaksa setiap cek berikutnya
+  // jadi lebih longgar, dan cek yang longgar itulah yang selama ini diam.
+  if (block === null) {
+    fail(`${label}: tidak punya field verification`);
+    return;
+  }
+  verificationsRead += 1;
+
+  const keys = [...block.matchAll(/^\s*(\w+):/gm)].map((m) => m[1]);
+  if (keys.join(",") !== VERIFICATION_KEYS.join(",")) {
+    fail(
+      `${label}: kunci verification [${keys.join(", ")}] tidak sama dengan [${VERIFICATION_KEYS.join(", ")}]`,
+    );
+    return;
+  }
+
+  const scalar = (key) => {
+    const found = new RegExp(`\\n\\s*${key}: (null|"([^"]*)")`).exec(block);
+    if (!found) return undefined;
+    return found[1] === "null" ? null : found[2];
+  };
+
+  const verification = {
+    review: scalar("review"),
+    checkedOn: scalar("checkedOn"),
+    validUntil: scalar("validUntil"),
+    source: scalar("source"),
+  };
+
+  // `review` tidak boleh null — ia satu-satunya field yang selalu punya nilai.
+  const shape = VERIFICATION_SHAPE[verification.review];
+  if (!shape) {
+    fail(
+      `${label}: review "${verification.review}" bukan salah satu dari ${Object.keys(VERIFICATION_SHAPE).join(", ")}`,
+    );
+    return;
+  }
+
+  // Invarian 40: konsistensi null menurut `review`.
+  for (const key of ["checkedOn", "validUntil", "source"]) {
+    const mustBeFilled = shape[key];
+    const value = verification[key];
+    if (mustBeFilled && value === null) {
+      fail(
+        `${label}: review "${verification.review}" mengharuskan ${key} berisi, tapi nilainya null`,
+      );
+    }
+    if (!mustBeFilled && value !== null) {
+      fail(
+        `${label}: review "${verification.review}" mengharuskan ${key} null, tapi nilainya "${value}"`,
+      );
+    }
+  }
+
+  // Invarian 41: tanggal berformat YYYY-MM-DD dan benar-benar ada.
+  for (const key of ["checkedOn", "validUntil"]) {
+    const value = verification[key];
+    if (value !== null && value !== undefined && !isRealDate(value)) {
+      fail(`${label}: ${key} "${value}" bukan tanggal YYYY-MM-DD yang sah`);
+    }
+  }
+
+  // Invarian 42: `validUntil` harus setelah `checkedOn`. Dokumen yang masa
+  // berlakunya sudah habis pada hari diperiksa tidak pernah jadi "approved" —
+  // hasilnya penolakan, bukan persetujuan berjangka nol.
+  if (
+    verification.checkedOn &&
+    verification.validUntil &&
+    verification.validUntil <= verification.checkedOn
+  ) {
+    fail(
+      `${label}: validUntil "${verification.validUntil}" tidak setelah checkedOn "${verification.checkedOn}"`,
+    );
+  }
+
+  // Invarian 43: pemeriksaan tidak bisa terjadi besok.
+  if (verification.checkedOn && verification.checkedOn > todayJakarta) {
+    fail(
+      `${label}: checkedOn "${verification.checkedOn}" ada di masa depan (hari ini ${todayJakarta})`,
+    );
+  }
+
+  // Invarian 44: `source: "registry"` cuma untuk fasilitas.
+  //
+  // Keputusan 4 membuka jalur tanpa pengajuan HANYA untuk fasilitas milik
+  // publik, karena pangkalan data terbuka yang dipakai adalah daftar fasilitas
+  // kesehatan. Tidak ada daftar terbuka yang setara untuk izin praktik
+  // perorangan, jadi `registry` pada seorang manusia berarti badge-nya berdiri di
+  // atas sumber yang tidak ada.
+  if (verification.source !== null && verification.source !== undefined) {
+    if (!VERIFICATION_SOURCES.includes(verification.source)) {
+      fail(
+        `${label}: source "${verification.source}" bukan ${VERIFICATION_SOURCES.join(" atau ")}`,
+      );
+    }
+    if (verification.source === "registry" && subject === "person") {
+      fail(
+        `${label}: source "registry" dipasang pada orang — jalur registry cuma untuk fasilitas`,
+      );
+    }
+  }
+
+  const state = verificationState(verification);
+  statesSeen.set(state, (statesSeen.get(state) ?? 0) + 1);
+  if (state === "expired") expiredBySubject[subject].push(label);
+}
+
+for (const professional of professionals) {
+  checkVerification(
+    `${professional.id} (${professional.slug ?? "tanpa slug"})`,
+    professional.body,
+    "person",
+  );
+}
+
+for (const centre of centres) {
+  checkVerification(
+    `${centre.id} (${centre.slug ?? "tanpa slug"})`,
+    centre.body,
+    "facility",
+  );
+}
+
+// Penjaga supaya bagian ini tidak pernah jadi cek nol iterasi seperti invarian 8
+// dulu. Kalau pemecah objek di atas berubah, `professionals`/`centres` bisa jadi
+// kosong dan seluruh cek verifikasi lewat tanpa memeriksa apa pun — hijau, dan
+// tidak berarti apa-apa.
+const verificationsExpected = professionals.length + centres.length;
+if (verificationsRead !== verificationsExpected) {
+  fail(
+    `verifikasi: cuma ${verificationsRead} blok verification terbaca dari ${verificationsExpected} objek — pola pembacanya berubah?`,
+  );
+}
+
+// Invarian 45: keenam `VerificationState` harus terpakai minimal sekali.
+//
+// Diperiksa GABUNGAN dua file, bukan per file, dan itu sengaja. Fasilitas cuma
+// memakai empat dari enam status (verified, pending, unverified, expired) karena
+// menambahkan `rejected`/`revoked` di sana berarti mencabut badge dari centre yang
+// sudah ditinjau diaze di browser, dan mengubah tampilan halaman yang sudah
+// disetujui bukan urusan pekerjaan ini. Yang penting setiap cabang di
+// `verificationStateOf` pernah dilewati oleh data nyata; kalau harus per file,
+// satu-satunya cara memenuhinya adalah mengarang data demi menyenangkan harness.
+const VERIFICATION_STATES = [
+  "unverified",
+  "pending",
+  "verified",
+  "expired",
+  "rejected",
+  "revoked",
+];
+for (const state of VERIFICATION_STATES) {
+  if (!statesSeen.has(state)) {
+    fail(
+      `verifikasi: tidak ada satu pun data yang menghasilkan status "${state}" — cabangnya tidak pernah teruji`,
+    );
+  }
+}
+
+// Invarian 46: jumlah data yang kedaluwarsa harus tetap seperti yang disengaja.
+//
+// Ini satu-satunya invarian di file ini yang bisa berbunyi tanpa ada yang
+// mengedit apa pun, dan justru itu gunanya. `validUntil` dibanding hari ini
+// berarti tanggal mock data punya masa pakai: setiap kali satu tanggal terlewati,
+// satu badge hilang dari halaman yang sudah pernah ditinjau, tanpa diff, tanpa
+// commit. Dibiarkan cukup lama, seluruh direktori akan kehilangan badge dan
+// halamannya terlihat seperti tidak ada yang pernah diperiksa.
+//
+// Satu per file memang disengaja: prof-8 (hendra-saputra) dan centre-9
+// (klinik-anindya-mandiri). Kalau angkanya bertambah, yang benar BUKAN menaikkan
+// angka di sini melainkan menggeser `validUntil` data yang baru lewat.
+const EXPIRED_ON_PURPOSE = { person: 1, facility: 1 };
+for (const subject of ["person", "facility"]) {
+  const found = expiredBySubject[subject];
+  if (found.length !== EXPIRED_ON_PURPOSE[subject]) {
+    fail(
+      `verifikasi: ${found.length} ${subject} kedaluwarsa (${found.join(", ") || "tidak ada"}), padahal yang disengaja ${EXPIRED_ON_PURPOSE[subject]} — geser validUntil-nya, jangan angkanya`,
+    );
+  }
+}
+
 // --- Hasil -------------------------------------------------------------------
 
 if (problems.length > 0) {
@@ -977,4 +1284,14 @@ if (problems.length > 0) {
 // tanpa perlu menyabotase apa pun dulu.
 console.log(
   `LOLOS — ${professionals.length} profesional, ${professionalSlugs.size} slug unik, ${articles.length} artikel dengan body & waktu baca konsisten, ${solutions.length} solusi dengan kurikulum & harga konsisten, ${events.length} event dengan kuota & susunan acara konsisten, ${centres.length} pusat layanan dengan ${centres.length * 7} baris jam & ${centreOfProfessional.size} profesional terdaftar, tautan artikel, solusi & event tersambung semua.`,
+);
+
+// Angka verifikasi dipisah ke barisnya sendiri karena bacanya berbeda: ini bukan
+// "sekian data lolos" melainkan sebaran status per hari ini. `verified` yang
+// turun tanpa ada yang mengedit data berarti ada tanggal yang baru terlewati.
+console.log(
+  `       verifikasi ${verificationsRead}/${verificationsExpected} blok terbaca menurut ${todayJakarta} WIB — ` +
+    VERIFICATION_STATES.map(
+      (state) => `${state} ${statesSeen.get(state) ?? 0}`,
+    ).join(", "),
 );

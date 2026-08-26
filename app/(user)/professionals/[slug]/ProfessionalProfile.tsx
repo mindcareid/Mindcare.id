@@ -36,7 +36,7 @@ export default function ProfessionalProfile({
 }: ProfessionalProfileProps) {
   return (
     <div className="min-h-screen">
-      <ProfessionalHero professional={professional} />
+      <ProfessionalHero professional={professional} now={now} />
 
       <Container className="pb-16 md:pb-24">
         <div className="space-y-14 md:space-y-16">
@@ -51,7 +51,7 @@ export default function ProfessionalProfile({
               kalimat "Practises independently". Alasannya di
               `ProfessionalCentre.tsx`: itu akan mengubah ketiadaan data menjadi
               sebuah pernyataan. */}
-          {centre && <ProfessionalCentre centre={centre} />}
+          {centre && <ProfessionalCentre centre={centre} now={now} />}
 
           <ProfessionalEducation professional={professional} />
 
@@ -85,7 +85,7 @@ export default function ProfessionalProfile({
                 underline
               />
               <div className="mt-6">
-                <ProfessionalsGrid professionals={related} />
+                <ProfessionalsGrid professionals={related} now={now} />
               </div>
             </div>
           )}

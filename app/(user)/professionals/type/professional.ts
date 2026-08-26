@@ -15,6 +15,8 @@
 // Isi konten (gelar, area of support, nama kota) tetap bahasa Indonesia —
 // rules.md pasal 7.
 
+import type { Verification } from "../../data/verification";
+
 export type ProfessionKind = "Psikolog" | "Psikiater" | "Konselor";
 
 export type SessionMode = "Online" | "In Person";
@@ -70,7 +72,19 @@ export interface Professional {
   credentials: string;
   profession: ProfessionKind;
   photoUrl: string | null;
-  isVerified: boolean;
+  /**
+   * Menggantikan `isVerified: boolean` pada 24 Agustus 2026 — alasan lengkap di
+   * `app/(user)/data/verification.ts` dan `design.md` bagian 21.
+   *
+   * JANGAN dirender langsung. Keadaan yang dipakai UI adalah nilai turunan dari
+   * `verificationStateOf(verification, now)`, karena "berlaku" dan "kedaluwarsa"
+   * dibedakan oleh tanggal hari ini, bukan oleh isi field ini.
+   *
+   * Yang diverifikasi di sini ORANG, jadi labelnya "Licence checked" — bukan
+   * label fasilitas. Verifikasi juga tidak menurun dari centre tempat dia
+   * praktik: bekerja di rumah sakit terverifikasi bukan kredensial.
+   */
+  verification: Verification;
   isAvailableNow: boolean;
   areasOfSupport: AreaOfSupport[];
   sessionModes: SessionMode[];

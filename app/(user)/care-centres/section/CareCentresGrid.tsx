@@ -6,6 +6,7 @@ import EmptyState from "@/app/components/reusable/EmptyState";
 import type { MetaItem } from "@/app/components/reusable/MetaRow";
 import { cn } from "@/lib/utils";
 import { isOpenAt, summariseTodayHours } from "../data/centreHours";
+import { verificationLabelOf } from "../../data/verification";
 import type { CareCentre } from "../type/careCentre";
 
 // Server-safe: tidak ada state di sini. State pencarian dan filter dipegang
@@ -88,7 +89,11 @@ export default function CareCentresGrid({
           subtitle={centre.kind}
           imageUrl={centre.photoUrl}
           imageAlt={centre.name}
-          verified={centre.isVerified}
+          verifiedLabel={verificationLabelOf(
+            centre.verification,
+            now,
+            "facility",
+          )}
           status={isOpenAt(centre, now) ? "open" : undefined}
           tags={tagsOf(centre)}
           meta={metaOf(centre, now)}

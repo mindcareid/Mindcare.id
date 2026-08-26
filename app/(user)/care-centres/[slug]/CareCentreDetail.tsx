@@ -67,7 +67,7 @@ export default function CareCentreDetail({
                 underline
               />
               <div className="mt-6">
-                <ProfessionalsGrid professionals={professionals} />
+                <ProfessionalsGrid professionals={professionals} now={now} />
               </div>
             </div>
           )}

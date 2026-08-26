@@ -23,6 +23,10 @@
 //     dari `professionalSlugs.length` yang dijaga harness. Angka lamanya (7, 5,
 //     4, 12, 3, 6, 4, 10, 5) karangan dan tidak bisa dibuktikan oleh apa pun di
 //     dalam repo ini.
+//   - `isVerified: boolean` diganti `verification` berbentuk objek — alasan
+//     lengkap di `app/(user)/data/verification.ts` dan `design.md` bagian 21.
+
+import type { Verification } from "../../data/verification";
 
 export type CentreKind =
   | "Klinik"
@@ -83,7 +87,18 @@ export interface CareCentre {
   name: string;
   kind: CentreKind;
   photoUrl: string | null;
-  isVerified: boolean;
+  /**
+   * Bentuknya sama dengan `Professional.verification`, tapi LABELNYA BEDA:
+   * fasilitas memakai "Licence & permit checked", orang memakai "Licence
+   * checked". Yang diperiksa memang tidak sama — fasilitas punya izin
+   * operasional dan nomor registrasi fasilitas, orang punya surat tanda
+   * registrasi dan surat izin praktik. Satu kata untuk dua klaim berbeda itu
+   * justru yang diperbaiki pada 24 Agustus 2026.
+   *
+   * Puskesmas dan RSUD boleh ber-`source: "registry"` tanpa ada yang mengajukan;
+   * lihat `VerificationSource`.
+   */
+  verification: Verification;
   /** Tepat tujuh entri, hari 1 sampai 7 berurutan, tanpa hari kembar. */
   openingHours: CentreOpeningHours[];
   /**
