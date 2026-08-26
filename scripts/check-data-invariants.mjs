@@ -17,7 +17,7 @@
 // tanpa `node_modules` yang lengkap. Konsekuensinya cek di sini dangkal
 // (regex, bukan AST) — cukup untuk invarian angka dan slug, tidak lebih.
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -1270,6 +1270,171 @@ for (const subject of ["person", "facility"]) {
   }
 }
 
+// --- Help --------------------------------------------------------------------
+//
+// Bagian ini menjaga satu kelas bug yang TIDAK SATU PUN alat lain di repo ini
+// bisa melihat: tautan ke halaman yang tidak ada. `tsc` cuma melihat string,
+// `eslint` tidak peduli, `next build` juga tidak — Next tidak memvalidasi
+// `href` — dan `next dev` baru mengaku 404 setelah ada yang mengklik.
+//
+// "Nanti ketemu kalau ada yang klik" bukan cara menemukannya di situs ini.
+// Sebelum 26 Agustus 2026 footer menautkan `/help/disclaimer` dan
+// `/help/report-concern` di SETIAP halaman, dan keduanya 404. Yang mengklik
+// "Report A Concern" di direktori kesehatan mental kemungkinan besar sedang
+// melaporkan sesuatu yang membahayakan.
+//
+// Karena itu invarian di sini MEMBACA DISK, bukan cuma teks datanya. Nilai
+// `group`, `icon`, dan `status` sengaja TIDAK dicek di sini: ketiganya union
+// bertipe di `app/(user)/help/type/helpTopic.ts` dan `helpTopics` dideklarasikan
+// `HelpTopic[]`, jadi salah tulis satu huruf sudah dijegal `tsc`. Mengulanginya
+// di sini cuma menambah tempat yang harus disamakan.
+
+const helpSource = read("app/(user)/help/data/helpTopics.ts");
+
+// Urutan field itu sendiri invarian, sama seperti di data lain: file ini dibaca
+// ulang dengan regex, dan pembaca manusia membandingkan entri baris demi baris.
+const HELP_FIELD_ORDER = [
+  "id",
+  "slug",
+  "title",
+  "summary",
+  "path",
+  "group",
+  "icon",
+  "status",
+  "createdAt",
+];
+
+const helpChunks = helpSource.split(/\n    id: "(help-\d+)"/).slice(1);
+const helpTopics = [];
+
+for (let index = 0; index < helpChunks.length; index += 2) {
+  const id = helpChunks[index];
+  const rest = helpChunks[index + 1] ?? "";
+  const closing = rest.indexOf("\n  },");
+  const body = closing === -1 ? rest : rest.slice(0, closing);
+  const label = `help ${id}`;
+
+  // Nilainya boleh turun sebaris di bawah nama fieldnya — prettier memindahkan
+  // `summary:` ke baris berikutnya begitu isinya panjang.
+  const pick = (field) => {
+    const found = new RegExp(`\\n\\s*${field}:\\s*(?:\\n\\s*)?"([^"]*)"`).exec(
+      body,
+    );
+    return found ? found[1] : null;
+  };
+
+  // Invarian 47: urutan field wajib sama dengan kontraknya, dan lengkap.
+  const order = ["id", ...[...body.matchAll(/\n {4}(\w+):/g)].map((m) => m[1])];
+  if (order.join(",") !== HELP_FIELD_ORDER.join(",")) {
+    fail(
+      `${label}: urutan field [${order.join(", ")}] tidak sama dengan kontrak [${HELP_FIELD_ORDER.join(", ")}]`,
+    );
+  }
+
+  helpTopics.push({
+    id,
+    slug: pick("slug"),
+    path: pick("path"),
+    group: pick("group"),
+    status: pick("status"),
+  });
+}
+
+// Invarian 48: datanya harus terbaca. Pelajaran dari invarian 8, yang diam
+// berhari-hari karena pemecahnya tidak cocok dan loopnya nol iterasi.
+if (helpTopics.length === 0) {
+  fail(
+    "help: nol topik terbaca dari helpTopics.ts — pemecah `id: \"help-NN\"` tidak cocok lagi, bukan datanya yang kosong",
+  );
+}
+
+const helpSlugs = new Set();
+const helpPaths = new Set();
+let helpPublished = 0;
+let helpDraft = 0;
+
+for (const topic of helpTopics) {
+  const label = `help ${topic.id}`;
+
+  // Invarian 49: slug dan path unik. Dua entri dengan path sama berarti satu
+  // kartu menutupi kartu lain tanpa ada yang kelihatan salah.
+  if (helpSlugs.has(topic.slug)) fail(`${label}: slug "${topic.slug}" ganda`);
+  helpSlugs.add(topic.slug);
+  if (helpPaths.has(topic.path)) fail(`${label}: path "${topic.path}" ganda`);
+  helpPaths.add(topic.path);
+
+  // `path` dipetakan ke berkas halamannya. Grup `using-mindcare` menunjuk ke
+  // luar /help, jadi pemetaannya dari path — bukan dari slug.
+  const pageFile = `app/(user)${topic.path}/page.tsx`;
+  const pageExists = existsSync(join(root, pageFile));
+
+  if (topic.status === "published") {
+    helpPublished += 1;
+
+    // Invarian 50: entri `published` WAJIB punya halaman di disk.
+    if (!pageExists) {
+      fail(
+        `${label} (${topic.slug}): status "published" tapi ${pageFile} tidak ada — kartu itu tautan mati`,
+      );
+    }
+  }
+
+  if (topic.status === "draft") {
+    helpDraft += 1;
+
+    // Invarian 51: entri `draft` boleh belum punya halaman, tapi kalau ada,
+    // halamannya harus masih placeholder. Kalau dokumennya sudah betulan
+    // ditulis dan statusnya lupa dinaikkan, kartunya tetap mati di /help dan
+    // dokumen yang sudah jadi tidak pernah ditemukan siapa pun.
+    if (pageExists && !/NotPublishedYet|NotFound/.test(read(pageFile))) {
+      fail(
+        `${label} (${topic.slug}): status "draft" tapi ${pageFile} bukan placeholder lagi — naikkan statusnya ke "published"`,
+      );
+    }
+  }
+}
+
+// Invarian 52: kelompok `legal-safety` di /help wajib sama isinya dengan blok
+// "Legal & Safety" di footer. Keduanya daftar dokumen yang sama, ditulis dua
+// kali di dua berkas, dan tidak ada yang memaksa keduanya bergerak bersama —
+// persis bentuk bug yang sudah terjadi sekali di repo ini (footer menautkan
+// `/help/verificaion-policy` yang tidak pernah ada).
+const menuSource = read("app/(user)/data/menu.ts");
+const legalSlice = menuSource.slice(
+  menuSource.indexOf('title: "Legal & Safety"'),
+);
+const legalItems = arrayBlock(legalSlice, "items");
+
+if (!legalItems) {
+  fail(
+    'help: blok items di bawah title: "Legal & Safety" tidak ketemu di menu.ts — bandingannya tidak jalan',
+  );
+} else {
+  const footerPaths = [...legalItems.matchAll(/path: "([^"]+)"/g)].map(
+    (m) => m[1],
+  );
+  const helpLegalPaths = helpTopics
+    .filter((topic) => topic.group === "legal-safety")
+    .map((topic) => topic.path);
+
+  const missingInHelp = footerPaths.filter((p) => !helpLegalPaths.includes(p));
+  const missingInFooter = helpLegalPaths.filter(
+    (p) => !footerPaths.includes(p),
+  );
+
+  if (missingInHelp.length > 0) {
+    fail(
+      `help: footer menautkan ${missingInHelp.join(", ")} tapi tidak ada kartunya di helpTopics.ts (grup legal-safety)`,
+    );
+  }
+  if (missingInFooter.length > 0) {
+    fail(
+      `help: helpTopics.ts punya kartu ${missingInFooter.join(", ")} tapi footer tidak menautkannya`,
+    );
+  }
+}
+
 // --- Hasil -------------------------------------------------------------------
 
 if (problems.length > 0) {
@@ -1294,4 +1459,11 @@ console.log(
     VERIFICATION_STATES.map(
       (state) => `${state} ${statesSeen.get(state) ?? 0}`,
     ).join(", "),
+);
+
+// Angka help juga dipisah, dengan alasan yang sama: yang menarik bukan "lolos"
+// melainkan berapa dokumen yang masih belum ada. `draft` yang tidak pernah turun
+// selama berminggu-minggu itu utang, bukan keadaan normal.
+console.log(
+  `       help ${helpTopics.length} topik — ${helpPublished} published (halamannya ada di disk), ${helpDraft} draft, ${helpPaths.size} path unik`,
 );
