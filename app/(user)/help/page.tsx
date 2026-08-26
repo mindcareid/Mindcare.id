@@ -1,119 +1,197 @@
-// app/company/help/page.tsx
-
+import type { Metadata } from "next";
 import Link from "next/link";
-import { HelpSearch } from "./components/HelpSearch";
 import {
-  MdOutlineBuildCircle,
-  MdOutlineShield,
-  MdOutlineCampaign,
-  MdOutlineCreditCard,
-  MdOutlineLocalShipping,
-} from "react-icons/md";
-import { ComponentType } from "react";
-import Image from "next/image";
+  ArrowRight,
+  CalendarDays,
+  Flag,
+  Hospital,
+  Info,
+  LockKeyhole,
+  Newspaper,
+  ShieldCheck,
+  FileText,
+  Sparkles,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+import Container from "@/app/components/reusable/Container";
+import PageHero from "@/app/components/reusable/PageHero";
+import SectionHeader from "@/app/components/reusable/SectionHeader";
+import { cn } from "@/lib/utils";
+import { getHelpTopicsByGroup } from "./data/helpTopics";
+import type { HelpTopic, HelpTopicIcon } from "./type/helpTopic";
 
-type HelpTopic = {
-  name: string;
-  slug: string;
-  icon: ComponentType<{ size?: number }>;
-  color: "green" | "blue" | "amber" | "red" | "purple" | "teal";
+// Halaman /help versi MindCare. Ditulis ulang 26 Agustus 2026 menggantikan
+// halaman Executive Corner yang ada di sini sebelumnya.
+//
+// TIGA HAL YANG MENENTUKAN BENTUK HALAMAN INI:
+//
+//   1. Kartu untuk dokumen yang belum ada TIDAK BISA DIKLIK. Ini keputusan
+//      diaze, dan alasannya penting: dari lima tautan "Legal & Safety" di
+//      footer, empat belum punya isi. Kalau kartunya bisa diklik, /help berubah
+//      dari satu tautan mati jadi empat tautan mati yang lebih mudah ditemukan.
+//      Yang paling tidak boleh menggantung adalah "Report a Concern" — orang
+//      yang mengkliknya kemungkinan besar sedang melaporkan sesuatu yang
+//      membahayakan. Presedennya sudah ada: kartu klinik penyelenggara di
+//      halaman event juga sengaja tidak bisa diklik selama rutenya belum ada.
+//   2. Statusnya datang dari data, bukan dari mata. `status: "draft"` di
+//      `data/helpTopics.ts` yang menentukan kartunya mati, dan harness
+//      `check-data-invariants.mjs` memeriksa ke disk apakah halaman untuk entri
+//      `published` benar-benar ada. Jadi tautan mati gagal di verifikasi, bukan
+//      ketemu waktu ada yang mengklik.
+//   3. Tidak ada warna per kartu. Halaman lama punya `colorMap` enam warna
+//      (empat di antaranya tidak dipakai) dari palet Tailwind mentah —
+//      emerald/blue/amber/red/purple/teal — plus komentar "Grid 4 kolom, sama
+//      persis seperti Gojek". Dua-duanya dibuang: warnanya melanggar larangan
+//      palet mentah di `design.md`, dan meniru tata letak layanan lain bukan
+//      alasan desain.
+//
+// Semuanya server component. Tidak ada `revalidate` karena tidak ada satu pun
+// nilai di halaman ini yang bergantung pada "sekarang".
+
+export const metadata: Metadata = {
+  title: "Help Centre",
+  description:
+    "Where to start on Mindcare, and the documents that govern how the directory works.",
 };
 
-const topics: HelpTopic[] = [
-  {
-    name: "Privacy Policy",
-    slug: "privacy-policy",
-    icon: MdOutlineBuildCircle,
-    color: "green",
-  },
-  {
-    name: "Terms Of Service",
-    slug: "terms-of-service",
-    icon: MdOutlineShield,
-    color: "blue",
-  },
-];
-
-// Map warna ke class Tailwind — dipisah agar tidak ada purge CSS issue
-const colorMap: Record<HelpTopic["color"], string> = {
-  green: "bg-emerald-50  text-emerald-700",
-  blue: "bg-blue-50     text-blue-700",
-  amber: "bg-amber-50    text-amber-700",
-  red: "bg-red-50      text-red-700",
-  purple: "bg-purple-50   text-purple-700",
-  teal: "bg-teal-50     text-teal-700",
+// Ikon disimpan sebagai NAMA di data (lihat catatan di `type/helpTopic.ts`),
+// dipetakan ke komponennya di sini. Union `HelpTopicIcon` yang memaksa peta ini
+// lengkap — menambah nama baru tanpa menambah barisnya akan gagal di `tsc`.
+const ICONS: Record<HelpTopicIcon, LucideIcon> = {
+  people: Users,
+  hospital: Hospital,
+  sparkle: Sparkles,
+  calendar: CalendarDays,
+  article: Newspaper,
+  verified: ShieldCheck,
+  document: FileText,
+  lock: LockKeyhole,
+  info: Info,
+  flag: Flag,
 };
 
-export default function HelpPage() {
+const CARD_BASE =
+  "flex h-full flex-col gap-3 rounded-xl border p-5 text-left";
+
+function TopicBody({ topic }: { topic: HelpTopic }) {
+  const Icon = ICONS[topic.icon];
+  const draft = topic.status === "draft";
+
   return (
-    <div className="min-h-screen bg-slate-100">
-      {/* ===== Hero ===== */}
-      <section className="flex items-center justify-around bg-white text-neutral-950 h-80 px-6">
-        {/* Logo Kiri */}
-        <div className="hidden md:flex items-end">
-          <Image
-            src="/images/logo/helpcenter_1.webp"
-            alt="Logo Help Center"
-            width={320}
-            height={200}
-            unoptimized
-            className="object-contain"
+    <>
+      <span
+        className={cn(
+          "inline-flex size-10 items-center justify-center rounded-lg",
+          draft
+            ? "bg-muted text-muted-foreground"
+            : "bg-brand-lavender-100 text-primary",
+        )}
+      >
+        <Icon size={20} aria-hidden="true" />
+      </span>
+
+      <div className="flex items-center gap-2">
+        <h3
+          className={cn(
+            "font-heading text-lg font-semibold leading-snug",
+            draft ? "text-muted-foreground" : "text-foreground",
+          )}
+        >
+          {topic.title}
+        </h3>
+        {!draft && (
+          <ArrowRight
+            size={16}
+            aria-hidden="true"
+            className="text-secondary transition-transform duration-300 group-hover:translate-x-1"
           />
-        </div>
+        )}
+      </div>
 
-        {/* Judul */}
-        <h1 className="text-4xl md:text-6xl font-semibold italic text-center">
-          Need some help?
-        </h1>
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        {topic.summary}
+      </p>
 
-        {/* Logo Kanan */}
-        <div className="hidden md:flex items-end">
-          <Image
-            src="/images/logo/helpcenter.webp"
-            alt="Logo Help Center"
-            width={250}
-            height={180}
-            unoptimized
-            className="object-contain"
+      {draft && (
+        <span className="mt-auto inline-flex w-fit items-center rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground">
+          Not published yet
+        </span>
+      )}
+    </>
+  );
+}
+
+function TopicCard({ topic }: { topic: HelpTopic }) {
+  // Kartu draft dirender sebagai <div>, bukan <a> tanpa href atau <a> dengan
+  // pointer-events-none. Alasannya aksesibilitas: keduanya masih diumumkan
+  // sebagai tautan oleh screen reader, dan yang kedua masih bisa dicapai lewat
+  // Tab. Kartu yang tidak menuju ke mana pun sebaiknya memang bukan tautan.
+  if (topic.status === "draft") {
+    return (
+      <div className={cn(CARD_BASE, "border-dashed border-border bg-muted/40")}>
+        <TopicBody topic={topic} />
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={topic.path}
+      className={cn(
+        CARD_BASE,
+        "group border-border bg-card shadow-card transition-shadow duration-300",
+        "hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      )}
+    >
+      <TopicBody topic={topic} />
+    </Link>
+  );
+}
+
+function TopicGrid({ topics }: { topics: HelpTopic[] }) {
+  return (
+    <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {topics.map((topic) => (
+        <TopicCard key={topic.id} topic={topic} />
+      ))}
+    </div>
+  );
+}
+
+export default async function HelpPage() {
+  const [directory, legal] = await Promise.all([
+    getHelpTopicsByGroup("using-mindcare"),
+    getHelpTopicsByGroup("legal-safety"),
+  ]);
+
+  return (
+    <div className="pb-20">
+      <PageHero
+        eyebrow="Help Centre"
+        title="Mulai dari mana?"
+        subtitle="Halaman ini untuk dua keperluan: kalau Anda belum tahu harus mencari ke mana, dan kalau Anda ingin tahu bagaimana direktori ini bekerja."
+      />
+
+      <Container>
+        <section>
+          <SectionHeader
+            title="Using MindCare"
+            description="Lima tempat utama di direktori ini, dan apa yang bisa Anda lakukan di masing-masing."
+            underline
           />
-        </div>
-      </section>
+          <TopicGrid topics={directory} />
+        </section>
 
-      {/* ===== Browse Topics ===== */}
-      <section className="mx-auto max-w-5xl px-6 py-10">
-        <h2 className="mb-8 text-center text-2xl font-semibold text-gray-900">
-          Browse Topics
-        </h2>
-
-        {/* 
-          Grid 4 kolom — sama persis seperti Gojek.
-          Di mobile jadi 2 kolom agar tidak terlalu sempit.
-        */}
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {topics.map((topic) => {
-            const Icon = topic.icon;
-            return (
-              <Link
-                key={topic.slug}
-                href={`/help/${topic.slug}`}
-                className="flex items-center gap-3 rounded-xl border border-gray-200 
-                           bg-white px-4 py-3.5 transition-all duration-200 
-                           hover:border-gray-300 hover:bg-gray-50"
-              >
-                <div
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center 
-                                 rounded-full ${colorMap[topic.color]}`}
-                >
-                  <Icon size={18} />
-                </div>
-                <span className="text-sm font-medium leading-tight text-gray-800">
-                  {topic.name}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
+        <section className="mt-16">
+          <SectionHeader
+            title="Legal & Safety"
+            description="Dokumen yang mengatur pemakaian MindCare dan cara kami memeriksa isi direktori. Yang belum kami terbitkan tetap tercantum, tanpa tautan."
+            underline
+          />
+          <TopicGrid topics={legal} />
+        </section>
+      </Container>
     </div>
   );
 }
