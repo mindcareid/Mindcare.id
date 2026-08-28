@@ -113,15 +113,6 @@ export const FooterMenu: FooterSection[] = [
       },
       {
         name: "Verification Policy",
-        // Sebelum 24 Agustus 2026 baris ini berbunyi
-        // "/help/verificaion-policy" — salah tulis, dan halamannya juga belum
-        // ada. Dua sebab 404 sekaligus, jadi memperbaiki salah tulisnya saja
-        // tidak menolong. Alamat ini sekarang harus sama dengan
-        // `VERIFICATION_POLICY_PATH` di `data/verification.ts`; ada penjaga tipe
-        // di `help/verification-policy/page.tsx` yang menggagalkan build kalau
-        // konstanta itu diubah tanpa memindahkan foldernya. Menu ini tidak
-        // meng-import konstantanya karena berkas ini murni data dan dipakai
-        // komponen klien.
         path: "/help/verification-policy",
       },
       {
