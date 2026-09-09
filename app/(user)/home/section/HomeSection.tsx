@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 type HomeSectionProps = {
   title: string;
   description?: string;
-  href: string;
+  href?: string;
   children: React.ReactNode;
   className?: string;
 };

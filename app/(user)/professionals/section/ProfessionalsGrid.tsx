@@ -67,7 +67,7 @@ export default function ProfessionalsGrid({
               tone: "mint" as const,
             })),
           ]}
-          maxTags={3}
+          maxTags={4}
           meta={[
             { icon: MapPin, text: professional.location.city },
             {

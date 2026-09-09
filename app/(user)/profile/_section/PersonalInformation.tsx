@@ -12,6 +12,7 @@ import { profileSchema, ProfileFormData } from "@/lib/validations/auth";
 import { useSession } from "next-auth/react";
 import type { User } from "@/types/auth";
 import type { IconType } from "react-icons";
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 
 // Reusable Components
 const ReadOnlyField = ({
@@ -252,7 +253,7 @@ export default function PersonalInformation({ user }: { user: User }) {
           <button
             type="submit"
             disabled={isLoading || !isDirty}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={buttonStyles({ size: "sm" })}
           >
             {isLoading ? "Saving..." : "Save changes"}
           </button>
@@ -260,7 +261,7 @@ export default function PersonalInformation({ user }: { user: User }) {
             type="button"
             onClick={() => reset()}
             disabled={isLoading || !isDirty}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={buttonStyles({ variant: "outline", size: "sm" })}
           >
             Discard
           </button>

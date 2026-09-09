@@ -62,9 +62,6 @@ export default function Home({
         description="Clinics, hospitals, community health centres, and counselling centres that treat mental health."
         href="/care-centres"
       >
-        {/* `now` yang sama dengan yang dipakai kartu event di bawah — satu
-            halaman, satu acuan waktu. Sejak 24 Agustus 2026 status "Open"
-            dihitung dari jam praktik, jadi grid ini butuh waktunya. */}
         <CareCentresGrid centres={centres} now={now} />
       </HomeSection>
 

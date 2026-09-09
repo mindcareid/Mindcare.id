@@ -73,13 +73,13 @@ export default function ContactSection({ className }: ContactUserProps) {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-3 text-gray-900">
+          {/* <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-3 text-gray-900">
             Contact Us
           </h2>
           <p className="text-gray-600 mb-6 text-sm sm:text-lg leading-relaxed">
             Have questions or want to collaborate? Fill out the form and we'll
             get back to you within 24 hours.
-          </p>
+          </p> */}
 
           <div className="space-y-2">
             {ContactData.map((contact) => (
