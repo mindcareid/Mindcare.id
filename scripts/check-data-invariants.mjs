@@ -17,7 +17,7 @@
 // tanpa `node_modules` yang lengkap. Konsekuensinya cek di sini dangkal
 // (regex, bukan AST) — cukup untuk invarian angka dan slug, tidak lebih.
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -26,6 +26,82 @@ const read = (relative) => readFileSync(join(root, relative), "utf8");
 
 const problems = [];
 const fail = (message) => problems.push(message);
+
+// Ambil isi satu array literal dari teks sumber dengan MENGHITUNG KURUNG, bukan
+// dengan regex.
+//
+// Sebelumnya semua blok array diambil dengan pola `field: \[([\s\S]*?)\n    \],`
+// dan pola itu punya lubang: kalau arraynya ditulis kosong dalam satu baris
+// (`about: [],`), pola itu tidak berhenti di situ melainkan melewatinya dan
+// menutup di array BERIKUTNYA. Akibatnya isi `agenda` terbaca sebagai isi
+// `about`, blok yang benar-benar kosong terlihat berisi, dan cek "kosong" lolos.
+// Ketemu 24 Agustus 2026 justru lewat sabotase — harnessnya sendiri hijau.
+// Lubang yang sama ada di `overview`, `whoItIsFor`, `curriculum`, dan `bio`.
+//
+// Mengembalikan `null` kalau fieldnya tidak ada sama sekali, dan string kosong
+// kalau arraynya ada tapi kosong. Dua hal itu memang beda: yang pertama field
+// hilang, yang kedua field ada tapi tidak berisi.
+function arrayBlock(source, field) {
+  const opener = new RegExp(`\\n\\s*${field}: \\[`).exec(source);
+  if (!opener) return null;
+
+  const start = opener.index + opener[0].length;
+  let depth = 0;
+  let inString = false;
+
+  for (let i = start; i < source.length; i += 1) {
+    const ch = source[i];
+    if (inString) {
+      if (ch === "\\") i += 1;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === "[") depth += 1;
+    else if (ch === "]") {
+      if (depth === 0) return source.slice(start, i);
+      depth -= 1;
+    }
+  }
+  return null;
+}
+
+const quotedStrings = (block) =>
+  [...block.matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((m) => m[1]);
+
+// Saudara `arrayBlock` untuk objek. Dipakai blok `verification`.
+//
+// Sengaja menghitung kurung, bukan pola `verification: \{([\s\S]*?)\n    \},`.
+// Pola itu jalan untuk data hari ini, tapi lubangnya persis sama dengan lubang
+// yang sudah memakan korban di `arrayBlock`: begitu ada satu objek yang ditulis
+// sebaris, pola itu tidak berhenti di situ melainkan menutup di objek
+// BERIKUTNYA, dan ceknya lolos sambil memeriksa data milik orang lain. Sekali
+// kesalahan itu terjadi dan ketemu lewat sabotase, tidak ada alasan menuliskannya
+// lagi di tempat baru.
+function objectBlock(source, field) {
+  const opener = new RegExp(`\\n\\s*${field}: \\{`).exec(source);
+  if (!opener) return null;
+
+  const start = opener.index + opener[0].length;
+  let depth = 0;
+  let inString = false;
+
+  for (let i = start; i < source.length; i += 1) {
+    const ch = source[i];
+    if (inString) {
+      if (ch === "\\") i += 1;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === "{") depth += 1;
+    else if (ch === "}") {
+      if (depth === 0) return source.slice(start, i);
+      depth -= 1;
+    }
+  }
+  return null;
+}
 
 // --- Professionals -----------------------------------------------------------
 
@@ -98,8 +174,9 @@ for (const professional of professionals) {
   }
 
   // Invarian 4: bio tidak boleh kosong, headline satu kalimat.
-  const bioBlock = body.match(/bio: \[([\s\S]*?)\n    \],/)?.[1] ?? "";
-  if (bioBlock.trim() === "") fail(`${id} (${slug}): bio kosong`);
+  const bioBlock = arrayBlock(body, "bio");
+  if (bioBlock === null) fail(`${id} (${slug}): tidak punya bio`);
+  else if (bioBlock.trim() === "") fail(`${id} (${slug}): bio kosong`);
 
   // Invarian 5: tahun lulus wajar dan berurutan naik.
   const years = [...body.matchAll(/year: (\d+)/g)].map((m) => Number(m[1]));
@@ -190,6 +267,19 @@ for (const article of articles) {
   const itemBlocks = [...body.matchAll(/items: \[([\s\S]*?)\n\s*\],/g)].map(
     (m) => m[1],
   );
+
+  // Pola `items: [` di atas punya lubang yang sama dengan blok array lain:
+  // `items: []` tidak cocok sama sekali, jadi blok list yang benar-benar kosong
+  // tidak terbaca — bukan terbaca lalu ditolak, melainkan tidak terhitung. Beda
+  // dari `about` atau `overview`, `items` bisa muncul berkali-kali dalam satu
+  // artikel sehingga `arrayBlock` (yang cuma mengambil kemunculan pertama) tidak
+  // dipakai di sini; yang dijaga jumlahnya.
+  const itemBlockCount = [...body.matchAll(/items: \[/g)].length;
+  if (itemBlocks.length !== itemBlockCount) {
+    fail(
+      `${label}: ada ${itemBlockCount} blok items tapi cuma ${itemBlocks.length} yang terbaca — ada yang ditulis kosong?`,
+    );
+  }
   const items = itemBlocks.flatMap((block) =>
     [...block.matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((m) => m[1]),
   );
@@ -327,16 +417,16 @@ for (const solution of solutions) {
   }
 
   // Invarian 17: overview minimal satu paragraf, whoItIsFor minimal tiga butir.
-  const overviewBlock = body.match(/overview: \[([\s\S]*?)\n    \],/)?.[1] ?? "";
-  const overviewCount = [
-    ...overviewBlock.matchAll(/"((?:[^"\\]|\\.)*)"/g),
-  ].filter((m) => m[1].trim() !== "").length;
+  const overviewBlock = arrayBlock(body, "overview");
+  if (overviewBlock === null) fail(`${label}: tidak punya overview`);
+  const overviewCount = quotedStrings(overviewBlock ?? "").filter(
+    (text) => text.trim() !== "",
+  ).length;
   if (overviewCount === 0) fail(`${label}: overview kosong`);
 
-  const whoBlock = body.match(/whoItIsFor: \[([\s\S]*?)\n    \],/)?.[1] ?? "";
-  const whoItems = [...whoBlock.matchAll(/"((?:[^"\\]|\\.)*)"/g)].map(
-    (m) => m[1],
-  );
+  const whoBlock = arrayBlock(body, "whoItIsFor");
+  if (whoBlock === null) fail(`${label}: tidak punya whoItIsFor`);
+  const whoItems = quotedStrings(whoBlock ?? "");
   if (whoItems.length < 3) {
     fail(
       `${label}: whoItIsFor cuma ${whoItems.length} butir — di bawah tiga, daftarnya terbaca setengah jadi`,
@@ -347,8 +437,7 @@ for (const solution of solutions) {
   }
 
   // Invarian 18: tidak ada judul atau ringkasan pertemuan yang kosong.
-  const curriculumBlock =
-    body.match(/curriculum: \[([\s\S]*?)\n    \],/)?.[1] ?? "";
+  const curriculumBlock = arrayBlock(body, "curriculum") ?? "";
   for (const field of ["title", "summary"]) {
     const values = [
       ...curriculumBlock.matchAll(
@@ -413,6 +502,316 @@ for (const field of ["id", "slug"]) {
   }
 }
 
+// --- Care centres: jam praktik, zona waktu, dan roster profesional -----------
+
+// Bagian ini masuk 24 Agustus 2026 bersamaan dengan perubahan kontrak
+// `CareCentre`. Tiga hal yang dulu ditulis tangan sekarang punya pasangan yang
+// bisa dihitung, dan tanpa cek di sini ketiganya bisa berselisih tanpa suara:
+//
+//   - `professionalCount` terhadap `professionalSlugs.length`
+//   - `openingHours` terhadap bentuknya sendiri (tujuh hari, jam yang masuk akal)
+//   - `professionalSlugs` terhadap data profesional dan kota masing-masing
+//
+// Nama field kota di dua file berbeda (`address.city` di centre,
+// `location.city` di profesional), jadi tidak ada apa pun di TypeScript yang
+// menghubungkan keduanya — seorang konselor Bandung bisa terdaftar praktik di
+// klinik Medan dan `tsc` tetap diam.
+
+const centresSource = read("app/(user)/care-centres/data/careCentres.ts");
+
+// Kota tiap profesional, dipakai invarian 34. Diambil dari objek profesionalnya
+// masing-masing, bukan regex sekali jalan atas seluruh file, karena urutannya
+// harus tetap berpasangan dengan slugnya.
+const cityByProfessionalSlug = new Map(
+  professionals
+    .filter((professional) => professional.slug)
+    .map((professional) => [
+      professional.slug,
+      professional.body.match(/location: \{\s*city: "([^"]+)"/)?.[1] ?? null,
+    ]),
+);
+
+for (const [slug, city] of cityByProfessionalSlug) {
+  if (city === null) {
+    fail(
+      `professionals: kota ${slug} tidak terbaca — pola \`location: { city: ... }\` berubah?`,
+    );
+  }
+}
+
+// Zona waktu Indonesia ditentukan provinsi, bukan selera. Tabel ini cuma memuat
+// provinsi yang benar-benar dipakai di mock data; provinsi baru WAJIB didaftarkan
+// di sini, dan kalau lupa, invarian 35 akan berbunyi — itu memang yang diinginkan,
+// jauh lebih baik daripada diam lalu menampilkan jam yang salah satu jam.
+const ZONE_BY_PROVINCE = {
+  "DKI Jakarta": "Asia/Jakarta",
+  "Jawa Barat": "Asia/Jakarta",
+  "Jawa Tengah": "Asia/Jakarta",
+  "Jawa Timur": "Asia/Jakarta",
+  "DI Yogyakarta": "Asia/Jakarta",
+  "Sumatera Utara": "Asia/Jakarta",
+  Bali: "Asia/Makassar",
+  "Sulawesi Selatan": "Asia/Makassar",
+};
+
+const centreChunks = centresSource.split(/\n    id: "(centre-\d+)"/).slice(1);
+
+const centres = [];
+for (let i = 0; i < centreChunks.length; i += 2) {
+  const body = centreChunks[i + 1] ?? "";
+  centres.push({
+    id: centreChunks[i],
+    body,
+    slug: body.match(/slug: "([^"]+)"/)?.[1],
+  });
+}
+
+if (centres.length === 0) {
+  fail("care-centres: tidak ada objek yang terbaca — pola pemisahnya berubah?");
+}
+
+// Dipakai juga oleh invarian 27 di bagian Events di bawah.
+const centreSlugs = new Set(
+  centres.map((centre) => centre.slug).filter(Boolean),
+);
+
+// Siapa saja yang sudah dipakai, untuk invarian 33.
+const centreOfProfessional = new Map();
+
+for (const centre of centres) {
+  const { id, body, slug } = centre;
+  const label = `${id} (${slug ?? "tanpa slug"})`;
+
+  if (!slug) fail(`${id}: tidak punya slug`);
+
+  // Invarian 29: openingHours tepat tujuh entri, hari 1 sampai 7 berurutan.
+  //
+  // Ini alasan utama jam praktik ditulis apa adanya di file data dan tidak
+  // dihasilkan fungsi pembangun: harness ini `.mjs` dan membaca teks, jadi jam
+  // yang dihitung di runtime tidak bisa diperiksa dari sini sama sekali.
+  const hoursBlock = arrayBlock(body, "openingHours");
+  if (hoursBlock === null) {
+    fail(`${label}: tidak punya openingHours`);
+    continue;
+  }
+
+  const entries = [
+    ...hoursBlock.matchAll(
+      /day: (\d+),\s*opens: (null|"[^"]*"),\s*closes: (null|"[^"]*")/g,
+    ),
+  ].map((m) => ({
+    day: Number(m[1]),
+    opens: m[2] === "null" ? null : m[2].slice(1, -1),
+    closes: m[3] === "null" ? null : m[3].slice(1, -1),
+  }));
+
+  // Jumlah `day:` dihitung terpisah supaya entri yang urutan fieldnya digeser
+  // (`opens` sebelum `day`, misalnya) memberi pesan yang benar — bukan diam-diam
+  // tidak terhitung lalu muncul sebagai "cuma 6 hari".
+  const dayMarkers = [...hoursBlock.matchAll(/day: \d+/g)].length;
+  if (entries.length !== dayMarkers) {
+    fail(
+      `${label}: ada ${dayMarkers} entri jam tapi cuma ${entries.length} yang terbaca — urutan field day/opens/closes berubah?`,
+    );
+  }
+
+  if (entries.length !== 7) {
+    fail(
+      `${label}: openingHours ${entries.length} entri, harus tepat 7 — tabel jam di halaman detail akan bolong`,
+    );
+  }
+
+  const days = entries.map((entry) => entry.day);
+  const expected = [1, 2, 3, 4, 5, 6, 7];
+  if (entries.length === 7 && days.join(",") !== expected.join(",")) {
+    fail(
+      `${label}: urutan hari [${days.join(", ")}] bukan 1..7 berurutan — UI merender apa adanya, jadi Senin bisa muncul di bawah Minggu`,
+    );
+  }
+
+  // Invarian 30: opens dan closes harus sepasang, berformat HH:MM, dan closes
+  // setelah opens.
+  //
+  // Cuma satu dari dua yang null itu bukan "tutup" dan bukan "buka" — `isOpenAt`
+  // memperlakukannya tutup, sementara tabelnya menulis "Closed", jadi salahnya
+  // tidak kelihatan sampai ada yang menyadari kliniknya buka tapi tertulis tutup.
+  for (const entry of entries) {
+    const pairLabel = `${label} hari ${entry.day}`;
+    if ((entry.opens === null) !== (entry.closes === null)) {
+      fail(
+        `${pairLabel}: opens ${entry.opens === null ? "null" : `"${entry.opens}"`} tapi closes ${entry.closes === null ? "null" : `"${entry.closes}"`} — harus dua-duanya null (tutup) atau dua-duanya terisi`,
+      );
+      continue;
+    }
+    if (entry.opens === null) continue;
+
+    // "24:00" sengaja sah sebagai batas akhir hari dan HANYA untuk `closes`.
+    // Ia bukan jam yang bisa ditunjuk jam dinding, jadi sebagai `opens` ia
+    // berarti "buka pada saat hari sudah habis" — mustahil.
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(entry.opens)) {
+      fail(`${pairLabel}: opens "${entry.opens}" bukan HH:MM 00:00–23:59`);
+    }
+    if (
+      entry.closes !== "24:00" &&
+      !/^([01]\d|2[0-3]):[0-5]\d$/.test(entry.closes)
+    ) {
+      fail(
+        `${pairLabel}: closes "${entry.closes}" bukan HH:MM 00:00–23:59 atau "24:00"`,
+      );
+    }
+    // Perbandingan teks, sah karena dua digit berpadding nol. Jam tutup yang
+    // melewati tengah malam TIDAK bisa diwakili bentuk ini — batasnya dicatat di
+    // design.md bagian 20, bukan diakali di sini.
+    if (entry.closes <= entry.opens) {
+      fail(
+        `${pairLabel}: closes "${entry.closes}" tidak setelah opens "${entry.opens}" — kalau memang tutup lewat tengah malam, bentuk data ini belum bisa mewakilinya`,
+      );
+    }
+  }
+
+  // Invarian 31: professionalCount = professionalSlugs.length, dan rosternya
+  // tidak boleh kosong.
+  //
+  // Sebelum 24 Agustus 2026 angka ini ditulis tangan (7, 5, 4, 12, 3, 6, 4, 10,
+  // 5) dan tidak ada apa pun yang bisa membuktikannya. Sekarang ia turunan, dan
+  // kartu di halaman daftar dirender dari panjang arraynya — bukan dari field ini.
+  const rosterBlock = arrayBlock(body, "professionalSlugs");
+  if (rosterBlock === null) {
+    fail(`${label}: tidak punya professionalSlugs`);
+    continue;
+  }
+
+  const roster = quotedStrings(rosterBlock);
+  const declaredCount = Number(body.match(/professionalCount: (\d+)/)?.[1]);
+
+  if (roster.length === 0) {
+    fail(
+      `${label}: professionalSlugs kosong — bagian "Team" di halaman detail akan kosong, dan kartu akan berbunyi "0 professionals listed"`,
+    );
+  }
+  if (!Number.isFinite(declaredCount)) {
+    fail(`${label}: tidak punya professionalCount`);
+  } else if (declaredCount !== roster.length) {
+    fail(
+      `${label}: professionalCount ${declaredCount} tidak sama dengan jumlah slug di professionalSlugs ${roster.length}`,
+    );
+  }
+
+  const seenInRoster = new Set();
+  for (const professionalSlug of roster) {
+    // Invarian 32: setiap slug di roster benar-benar ada di data profesional.
+    if (!professionalSlugs.has(professionalSlug)) {
+      fail(
+        `${label}: professionalSlugs memuat "${professionalSlug}" yang tidak ada di data profesional — kartu di bagian "Team" akan hilang tanpa jejak`,
+      );
+      continue;
+    }
+
+    if (seenInRoster.has(professionalSlug)) {
+      fail(`${label}: "${professionalSlug}" tercantum dua kali di roster`);
+    }
+    seenInRoster.add(professionalSlug);
+
+    // Invarian 33: satu profesional tidak boleh terdaftar di dua centre.
+    //
+    // Bukan karena mustahil di dunia nyata — psikiater memang bisa praktik di
+    // beberapa tempat — melainkan karena `getCentreOfProfessional` mengembalikan
+    // yang PERTAMA ditemukan. Selama relasinya masih satu arah, dua centre berarti
+    // salah satunya tidak akan pernah muncul di profil orangnya. Kalau suatu hari
+    // relasinya dibuat banyak-ke-banyak, invarian ini yang harus dicabut, dan
+    // aksesornya harus berubah bersamaan.
+    const owner = centreOfProfessional.get(professionalSlug);
+    if (owner) {
+      fail(
+        `${label}: "${professionalSlug}" sudah terdaftar di ${owner} — relasinya masih satu arah, jadi \`getCentreOfProfessional\` hanya akan menemukan ${owner}`,
+      );
+    } else {
+      centreOfProfessional.set(professionalSlug, label);
+    }
+
+    // Invarian 34: kota profesional harus sama dengan kota centre-nya.
+    //
+    // Keputusan diaze, 24 Agustus 2026. Halaman profil akan menulis "Practises
+    // at" tanpa menyebut kota, jadi kalau kotanya beda, pembaca melihat konselor
+    // Bandung dengan alamat Medan di bawahnya dan tidak ada yang menjelaskan.
+    const centreCity = body.match(/city: "([^"]+)"/)?.[1];
+    const personCity = cityByProfessionalSlug.get(professionalSlug);
+    if (centreCity && personCity && centreCity !== personCity) {
+      fail(
+        `${label}: berkota "${centreCity}" tapi "${professionalSlug}" berkota "${personCity}"`,
+      );
+    }
+  }
+
+  // Invarian 35: timeZone harus cocok dengan provinsinya.
+  const province = body.match(/province: "([^"]+)"/)?.[1];
+  const timeZone = body.match(/timeZone: "([^"]+)"/)?.[1];
+  if (!timeZone) {
+    fail(`${label}: tidak punya timeZone`);
+  } else if (!province) {
+    fail(`${label}: provinsinya tidak terbaca`);
+  } else if (!(province in ZONE_BY_PROVINCE)) {
+    fail(
+      `${label}: provinsi "${province}" belum ada di tabel zona waktu di harness ini — daftarkan dulu, jangan dibiarkan lewat`,
+    );
+  } else if (ZONE_BY_PROVINCE[province] !== timeZone) {
+    fail(
+      `${label}: timeZone "${timeZone}" tidak cocok dengan provinsi "${province}" yang seharusnya "${ZONE_BY_PROVINCE[province]}" — status buka/tutup akan bergeser sejam`,
+    );
+  }
+
+  // Invarian 36: openingNote null atau benar-benar berisi. String kosong akan
+  // merender kotak catatan yang kosong di bawah tabel jam.
+  const noteRaw = body.match(/openingNote:\s*\n?\s*(null|"(?:[^"\\]|\\.)*")/)?.[1];
+  if (noteRaw === undefined) {
+    fail(`${label}: tidak punya openingNote`);
+  } else if (noteRaw !== "null" && noteRaw.slice(1, -1).trim() === "") {
+    fail(`${label}: openingNote string kosong — pakai null kalau tidak ada catatan`);
+  }
+
+  // Invarian 37: layanan minimal satu dan tidak ada yang kembar dalam satu centre.
+  const serviceRefs = [...body.matchAll(/services\.([A-Za-z]+)/g)].map(
+    (m) => m[1],
+  );
+  if (serviceRefs.length === 0) {
+    fail(`${label}: tidak punya services — kartunya tidak akan punya tag apa pun`);
+  }
+  const seenServices = new Set();
+  for (const ref of serviceRefs) {
+    if (seenServices.has(ref)) {
+      fail(`${label}: layanan "${ref}" dicantumkan dua kali`);
+    }
+    seenServices.add(ref);
+  }
+
+  // Invarian 38: koordinat masih di dalam kotak Indonesia dan kode pos lima
+  // digit. Dua-duanya cuma penangkap salah ketik — tanda minus yang hilang di
+  // lintang memindahkan klinik Jakarta ke Laut Cina Selatan, dan peta nantinya
+  // akan menaruhnya di sana tanpa protes.
+  const latitude = Number(body.match(/latitude: (-?[\d.]+)/)?.[1]);
+  const longitude = Number(body.match(/longitude: (-?[\d.]+)/)?.[1]);
+  if (!Number.isFinite(latitude) || latitude < -11 || latitude > 6) {
+    fail(`${label}: latitude ${latitude} di luar wilayah Indonesia (-11..6)`);
+  }
+  if (!Number.isFinite(longitude) || longitude < 95 || longitude > 141) {
+    fail(`${label}: longitude ${longitude} di luar wilayah Indonesia (95..141)`);
+  }
+  const postalCode = body.match(/postalCode: "([^"]*)"/)?.[1];
+  if (!postalCode || !/^\d{5}$/.test(postalCode)) {
+    fail(`${label}: postalCode "${postalCode}" bukan lima digit`);
+  }
+}
+
+// Invarian 28: id dan slug centre unik.
+for (const field of ["id", "slug"]) {
+  const values = centres.map((centre) => centre[field]);
+  const seen = new Set();
+  for (const value of values) {
+    if (seen.has(value)) fail(`care-centres: ${field} kembar — ${value}`);
+    seen.add(value);
+  }
+}
+
 // --- Events ------------------------------------------------------------------
 
 const eventsSource = read("app/(user)/events/data/events.ts");
@@ -428,19 +827,611 @@ for (const slug of new Set(professionalHosts)) {
   }
 }
 
+// Invarian 27: penyelenggara berkind `centre` juga harus benar-benar ada.
+//
+// Cek di atas cuma menyaring kind `professional`, jadi selama ini LIMA dari
+// sembilan penyelenggara — yang semuanya klinik — tidak pernah diperiksa sama
+// sekali. Ketemu 24 Agustus 2026 waktu membangun kartu "Hosted by": kartu itu
+// membaca data pusat layanan dengan `getCareCentreBySlug`, dan salah tulis satu
+// huruf akan membuat kartunya jatuh ke bentuk darurat tanpa ada yang memberi
+// tahu.
+//
+// `centreSlugs` sekarang datang dari pemecah per objek di bagian Care centres di
+// atas. Versi pertamanya menyapu seluruh file dengan `/\n    slug: "([^"]+)"/g`,
+// dan pola itu ikut menangkap delapan slug LAYANAN di peta `services` yang
+// indentasinya sama — jadi `host.slug: "psikoterapi"` akan lolos cek ini. Lubang
+// yang sama persis dengan yang pernah ada di daftar slug profesional.
+const centreHosts = [...eventsSource.matchAll(
+  /kind: "centre",\s*\n\s*slug: "([^"]+)"/g,
+)].map((m) => m[1]);
+
+if (centreHosts.length === 0) {
+  fail("events: tidak ada penyelenggara berkind centre yang terbaca — pola berubah?");
+}
+
+for (const slug of new Set(centreHosts)) {
+  if (!centreSlugs.has(slug)) {
+    fail(
+      `events: host.slug "${slug}" berkind centre tapi tidak ada di data pusat layanan — kartu "Hosted by" akan jatuh ke bentuk darurat`,
+    );
+  }
+}
+
 // Invarian 8: registeredCount tidak boleh melewati quota.
-const eventChunks = eventsSource.split(/\n    id: "(evt-[^"]+)"/).slice(1);
+//
+// CATATAN: pola di bawah semula `id: "(evt-...)"` padahal id sebenarnya di file
+// data berawalan `ev-`. Akibatnya pemecah ini menghasilkan NOL event, loop di
+// bawahnya tidak pernah jalan sekali pun, dan harness tetap melaporkan LOLOS —
+// invarian ini tidak memeriksa apa pun sejak dibuat. Ketemu 24 Agustus 2026
+// waktu hendak menambah invarian event yang lain. Inilah alasan aturan "cek yang
+// selalu hijau tidak ada gunanya" ada, dan invarian inilah yang melewatinya.
+//
+// `ev-\d+` sengaja dipatok angka, bukan `[^"]+`: id baris susunan acara juga
+// berawalan `ev-` (`ev-1-a1`) dan cuma dibedakan indentasi. Kalau suatu hari
+// Prettier menggeser indentasinya, pola yang longgar akan menganggap tiap baris
+// agenda sebagai event tersendiri.
+const eventChunks = eventsSource.split(/\n    id: "(ev-\d+)"/).slice(1);
+
+const events = [];
 for (let i = 0; i < eventChunks.length; i += 2) {
-  const id = eventChunks[i];
-  const body = eventChunks[i + 1] ?? "";
+  events.push({ id: eventChunks[i], body: eventChunks[i + 1] ?? "" });
+}
+
+if (events.length === 0) {
+  fail("events: tidak ada objek yang terbaca — pola pemisahnya berubah?");
+}
+
+for (const event of events) {
+  const { id, body } = event;
+  const slug = body.match(/slug: "([^"]+)"/)?.[1];
+  const label = `${id} (${slug ?? "tanpa slug"})`;
+
   const quotaRaw = body.match(/quota: (null|\d+)/)?.[1];
   const registered = Number(body.match(/registeredCount: (\d+)/)?.[1]);
   if (quotaRaw && quotaRaw !== "null" && Number.isFinite(registered)) {
     if (registered > Number(quotaRaw)) {
+      fail(`${id}: registeredCount ${registered} melewati quota ${quotaRaw}`);
+    }
+  }
+
+  // Invarian 23: about minimal satu paragraf tidak kosong.
+  const aboutBlock = arrayBlock(body, "about");
+  if (aboutBlock === null) fail(`${label}: tidak punya about`);
+  const aboutParagraphs = quotedStrings(aboutBlock ?? "");
+  if (aboutParagraphs.filter((text) => text.trim() !== "").length === 0) {
+    fail(`${label}: about kosong`);
+  }
+  for (const text of aboutParagraphs) {
+    if (text.trim() === "") fail(`${label}: ada paragraf about yang kosong`);
+  }
+
+  // Susunan acara dipecah per baris dulu, bukan dibaca sekali jalan dengan satu
+  // regex panjang: Prettier bebas memindahkan `title:` ke baris berikutnya kalau
+  // judulnya kepanjangan, dan pola yang mengandaikan tiga baris berurutan akan
+  // diam-diam melewatkan baris itu.
+  const agendaBlock = arrayBlock(body, "agenda");
+  if (agendaBlock === null) fail(`${label}: tidak punya agenda`);
+  const agendaParts = (agendaBlock ?? "")
+    .split(/\n\s{8}id: "([^"]+)",/)
+    .slice(1);
+  const agenda = [];
+  for (let i = 0; i < agendaParts.length; i += 2) {
+    const rowBody = agendaParts[i + 1] ?? "";
+    agenda.push({
+      id: agendaParts[i],
+      time: rowBody.match(/time: "([^"]*)"/)?.[1] ?? "",
+      title: rowBody.match(/title:\s*\n?\s*"((?:[^"\\]|\\.)*)"/)?.[1] ?? "",
+    });
+  }
+
+  // Invarian 24: agenda minimal satu baris, id unik, time & title tidak kosong.
+  if (agenda.length === 0) {
+    fail(`${label}: agenda kosong — susunan acara tidak akan tampil sama sekali`);
+  }
+  const seenAgendaIds = new Set();
+  for (const row of agenda) {
+    if (seenAgendaIds.has(row.id)) {
+      fail(`${label}: id baris agenda kembar "${row.id}"`);
+    }
+    seenAgendaIds.add(row.id);
+    if (row.time.trim() === "") fail(`${label}: baris ${row.id} tanpa time`);
+    if (row.title.trim() === "") fail(`${label}: baris ${row.id} tanpa title`);
+  }
+
+  // Invarian 25: agenda adalah rincian dari startDate–endDate.
+  //
+  // Ini nilai turunan seperti `startingPriceIdr` dan `readTimeMinutes`: jam di
+  // agenda bukan data mandiri, ia pecahan dari rentang waktu acara. Kalau
+  // dibiarkan, hero bisa bilang acaranya sampai 15:00 sambil susunan acaranya
+  // berhenti 14:00 — dua-duanya `string` yang sah, jadi `tsc` diam saja.
+  //
+  // Jam lokal diambil langsung dari teks ISO-nya (`...T09:00:00+07:00` → 09:00),
+  // BUKAN lewat `Date`: begitu masuk `Date`, jamnya jadi jam mesin yang
+  // menjalankan skrip ini dan cek jadi bergantung zona waktu komputer.
+  const startLocal = body.match(/startDate: "[^"T]+T(\d{2}:\d{2})/)?.[1];
+  const endLocal = body.match(/endDate: "[^"T]+T(\d{2}:\d{2})/)?.[1];
+  const ranges = [];
+  for (const row of agenda) {
+    const parsed = row.time.match(/^(\d{2}:\d{2}) – (\d{2}:\d{2})$/);
+    if (!parsed) {
       fail(
-        `${id}: registeredCount ${registered} melewati quota ${quotaRaw}`,
+        `${label}: time "${row.time}" di ${row.id} tidak berformat "HH:MM – HH:MM" (pemisahnya en dash berspasi)`,
+      );
+      continue;
+    }
+    if (parsed[2] <= parsed[1]) {
+      fail(`${label}: ${row.id} berakhir "${parsed[2]}" tidak setelah mulai "${parsed[1]}"`);
+    }
+    ranges.push({ id: row.id, from: parsed[1], to: parsed[2] });
+  }
+  if (ranges.length === agenda.length && ranges.length > 0) {
+    if (startLocal && ranges[0].from !== startLocal) {
+      fail(
+        `${label}: agenda mulai "${ranges[0].from}" padahal startDate jam ${startLocal}`,
       );
     }
+    if (endLocal && ranges[ranges.length - 1].to !== endLocal) {
+      fail(
+        `${label}: agenda selesai "${ranges[ranges.length - 1].to}" padahal endDate jam ${endLocal}`,
+      );
+    }
+    for (let i = 1; i < ranges.length; i += 1) {
+      if (ranges[i].from !== ranges[i - 1].to) {
+        fail(
+          `${label}: ada lubang di susunan acara — ${ranges[i - 1].id} selesai "${ranges[i - 1].to}" tapi ${ranges[i].id} mulai "${ranges[i].from}"`,
+        );
+      }
+    }
+  }
+}
+
+// Invarian 26: id dan slug event unik.
+for (const field of ["id", "slug"]) {
+  const values = events.map((event) =>
+    field === "id" ? event.id : event.body.match(/slug: "([^"]+)"/)?.[1],
+  );
+  const seen = new Set();
+  for (const value of values) {
+    if (seen.has(value)) fail(`events: ${field} kembar — ${value}`);
+    seen.add(value);
+  }
+}
+
+// --- Verifikasi: bentuk, konsistensi tanggal, dan cakupan cabang -------------
+
+// Masuk 24 Agustus 2026 bersama penggantian `isVerified: boolean` jadi objek
+// `verification`. Sebelumnya nilainya cuma `true`/`false` dan tidak ada yang bisa
+// salah selain artinya sendiri. Sekarang ada empat field yang saling terikat, dan
+// ikatannya TIDAK dijaga TypeScript:
+//
+//   - `checkedOn: string | null` tetap sah bertipe walau isinya "2026-13-45"
+//   - `validUntil` tetap sah walau tanggalnya lebih dulu daripada `checkedOn`
+//   - `review: "approved"` dengan `validUntil: null` lolos tipe, padahal di
+//     `verificationStateOf` itu jatuh ke "expired" — badge-nya diam-diam hilang
+//   - `source: "registry"` tetap sah dipasang di seorang manusia, padahal
+//     keputusan 4 cuma memberi jalur registry untuk FASILITAS milik publik
+//
+// Semua itu gagal dengan cara yang paling buruk: halamannya tetap terender, tetap
+// rapi, cuma badge-nya tidak muncul — dan badge yang tidak muncul justru sengaja
+// dibuat tidak bersuara supaya tidak terbaca sebagai tuduhan. Jadi bug di sini
+// tidak punya gejala sama sekali. Itulah kenapa ceknya harus di harness.
+
+const VERIFICATION_KEYS = ["review", "checkedOn", "validUntil", "source"];
+
+// Field mana yang WAJIB berisi (true) dan mana yang wajib null (false), per nilai
+// `review`. Tabel ini adalah kontraknya, ditulis sekali supaya profesional dan
+// fasilitas tidak bisa punya aturan yang berbeda tanpa disadari.
+//
+// `pending` sengaja semuanya null: selama belum diputuskan, belum ada tanggal
+// pemeriksaan, dan menuliskan sumbernya lebih dulu berarti mengaku sudah tahu
+// dari mana dokumennya diperiksa padahal belum diperiksa.
+const VERIFICATION_SHAPE = {
+  none: { checkedOn: false, validUntil: false, source: false },
+  pending: { checkedOn: false, validUntil: false, source: false },
+  rejected: { checkedOn: true, validUntil: false, source: true },
+  revoked: { checkedOn: true, validUntil: false, source: true },
+  approved: { checkedOn: true, validUntil: true, source: true },
+};
+
+const VERIFICATION_SOURCES = ["submission", "registry"];
+
+// Hari ini menurut Asia/Jakarta, sama seperti `VERIFICATION_TIME_ZONE` di
+// `app/(user)/data/verification.ts`. Logikanya DIULANG di sini, tidak diimpor,
+// karena harness ini `.mjs` dan tidak bisa mengimpor TypeScript. Konsekuensinya
+// harus disadari: kalau zona waktu di aplikasinya diganti, baris ini tidak ikut
+// berganti dan harness akan menilai dengan hari yang berbeda. Kalau itu terjadi,
+// yang benar adalah mengganti keduanya sekaligus.
+const todayJakarta = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Jakarta",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(new Date());
+
+// Tanggal yang benar-benar ada, bukan cuma yang bentuknya benar. `2026-02-30`
+// lolos pola `\d{4}-\d{2}-\d{2}` tapi bukan tanggal, dan `new Date` akan
+// menggesernya jadi 2 Maret tanpa mengeluh.
+function isRealDate(text) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
+  const parsed = new Date(`${text}T00:00:00Z`);
+  return (
+    !Number.isNaN(parsed.getTime()) &&
+    parsed.toISOString().slice(0, 10) === text
+  );
+}
+
+// Salinan `verificationStateOf`, dengan alasan yang sama seperti `todayJakarta`.
+function verificationState(verification) {
+  switch (verification.review) {
+    case "none":
+      return "unverified";
+    case "pending":
+      return "pending";
+    case "rejected":
+      return "rejected";
+    case "revoked":
+      return "revoked";
+    case "approved":
+      return verification.validUntil && todayJakarta <= verification.validUntil
+        ? "verified"
+        : "expired";
+    default:
+      return "tidak-sah";
+  }
+}
+
+const statesSeen = new Map();
+const expiredBySubject = { person: [], facility: [] };
+let verificationsRead = 0;
+
+function checkVerification(label, body, subject) {
+  const block = objectBlock(body, "verification");
+
+  // Invarian 39: field `verification` harus ada, dan isinya tepat empat kunci
+  // dalam urutan yang sama. Urutan ikut dijaga karena harness ini membaca teks:
+  // data yang ditulis dengan urutan berbeda-beda memaksa setiap cek berikutnya
+  // jadi lebih longgar, dan cek yang longgar itulah yang selama ini diam.
+  if (block === null) {
+    fail(`${label}: tidak punya field verification`);
+    return;
+  }
+  verificationsRead += 1;
+
+  const keys = [...block.matchAll(/^\s*(\w+):/gm)].map((m) => m[1]);
+  if (keys.join(",") !== VERIFICATION_KEYS.join(",")) {
+    fail(
+      `${label}: kunci verification [${keys.join(", ")}] tidak sama dengan [${VERIFICATION_KEYS.join(", ")}]`,
+    );
+    return;
+  }
+
+  const scalar = (key) => {
+    const found = new RegExp(`\\n\\s*${key}: (null|"([^"]*)")`).exec(block);
+    if (!found) return undefined;
+    return found[1] === "null" ? null : found[2];
+  };
+
+  const verification = {
+    review: scalar("review"),
+    checkedOn: scalar("checkedOn"),
+    validUntil: scalar("validUntil"),
+    source: scalar("source"),
+  };
+
+  // `review` tidak boleh null — ia satu-satunya field yang selalu punya nilai.
+  const shape = VERIFICATION_SHAPE[verification.review];
+  if (!shape) {
+    fail(
+      `${label}: review "${verification.review}" bukan salah satu dari ${Object.keys(VERIFICATION_SHAPE).join(", ")}`,
+    );
+    return;
+  }
+
+  // Invarian 40: konsistensi null menurut `review`.
+  for (const key of ["checkedOn", "validUntil", "source"]) {
+    const mustBeFilled = shape[key];
+    const value = verification[key];
+    if (mustBeFilled && value === null) {
+      fail(
+        `${label}: review "${verification.review}" mengharuskan ${key} berisi, tapi nilainya null`,
+      );
+    }
+    if (!mustBeFilled && value !== null) {
+      fail(
+        `${label}: review "${verification.review}" mengharuskan ${key} null, tapi nilainya "${value}"`,
+      );
+    }
+  }
+
+  // Invarian 41: tanggal berformat YYYY-MM-DD dan benar-benar ada.
+  for (const key of ["checkedOn", "validUntil"]) {
+    const value = verification[key];
+    if (value !== null && value !== undefined && !isRealDate(value)) {
+      fail(`${label}: ${key} "${value}" bukan tanggal YYYY-MM-DD yang sah`);
+    }
+  }
+
+  // Invarian 42: `validUntil` harus setelah `checkedOn`. Dokumen yang masa
+  // berlakunya sudah habis pada hari diperiksa tidak pernah jadi "approved" —
+  // hasilnya penolakan, bukan persetujuan berjangka nol.
+  if (
+    verification.checkedOn &&
+    verification.validUntil &&
+    verification.validUntil <= verification.checkedOn
+  ) {
+    fail(
+      `${label}: validUntil "${verification.validUntil}" tidak setelah checkedOn "${verification.checkedOn}"`,
+    );
+  }
+
+  // Invarian 43: pemeriksaan tidak bisa terjadi besok.
+  if (verification.checkedOn && verification.checkedOn > todayJakarta) {
+    fail(
+      `${label}: checkedOn "${verification.checkedOn}" ada di masa depan (hari ini ${todayJakarta})`,
+    );
+  }
+
+  // Invarian 44: `source: "registry"` cuma untuk fasilitas.
+  //
+  // Keputusan 4 membuka jalur tanpa pengajuan HANYA untuk fasilitas milik
+  // publik, karena pangkalan data terbuka yang dipakai adalah daftar fasilitas
+  // kesehatan. Tidak ada daftar terbuka yang setara untuk izin praktik
+  // perorangan, jadi `registry` pada seorang manusia berarti badge-nya berdiri di
+  // atas sumber yang tidak ada.
+  if (verification.source !== null && verification.source !== undefined) {
+    if (!VERIFICATION_SOURCES.includes(verification.source)) {
+      fail(
+        `${label}: source "${verification.source}" bukan ${VERIFICATION_SOURCES.join(" atau ")}`,
+      );
+    }
+    if (verification.source === "registry" && subject === "person") {
+      fail(
+        `${label}: source "registry" dipasang pada orang — jalur registry cuma untuk fasilitas`,
+      );
+    }
+  }
+
+  const state = verificationState(verification);
+  statesSeen.set(state, (statesSeen.get(state) ?? 0) + 1);
+  if (state === "expired") expiredBySubject[subject].push(label);
+}
+
+for (const professional of professionals) {
+  checkVerification(
+    `${professional.id} (${professional.slug ?? "tanpa slug"})`,
+    professional.body,
+    "person",
+  );
+}
+
+for (const centre of centres) {
+  checkVerification(
+    `${centre.id} (${centre.slug ?? "tanpa slug"})`,
+    centre.body,
+    "facility",
+  );
+}
+
+// Penjaga supaya bagian ini tidak pernah jadi cek nol iterasi seperti invarian 8
+// dulu. Kalau pemecah objek di atas berubah, `professionals`/`centres` bisa jadi
+// kosong dan seluruh cek verifikasi lewat tanpa memeriksa apa pun — hijau, dan
+// tidak berarti apa-apa.
+const verificationsExpected = professionals.length + centres.length;
+if (verificationsRead !== verificationsExpected) {
+  fail(
+    `verifikasi: cuma ${verificationsRead} blok verification terbaca dari ${verificationsExpected} objek — pola pembacanya berubah?`,
+  );
+}
+
+// Invarian 45: keenam `VerificationState` harus terpakai minimal sekali.
+//
+// Diperiksa GABUNGAN dua file, bukan per file, dan itu sengaja. Fasilitas cuma
+// memakai empat dari enam status (verified, pending, unverified, expired) karena
+// menambahkan `rejected`/`revoked` di sana berarti mencabut badge dari centre yang
+// sudah ditinjau diaze di browser, dan mengubah tampilan halaman yang sudah
+// disetujui bukan urusan pekerjaan ini. Yang penting setiap cabang di
+// `verificationStateOf` pernah dilewati oleh data nyata; kalau harus per file,
+// satu-satunya cara memenuhinya adalah mengarang data demi menyenangkan harness.
+const VERIFICATION_STATES = [
+  "unverified",
+  "pending",
+  "verified",
+  "expired",
+  "rejected",
+  "revoked",
+];
+for (const state of VERIFICATION_STATES) {
+  if (!statesSeen.has(state)) {
+    fail(
+      `verifikasi: tidak ada satu pun data yang menghasilkan status "${state}" — cabangnya tidak pernah teruji`,
+    );
+  }
+}
+
+// Invarian 46: jumlah data yang kedaluwarsa harus tetap seperti yang disengaja.
+//
+// Ini satu-satunya invarian di file ini yang bisa berbunyi tanpa ada yang
+// mengedit apa pun, dan justru itu gunanya. `validUntil` dibanding hari ini
+// berarti tanggal mock data punya masa pakai: setiap kali satu tanggal terlewati,
+// satu badge hilang dari halaman yang sudah pernah ditinjau, tanpa diff, tanpa
+// commit. Dibiarkan cukup lama, seluruh direktori akan kehilangan badge dan
+// halamannya terlihat seperti tidak ada yang pernah diperiksa.
+//
+// Satu per file memang disengaja: prof-8 (hendra-saputra) dan centre-9
+// (klinik-anindya-mandiri). Kalau angkanya bertambah, yang benar BUKAN menaikkan
+// angka di sini melainkan menggeser `validUntil` data yang baru lewat.
+const EXPIRED_ON_PURPOSE = { person: 1, facility: 1 };
+for (const subject of ["person", "facility"]) {
+  const found = expiredBySubject[subject];
+  if (found.length !== EXPIRED_ON_PURPOSE[subject]) {
+    fail(
+      `verifikasi: ${found.length} ${subject} kedaluwarsa (${found.join(", ") || "tidak ada"}), padahal yang disengaja ${EXPIRED_ON_PURPOSE[subject]} — geser validUntil-nya, jangan angkanya`,
+    );
+  }
+}
+
+// --- Help --------------------------------------------------------------------
+//
+// Bagian ini menjaga satu kelas bug yang TIDAK SATU PUN alat lain di repo ini
+// bisa melihat: tautan ke halaman yang tidak ada. `tsc` cuma melihat string,
+// `eslint` tidak peduli, `next build` juga tidak — Next tidak memvalidasi
+// `href` — dan `next dev` baru mengaku 404 setelah ada yang mengklik.
+//
+// "Nanti ketemu kalau ada yang klik" bukan cara menemukannya di situs ini.
+// Sebelum 26 Agustus 2026 footer menautkan `/help/disclaimer` dan
+// `/help/report-concern` di SETIAP halaman, dan keduanya 404. Yang mengklik
+// "Report A Concern" di direktori kesehatan mental kemungkinan besar sedang
+// melaporkan sesuatu yang membahayakan.
+//
+// Karena itu invarian di sini MEMBACA DISK, bukan cuma teks datanya. Nilai
+// `group`, `icon`, dan `status` sengaja TIDAK dicek di sini: ketiganya union
+// bertipe di `app/(user)/help/type/helpTopic.ts` dan `helpTopics` dideklarasikan
+// `HelpTopic[]`, jadi salah tulis satu huruf sudah dijegal `tsc`. Mengulanginya
+// di sini cuma menambah tempat yang harus disamakan.
+
+const helpSource = read("app/(user)/help/data/helpTopics.ts");
+
+// Urutan field itu sendiri invarian, sama seperti di data lain: file ini dibaca
+// ulang dengan regex, dan pembaca manusia membandingkan entri baris demi baris.
+const HELP_FIELD_ORDER = [
+  "id",
+  "slug",
+  "title",
+  "summary",
+  "path",
+  "group",
+  "icon",
+  "status",
+  "createdAt",
+];
+
+const helpChunks = helpSource.split(/\n    id: "(help-\d+)"/).slice(1);
+const helpTopics = [];
+
+for (let index = 0; index < helpChunks.length; index += 2) {
+  const id = helpChunks[index];
+  const rest = helpChunks[index + 1] ?? "";
+  const closing = rest.indexOf("\n  },");
+  const body = closing === -1 ? rest : rest.slice(0, closing);
+  const label = `help ${id}`;
+
+  // Nilainya boleh turun sebaris di bawah nama fieldnya — prettier memindahkan
+  // `summary:` ke baris berikutnya begitu isinya panjang.
+  const pick = (field) => {
+    const found = new RegExp(`\\n\\s*${field}:\\s*(?:\\n\\s*)?"([^"]*)"`).exec(
+      body,
+    );
+    return found ? found[1] : null;
+  };
+
+  // Invarian 47: urutan field wajib sama dengan kontraknya, dan lengkap.
+  const order = ["id", ...[...body.matchAll(/\n {4}(\w+):/g)].map((m) => m[1])];
+  if (order.join(",") !== HELP_FIELD_ORDER.join(",")) {
+    fail(
+      `${label}: urutan field [${order.join(", ")}] tidak sama dengan kontrak [${HELP_FIELD_ORDER.join(", ")}]`,
+    );
+  }
+
+  helpTopics.push({
+    id,
+    slug: pick("slug"),
+    path: pick("path"),
+    group: pick("group"),
+    status: pick("status"),
+  });
+}
+
+// Invarian 48: datanya harus terbaca. Pelajaran dari invarian 8, yang diam
+// berhari-hari karena pemecahnya tidak cocok dan loopnya nol iterasi.
+if (helpTopics.length === 0) {
+  fail(
+    "help: nol topik terbaca dari helpTopics.ts — pemecah `id: \"help-NN\"` tidak cocok lagi, bukan datanya yang kosong",
+  );
+}
+
+const helpSlugs = new Set();
+const helpPaths = new Set();
+let helpPublished = 0;
+let helpDraft = 0;
+
+for (const topic of helpTopics) {
+  const label = `help ${topic.id}`;
+
+  // Invarian 49: slug dan path unik. Dua entri dengan path sama berarti satu
+  // kartu menutupi kartu lain tanpa ada yang kelihatan salah.
+  if (helpSlugs.has(topic.slug)) fail(`${label}: slug "${topic.slug}" ganda`);
+  helpSlugs.add(topic.slug);
+  if (helpPaths.has(topic.path)) fail(`${label}: path "${topic.path}" ganda`);
+  helpPaths.add(topic.path);
+
+  // `path` dipetakan ke berkas halamannya. Grup `using-mindcare` menunjuk ke
+  // luar /help, jadi pemetaannya dari path — bukan dari slug.
+  const pageFile = `app/(user)${topic.path}/page.tsx`;
+  const pageExists = existsSync(join(root, pageFile));
+
+  if (topic.status === "published") {
+    helpPublished += 1;
+
+    // Invarian 50: entri `published` WAJIB punya halaman di disk.
+    if (!pageExists) {
+      fail(
+        `${label} (${topic.slug}): status "published" tapi ${pageFile} tidak ada — kartu itu tautan mati`,
+      );
+    }
+  }
+
+  if (topic.status === "draft") {
+    helpDraft += 1;
+
+    // Invarian 51: entri `draft` boleh belum punya halaman, tapi kalau ada,
+    // halamannya harus masih placeholder. Kalau dokumennya sudah betulan
+    // ditulis dan statusnya lupa dinaikkan, kartunya tetap mati di /help dan
+    // dokumen yang sudah jadi tidak pernah ditemukan siapa pun.
+    if (pageExists && !/NotPublishedYet|NotFound/.test(read(pageFile))) {
+      fail(
+        `${label} (${topic.slug}): status "draft" tapi ${pageFile} bukan placeholder lagi — naikkan statusnya ke "published"`,
+      );
+    }
+  }
+}
+
+// Invarian 52: kelompok `legal-safety` di /help wajib sama isinya dengan blok
+// "Legal & Safety" di footer. Keduanya daftar dokumen yang sama, ditulis dua
+// kali di dua berkas, dan tidak ada yang memaksa keduanya bergerak bersama —
+// persis bentuk bug yang sudah terjadi sekali di repo ini (footer menautkan
+// `/help/verificaion-policy` yang tidak pernah ada).
+const menuSource = read("app/(user)/data/menu.ts");
+const legalSlice = menuSource.slice(
+  menuSource.indexOf('title: "Legal & Safety"'),
+);
+const legalItems = arrayBlock(legalSlice, "items");
+
+if (!legalItems) {
+  fail(
+    'help: blok items di bawah title: "Legal & Safety" tidak ketemu di menu.ts — bandingannya tidak jalan',
+  );
+} else {
+  const footerPaths = [...legalItems.matchAll(/path: "([^"]+)"/g)].map(
+    (m) => m[1],
+  );
+  const helpLegalPaths = helpTopics
+    .filter((topic) => topic.group === "legal-safety")
+    .map((topic) => topic.path);
+
+  const missingInHelp = footerPaths.filter((p) => !helpLegalPaths.includes(p));
+  const missingInFooter = helpLegalPaths.filter(
+    (p) => !footerPaths.includes(p),
+  );
+
+  if (missingInHelp.length > 0) {
+    fail(
+      `help: footer menautkan ${missingInHelp.join(", ")} tapi tidak ada kartunya di helpTopics.ts (grup legal-safety)`,
+    );
+  }
+  if (missingInFooter.length > 0) {
+    fail(
+      `help: helpTopics.ts punya kartu ${missingInFooter.join(", ")} tapi footer tidak menautkannya`,
+    );
   }
 }
 
@@ -452,6 +1443,27 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
+// Pesan ini menyebut JUMLAH tiap entitas dengan sengaja. Invarian 8 pernah diam
+// selama berhari-hari karena pemecahnya tidak cocok dan loopnya nol iterasi;
+// kalau angkanya ditampilkan sejak awal, "0 event" akan langsung kelihatan
+// tanpa perlu menyabotase apa pun dulu.
 console.log(
-  `LOLOS — ${professionals.length} profesional, ${professionalSlugs.size} slug unik, ${articles.length} artikel dengan body & waktu baca konsisten, ${solutions.length} solusi dengan kurikulum & harga konsisten, tautan artikel, solusi & event tersambung semua.`,
+  `LOLOS — ${professionals.length} profesional, ${professionalSlugs.size} slug unik, ${articles.length} artikel dengan body & waktu baca konsisten, ${solutions.length} solusi dengan kurikulum & harga konsisten, ${events.length} event dengan kuota & susunan acara konsisten, ${centres.length} pusat layanan dengan ${centres.length * 7} baris jam & ${centreOfProfessional.size} profesional terdaftar, tautan artikel, solusi & event tersambung semua.`,
+);
+
+// Angka verifikasi dipisah ke barisnya sendiri karena bacanya berbeda: ini bukan
+// "sekian data lolos" melainkan sebaran status per hari ini. `verified` yang
+// turun tanpa ada yang mengedit data berarti ada tanggal yang baru terlewati.
+console.log(
+  `       verifikasi ${verificationsRead}/${verificationsExpected} blok terbaca menurut ${todayJakarta} WIB — ` +
+    VERIFICATION_STATES.map(
+      (state) => `${state} ${statesSeen.get(state) ?? 0}`,
+    ).join(", "),
+);
+
+// Angka help juga dipisah, dengan alasan yang sama: yang menarik bukan "lolos"
+// melainkan berapa dokumen yang masih belum ada. `draft` yang tidak pernah turun
+// selama berminggu-minggu itu utang, bukan keadaan normal.
+console.log(
+  `       help ${helpTopics.length} topik — ${helpPublished} published (halamannya ada di disk), ${helpDraft} draft, ${helpPaths.size} path unik`,
 );

@@ -113,7 +113,7 @@ export const FooterMenu: FooterSection[] = [
       },
       {
         name: "Verification Policy",
-        path: "/help/verificaion-policy",
+        path: "/help/verification-policy",
       },
       {
         name: "Report A Concern",

@@ -22,14 +22,14 @@ export function LeafOrnament({ className }: { className?: string }) {
         strokeLinejoin="round"
       />
       <path
-        d="M106 150C84 142 70 120 70 96C95 102 108 122 106 150Z"
+        d="M100 150C84 142 70 120 70 96C95 102 108 122 106 150Z"
         stroke="var(--brand-purple-600)"
         strokeWidth="2"
         strokeLinejoin="round"
       />
       {/* daun kanan */}
       <path
-        d="M112 172C134 162 146 138 144 114C122 124 110 144 112 172Z"
+        d="M112 172C134 162 140 128 144 114C122 120 100 144 95 172Z"
         stroke="var(--brand-purple-600)"
         strokeWidth="2"
         strokeLinejoin="round"

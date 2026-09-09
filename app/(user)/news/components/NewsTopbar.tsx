@@ -23,7 +23,7 @@ export function NewsTopbar({ active, onChange }: Props) {
       <div className="flex items-center gap-3 shrink-0">
         <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center overflow-hidden">
           <Image
-            src="/images/logo/favicon.ico"
+            src="/images/icon/iconMindcare.ico"
             alt="Execorner"
             width={50}
             height={50}

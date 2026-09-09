@@ -10,6 +10,7 @@ import PageHero from "@/app/components/reusable/PageHero";
 import SearchBar from "@/app/components/reusable/SearchBar";
 import CareCentresGrid from "./section/CareCentresGrid";
 import CentresMapPlaceholder from "./section/CentresMapPlaceholder";
+import { isOpenAt } from "./data/centreHours";
 import type { CareCentre, CareCentreFacets } from "./type/careCentre";
 
 // Satu-satunya client component di fitur ini. `page.tsx` tetap server component
@@ -41,9 +42,20 @@ function matchesQuery(centre: CareCentre, query: string) {
 type CareCentresProps = {
   centres: CareCentre[];
   facets: CareCentreFacets;
+  /**
+   * Acuan waktu tunggal, difiksasi `page.tsx`. Filter "Open now" dan baris jam
+   * di kartu wajib memakai instan yang SAMA — kalau komponen ini memanggil
+   * `new Date()` sendiri, sebuah centre bisa lolos filter "Open now" sementara
+   * kartunya menulis jam yang sudah lewat.
+   */
+  now: string;
 };
 
-export default function CareCentres({ centres, facets }: CareCentresProps) {
+export default function CareCentres({
+  centres,
+  facets,
+  now,
+}: CareCentresProps) {
   const [query, setQuery] = useState("");
   const [city, setCity] = useState(ALL);
   const [kind, setKind] = useState(ALL);
@@ -65,10 +77,13 @@ export default function CareCentres({ centres, facets }: CareCentresProps) {
       ) {
         return false;
       }
-      if (availability === OPEN_NOW && !centre.isOpenNow) return false;
+      // "Open now" dihitung dari jam praktik dan `now`, bukan dari sebuah field
+      // di datanya. Sebelum 24 Agustus 2026 ini membaca `centre.isOpenNow` yang
+      // ditulis tangan — nilainya tidak pernah berubah walau jamnya berubah.
+      if (availability === OPEN_NOW && !isOpenAt(centre, now)) return false;
       return true;
     });
-  }, [centres, query, city, kind, service, availability]);
+  }, [centres, query, city, kind, service, availability, now]);
 
   const isFiltered =
     query.trim() !== "" ||
@@ -163,7 +178,11 @@ export default function CareCentres({ centres, facets }: CareCentresProps) {
           of {centres.length} centres
         </p>
 
-        <CareCentresGrid centres={visibleCentres} className="mt-6" />
+        <CareCentresGrid
+          centres={visibleCentres}
+          now={now}
+          className="mt-6"
+        />
       </Container>
     </div>
   );

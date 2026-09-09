@@ -20,11 +20,19 @@ export interface EventHost {
   logoUrl: string | null;
 }
 
+export interface EventAgendaItem {
+  id: string;
+  time: string;
+  title: string;
+}
+
 export interface MindcareEvent {
   id: string;
   slug: string;
   title: string;
   summary: string;
+  about: string[];
+  agenda: EventAgendaItem[];
   coverImage: string | null;
   location: string | null;
   timeZone: string;

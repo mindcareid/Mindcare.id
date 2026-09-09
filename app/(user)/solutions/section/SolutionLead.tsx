@@ -3,6 +3,10 @@ import { ArrowRight, GraduationCap, MapPin } from "lucide-react";
 import SectionHeader from "@/app/components/reusable/SectionHeader";
 import Tag from "@/app/components/reusable/Tag";
 import VerifiedBadge from "@/app/components/reusable/VerifiedBadge";
+import {
+  VERIFICATION_POLICY_PATH,
+  verificationLabelOf,
+} from "../../data/verification";
 import type { Professional } from "../../professionals/type/professional";
 
 function initialsOf(name: string) {
@@ -15,13 +19,21 @@ function initialsOf(name: string) {
 
 type SolutionLeadProps = {
   professional: Professional;
+  /** Acuan waktu tunggal dari `page.tsx`, ISO string. Dipakai badge verifikasi. */
+  now: string;
 };
 
 // Judulnya "Led by", bukan "Facilitator" atau "Instructor": satu orang yang
 // memimpin rangkaian, sementara pelaksananya bisa lebih dari satu. Kontraknya
 // memang cuma menyimpan SATU slug (`leadProfessionalSlug`), jadi menyebut
 // "Facilitators" akan menjanjikan daftar yang tidak ada datanya.
-export default function SolutionLead({ professional }: SolutionLeadProps) {
+export default function SolutionLead({ professional, now }: SolutionLeadProps) {
+  const verifiedLabel = verificationLabelOf(
+    professional.verification,
+    now,
+    "person",
+  );
+
   return (
     <div>
       <SectionHeader title="Led by" underline />
@@ -36,7 +48,15 @@ export default function SolutionLead({ professional }: SolutionLeadProps) {
             <p className="font-heading text-lg font-semibold text-foreground">
               {professional.fullName}
             </p>
-            {professional.isVerified && <VerifiedBadge />}
+            {/* Tanpa tanggal — aturan yang sama dengan `ProfessionalCentre`:
+                tanggal pemeriksaan hanya muncul di halaman yang orangnya jadi
+                subjek. Di sini subjeknya programnya. */}
+            {verifiedLabel && (
+              <VerifiedBadge
+                label={verifiedLabel}
+                href={VERIFICATION_POLICY_PATH}
+              />
+            )}
           </div>
 
           <p className="mt-1 text-sm text-muted-foreground">

@@ -1,10 +1,12 @@
 import Container from "@/app/components/reusable/Container";
 import SectionHeader from "@/app/components/reusable/SectionHeader";
+import type { CareCentre } from "../../care-centres/type/careCentre";
 import InsightsGrid from "../../insights/section/InsightsGrid";
 import type { Article } from "../../insights/type/article";
 import EventsCardGrid from "../../events/section/EventsCardGrid";
 import type { MindcareEvent } from "../../events/type/event";
 import ProfessionalAbout from "../section/ProfessionalAbout";
+import ProfessionalCentre from "../section/ProfessionalCentre";
 import ProfessionalEducation from "../section/ProfessionalEducation";
 import ProfessionalHero from "../section/ProfessionalHero";
 import ProfessionalServices from "../section/ProfessionalServices";
@@ -13,6 +15,11 @@ import type { Professional } from "../type/professional";
 
 type ProfessionalProfileProps = {
   professional: Professional;
+  /**
+   * Tempat praktiknya, atau `null` kalau belum terikat centre mana pun. Dua dari
+   * lima belas profesional di mock data memang belum, dan itu keadaan yang sah.
+   */
+  centre: CareCentre | null;
   articles: Article[];
   events: MindcareEvent[];
   related: Professional[];
@@ -21,6 +28,7 @@ type ProfessionalProfileProps = {
 
 export default function ProfessionalProfile({
   professional,
+  centre,
   articles,
   events,
   related,
@@ -28,12 +36,23 @@ export default function ProfessionalProfile({
 }: ProfessionalProfileProps) {
   return (
     <div className="min-h-screen">
-      <ProfessionalHero professional={professional} />
+      <ProfessionalHero professional={professional} now={now} />
 
       <Container className="pb-16 md:pb-24">
         <div className="space-y-14 md:space-y-16">
           <ProfessionalAbout professional={professional} />
           <ProfessionalServices professional={professional} />
+
+          {/* Letaknya setelah tarif dan sebelum riwayat pendidikan, mengikuti
+              urutan pertanyaan pembaca: berapa biayanya, di mana tempatnya,
+              baru latar belakangnya.
+
+              Disembunyikan seluruhnya kalau `centre` null — bukan diganti
+              kalimat "Practises independently". Alasannya di
+              `ProfessionalCentre.tsx`: itu akan mengubah ketiadaan data menjadi
+              sebuah pernyataan. */}
+          {centre && <ProfessionalCentre centre={centre} now={now} />}
+
           <ProfessionalEducation professional={professional} />
 
           {articles.length > 0 && (
@@ -66,7 +85,7 @@ export default function ProfessionalProfile({
                 underline
               />
               <div className="mt-6">
-                <ProfessionalsGrid professionals={related} />
+                <ProfessionalsGrid professionals={related} now={now} />
               </div>
             </div>
           )}

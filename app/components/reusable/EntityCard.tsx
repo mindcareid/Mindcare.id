@@ -17,7 +17,19 @@ type EntityCardProps = {
   subtitle?: string;
   imageUrl?: string | null;
   imageAlt?: string;
-  verified?: boolean;
+  /**
+   * Label badge verifikasi, atau `null`/tidak diisi kalau badge tidak boleh
+   * muncul. Bukan boolean: kalau boolean, call site bisa menyalakan badge tanpa
+   * menyebut APA yang diperiksa, dan itu persisnya kekeliruan yang diperbaiki 24
+   * Agustus 2026 — satu kata "Verified" untuk orang dan gedung sekaligus.
+   *
+   * Isinya dihitung call site lewat `verificationLabelOf(v, now, subjek)`.
+   * `EntityCard` sendiri tetap tidak tahu-menahu soal domain: dia cuma merender
+   * teks yang diberikan. Badge di sini TIDAK bisa jadi tautan ke halaman
+   * kebijakan, karena seluruh kartu sudah dibungkus `<Link>` dan tautan bersarang
+   * itu HTML tidak sah — tautannya cuma ada di hero halaman detail.
+   */
+  verifiedLabel?: string | null;
   status?: StatusKind;
   statusLabel?: string;
   tags?: EntityCardTag[];
@@ -45,7 +57,7 @@ export default function EntityCard({
   subtitle,
   imageUrl,
   imageAlt,
-  verified = false,
+  verifiedLabel,
   status,
   statusLabel,
   tags = [],
@@ -87,9 +99,9 @@ export default function EntityCard({
           </span>
         )}
 
-        {(verified || status) && (
+        {(verifiedLabel || status) && (
           <div className="absolute left-3 top-3 flex items-center gap-2">
-            {verified && <VerifiedBadge />}
+            {verifiedLabel && <VerifiedBadge label={verifiedLabel} />}
             {status && (
               <span className="inline-flex items-center rounded-sm border border-border bg-card px-2 py-1">
                 <StatusDot status={status} label={statusLabel} />

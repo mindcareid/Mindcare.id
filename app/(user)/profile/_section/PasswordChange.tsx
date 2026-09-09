@@ -1,5 +1,6 @@
 "use client";
 
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 import RuleItem from "@/app/components/RuleItem";
 import {
   changePasswordSchema,
@@ -130,49 +131,53 @@ export default function ChangePassword() {
         <h2 className="text-lg font-semibold mb-4">Change Password</h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <PasswordInput
-              label="Current Password"
-              register={register}
-              name="oldPassword"
-              error={errors.oldPassword?.message}
-            />
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 lg:gap-8">
+            {/* Kolom kiri: form input */}
+            <div className="flex flex-col gap-4">
+              <PasswordInput
+                label="Current Password"
+                register={register}
+                name="oldPassword"
+                error={errors.oldPassword?.message}
+              />
+              <PasswordInput
+                label="New Password"
+                register={register}
+                name="newPassword"
+                error={errors.newPassword?.message}
+              />
+              <PasswordInput
+                label="Confirm New Password"
+                register={register}
+                name="confirmPassword"
+                error={errors.confirmPassword?.message}
+              />
+            </div>
 
-            <PasswordInput
-              label="New Password"
-              register={register}
-              name="newPassword"
-              error={errors.newPassword?.message}
-            />
-
-            <PasswordInput
-              label="Confirm New Password"
-              register={register}
-              name="confirmPassword"
-              error={errors.confirmPassword?.message}
-            />
-          </div>
-          <div className="text-xs text-gray-500 bg-gray-50 border rounded-lg p-3 mt-2">
-            <RuleItem
-              valid={passwordRules.minLength}
-              label="At least 8 characters include:"
-              showIcon={false}
-            />
-            <ul className="space-y-1">
-              <RuleItem
-                valid={passwordRules.uppercase}
-                label="1 uppercase letter"
-              />
-              <RuleItem
-                valid={passwordRules.lowercase}
-                label="1 lowercase letter"
-              />
-              <RuleItem valid={passwordRules.number} label="1 number" />
-              <RuleItem
-                valid={passwordRules.special}
-                label="1 special character (Eg. .,/?';[]{}`!@#$%^&*()_+=-)"
-              />
-            </ul>
+            <div className="lg:sticky lg:top-4 h-fit">
+              <div className=" text-gray-500 bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <RuleItem
+                  valid={passwordRules.minLength}
+                  label="At least 8 characters include:"
+                  showIcon={false}
+                />
+                <ul className="space-y-1.5 mt-2">
+                  <RuleItem
+                    valid={passwordRules.uppercase}
+                    label="1 uppercase letter"
+                  />
+                  <RuleItem
+                    valid={passwordRules.lowercase}
+                    label="1 lowercase letter"
+                  />
+                  <RuleItem valid={passwordRules.number} label="1 number" />
+                  <RuleItem
+                    valid={passwordRules.special}
+                    label="1 special character (Eg. .,/?';[]{}`!@#$%^&*()_+=-)"
+                  />
+                </ul>
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-col md:flex-row gap-3 pt-6">
@@ -180,7 +185,7 @@ export default function ChangePassword() {
               type="button"
               onClick={() => reset()}
               disabled={isLoading}
-              className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={buttonStyles({ variant: "outline", size: "md" })}
             >
               Cancel
             </button>
@@ -188,7 +193,7 @@ export default function ChangePassword() {
             <button
               type="submit"
               disabled={isLoading}
-              className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={buttonStyles({ size: "md" })}
             >
               {isLoading ? "Changing..." : "Change Password"}
             </button>

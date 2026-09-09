@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { buttonStyles } from "../components/reusable/buttonStyles";
 
 export default function NotFound() {
   return (
@@ -19,9 +20,9 @@ export default function NotFound() {
       </p>
       <Link
         href="/"
-        className="px-6 py-2 border border-blue-500 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all duration-300"
+        className={buttonStyles({ variant: "outline", size: "lg" })}
       >
-        Back to homepage
+        Back to Homepage
       </Link>
     </div>
   );

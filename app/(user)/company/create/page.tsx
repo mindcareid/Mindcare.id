@@ -10,6 +10,7 @@ import {
   CreateCompanyFormData,
 } from "@/lib/validations/auth";
 import TermsCompany from "../component/TermsCompany";
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 type ApiError = {
   message?: string;
 };
@@ -414,8 +415,7 @@ export default function CreateCompanyPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-blue-600 text-white py-3 font-medium
-                       hover:bg-blue-700 transition disabled:opacity-50"
+            className={buttonStyles({ className:"w-full", size: "lg" })}
           >
             {loading ? "Creating..." : "Create Company"}
           </button>

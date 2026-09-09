@@ -11,6 +11,11 @@ import StatusDot from "@/app/components/reusable/StatusDot";
 import Tag from "@/app/components/reusable/Tag";
 import VerifiedBadge from "@/app/components/reusable/VerifiedBadge";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
+import {
+  VERIFICATION_POLICY_PATH,
+  formatCheckedOn,
+  verificationLabelOf,
+} from "../../data/verification";
 import type { Professional } from "../type/professional";
 
 const priceFormatter = new Intl.NumberFormat("id-ID", {
@@ -29,11 +34,24 @@ function initialsOf(name: string) {
 
 type ProfessionalHeroProps = {
   professional: Professional;
+  /**
+   * Acuan waktu tunggal dari `page.tsx`, ISO string. Wajib, karena badge
+   * verifikasi berlaku sampai tanggal tertentu — lihat
+   * `app/(user)/data/verification.ts`.
+   */
+  now: string;
 };
 
 export default function ProfessionalHero({
   professional,
+  now,
 }: ProfessionalHeroProps) {
+  const verifiedLabel = verificationLabelOf(
+    professional.verification,
+    now,
+    "person",
+  );
+
   return (
     <PageHero
       eyebrow={professional.profession}
@@ -51,9 +69,15 @@ export default function ProfessionalHero({
       }
     >
       <div className="flex flex-col gap-5">
-        {(professional.isVerified || professional.isAvailableNow) && (
+        {(verifiedLabel || professional.isAvailableNow) && (
           <div className="flex flex-wrap items-center gap-2">
-            {professional.isVerified && <VerifiedBadge />}
+            {verifiedLabel && (
+              <VerifiedBadge
+                label={verifiedLabel}
+                checkedOn={formatCheckedOn(professional.verification)}
+                href={VERIFICATION_POLICY_PATH}
+              />
+            )}
             {professional.isAvailableNow && (
               <span className="inline-flex items-center rounded-sm border border-border bg-card px-2 py-1">
                 <StatusDot status="online" />

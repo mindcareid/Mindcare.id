@@ -5,6 +5,26 @@ import type {
   CentreService,
 } from "../type/careCentre";
 
+// Perubahan 24 Agustus 2026 (alasan lengkap di `design.md` bagian 20):
+//
+//   - `openingHours` yang dulu satu baris teks ("Sen–Sab, 08.00–20.00") kini
+//     tujuh entri per centre. Jamnya sama dengan teks lamanya, tidak ada jam
+//     baru yang dikarang — cuma bentuknya yang berubah supaya bisa dihitung.
+//   - `isOpenNow` dihapus. Statusnya sekarang dihitung `isOpenAt()` di
+//     `centreHours.ts` dari jam praktik plus waktu sekarang.
+//   - `timeZone` ditambahkan. Denpasar dan Makassar `Asia/Makassar` (WITA),
+//     tujuh sisanya `Asia/Jakarta` (WIB).
+//   - `professionalCount` yang dulu ditulis tangan (7, 5, 4, 12, 3, 6, 4, 10, 5)
+//     sekarang wajib sama dengan `professionalSlugs.length`. Angka lamanya tidak
+//     bisa dibuktikan oleh apa pun; angka barunya bisa dihitung ulang siapa saja
+//     dari daftar slugnya. Konsekuensinya angkanya jadi kecil — dua rumah sakit
+//     di bawah berbunyi 3 dan 2, bukan 12 dan 10.
+//
+// Semua entri tujuh baris ditulis apa adanya, tanpa helper pembangun, supaya
+// harness di `scripts/check-data-invariants.mjs` bisa membacanya dari teks file.
+// Harness itu `.mjs` dan tidak mengimpor TypeScript; kalau jamnya dihasilkan
+// fungsi, invarian "tepat tujuh hari berurutan" tidak bisa diperiksa sama sekali.
+
 const services = {
   konsultasiPsikiatri: {
     id: "svc-1",
@@ -47,9 +67,23 @@ const careCentres: CareCentre[] = [
     name: "Klinik Jiwa Sehat Kemang",
     kind: "Klinik",
     photoUrl: null,
-    isVerified: true,
-    isOpenNow: true,
-    openingHours: "Sen–Sab, 08.00–20.00",
+    verification: {
+      review: "approved",
+      checkedOn: "2026-03-05",
+      validUntil: "2028-03-04",
+      source: "submission",
+    },
+    openingHours: [
+      { day: 1, opens: "08:00", closes: "20:00" },
+      { day: 2, opens: "08:00", closes: "20:00" },
+      { day: 3, opens: "08:00", closes: "20:00" },
+      { day: 4, opens: "08:00", closes: "20:00" },
+      { day: 5, opens: "08:00", closes: "20:00" },
+      { day: 6, opens: "08:00", closes: "20:00" },
+      { day: 7, opens: null, closes: null },
+    ],
+    openingNote: null,
+    timeZone: "Asia/Jakarta",
     services: [
       services.konsultasiPsikiatri,
       services.psikoterapi,
@@ -64,7 +98,8 @@ const careCentres: CareCentre[] = [
     coordinates: { latitude: -6.2615, longitude: 106.8106 },
     phone: "(021) 5550 1180",
     acceptsBpjs: false,
-    professionalCount: 7,
+    professionalSlugs: ["anindita-rahmawati", "jelita-anggraini"],
+    professionalCount: 2,
     createdAt: "2026-04-02T02:00:00.000Z",
   },
   {
@@ -73,9 +108,23 @@ const careCentres: CareCentre[] = [
     name: "Pusat Konseling Cakrawala",
     kind: "Pusat Konseling",
     photoUrl: null,
-    isVerified: true,
-    isOpenNow: true,
-    openingHours: "Sen–Jum, 09.00–18.00",
+    verification: {
+      review: "approved",
+      checkedOn: "2026-01-22",
+      validUntil: "2027-10-31",
+      source: "submission",
+    },
+    openingHours: [
+      { day: 1, opens: "09:00", closes: "18:00" },
+      { day: 2, opens: "09:00", closes: "18:00" },
+      { day: 3, opens: "09:00", closes: "18:00" },
+      { day: 4, opens: "09:00", closes: "18:00" },
+      { day: 5, opens: "09:00", closes: "18:00" },
+      { day: 6, opens: null, closes: null },
+      { day: 7, opens: null, closes: null },
+    ],
+    openingNote: null,
+    timeZone: "Asia/Jakarta",
     services: [
       services.psikoterapi,
       services.konselingKeluarga,
@@ -90,7 +139,8 @@ const careCentres: CareCentre[] = [
     coordinates: { latitude: -6.9147, longitude: 107.6098 },
     phone: "(022) 5550 2214",
     acceptsBpjs: false,
-    professionalCount: 5,
+    professionalSlugs: ["oktavia-rahayu"],
+    professionalCount: 1,
     createdAt: "2026-04-05T02:00:00.000Z",
   },
   {
@@ -99,9 +149,23 @@ const careCentres: CareCentre[] = [
     name: "Klinik Psikologi Adyatma",
     kind: "Klinik",
     photoUrl: null,
-    isVerified: false,
-    isOpenNow: false,
-    openingHours: "Sen–Jum, 10.00–17.00",
+    verification: {
+      review: "pending",
+      checkedOn: null,
+      validUntil: null,
+      source: null,
+    },
+    openingHours: [
+      { day: 1, opens: "10:00", closes: "17:00" },
+      { day: 2, opens: "10:00", closes: "17:00" },
+      { day: 3, opens: "10:00", closes: "17:00" },
+      { day: 4, opens: "10:00", closes: "17:00" },
+      { day: 5, opens: "10:00", closes: "17:00" },
+      { day: 6, opens: null, closes: null },
+      { day: 7, opens: null, closes: null },
+    ],
+    openingNote: null,
+    timeZone: "Asia/Jakarta",
     services: [
       services.tesPsikologi,
       services.konselingAnakRemaja,
@@ -116,7 +180,8 @@ const careCentres: CareCentre[] = [
     coordinates: { latitude: -7.7956, longitude: 110.3695 },
     phone: "(0274) 5550 337",
     acceptsBpjs: false,
-    professionalCount: 4,
+    professionalSlugs: ["chandra-wijaya"],
+    professionalCount: 1,
     createdAt: "2026-04-09T02:00:00.000Z",
   },
   {
@@ -125,9 +190,24 @@ const careCentres: CareCentre[] = [
     name: "RSU Bina Nurani",
     kind: "Rumah Sakit",
     photoUrl: null,
-    isVerified: true,
-    isOpenNow: true,
-    openingHours: "Setiap hari, 24 jam",
+    verification: {
+      review: "approved",
+      checkedOn: "2026-04-14",
+      validUntil: "2029-04-13",
+      source: "registry",
+    },
+    openingHours: [
+      { day: 1, opens: "00:00", closes: "24:00" },
+      { day: 2, opens: "00:00", closes: "24:00" },
+      { day: 3, opens: "00:00", closes: "24:00" },
+      { day: 4, opens: "00:00", closes: "24:00" },
+      { day: 5, opens: "00:00", closes: "24:00" },
+      { day: 6, opens: "00:00", closes: "24:00" },
+      { day: 7, opens: "00:00", closes: "24:00" },
+    ],
+    openingNote:
+      "Jam di atas jam layanan gawat darurat. Poliklinik jiwa mengikuti jadwal dokter.",
+    timeZone: "Asia/Jakarta",
     services: [
       services.konsultasiPsikiatri,
       services.gawatDarurat,
@@ -143,7 +223,12 @@ const careCentres: CareCentre[] = [
     coordinates: { latitude: -7.2575, longitude: 112.7521 },
     phone: "(031) 5550 4460",
     acceptsBpjs: true,
-    professionalCount: 12,
+    professionalSlugs: [
+      "dian-puspitasari",
+      "kurniawan-adiputra",
+      "laila-fitriani",
+    ],
+    professionalCount: 3,
     createdAt: "2026-04-12T02:00:00.000Z",
   },
   {
@@ -152,9 +237,23 @@ const careCentres: CareCentre[] = [
     name: "Puskesmas Cempaka Wangi",
     kind: "Puskesmas",
     photoUrl: null,
-    isVerified: true,
-    isOpenNow: true,
-    openingHours: "Sen–Sab, 07.30–15.00",
+    verification: {
+      review: "approved",
+      checkedOn: "2026-05-20",
+      validUntil: "2029-12-31",
+      source: "registry",
+    },
+    openingHours: [
+      { day: 1, opens: "07:30", closes: "15:00" },
+      { day: 2, opens: "07:30", closes: "15:00" },
+      { day: 3, opens: "07:30", closes: "15:00" },
+      { day: 4, opens: "07:30", closes: "15:00" },
+      { day: 5, opens: "07:30", closes: "15:00" },
+      { day: 6, opens: "07:30", closes: "15:00" },
+      { day: 7, opens: null, closes: null },
+    ],
+    openingNote: "Tutup pada hari libur nasional.",
+    timeZone: "Asia/Jakarta",
     services: [services.konsultasiPsikiatri, services.konselingKeluarga],
     address: {
       street: "Jl. Cempaka Wangi No. 4",
@@ -165,7 +264,8 @@ const careCentres: CareCentre[] = [
     coordinates: { latitude: -6.1862, longitude: 106.834 },
     phone: "(021) 5550 5502",
     acceptsBpjs: true,
-    professionalCount: 3,
+    professionalSlugs: ["nadia-kusumawardani"],
+    professionalCount: 1,
     createdAt: "2026-04-16T02:00:00.000Z",
   },
   {
@@ -174,9 +274,23 @@ const careCentres: CareCentre[] = [
     name: "Klinik Sahabat Pikiran",
     kind: "Klinik",
     photoUrl: null,
-    isVerified: false,
-    isOpenNow: true,
-    openingHours: "Sen–Sab, 09.00–19.00",
+    verification: {
+      review: "none",
+      checkedOn: null,
+      validUntil: null,
+      source: null,
+    },
+    openingHours: [
+      { day: 1, opens: "09:00", closes: "19:00" },
+      { day: 2, opens: "09:00", closes: "19:00" },
+      { day: 3, opens: "09:00", closes: "19:00" },
+      { day: 4, opens: "09:00", closes: "19:00" },
+      { day: 5, opens: "09:00", closes: "19:00" },
+      { day: 6, opens: "09:00", closes: "19:00" },
+      { day: 7, opens: null, closes: null },
+    ],
+    openingNote: null,
+    timeZone: "Asia/Jakarta",
     services: [
       services.psikoterapi,
       services.konselingAnakRemaja,
@@ -191,7 +305,8 @@ const careCentres: CareCentre[] = [
     coordinates: { latitude: 3.5952, longitude: 98.6722 },
     phone: "(061) 5550 6318",
     acceptsBpjs: false,
-    professionalCount: 6,
+    professionalSlugs: ["fajar-ramadhan"],
+    professionalCount: 1,
     createdAt: "2026-04-20T02:00:00.000Z",
   },
   {
@@ -200,9 +315,23 @@ const careCentres: CareCentre[] = [
     name: "Pusat Konseling Bali Tenang",
     kind: "Pusat Konseling",
     photoUrl: null,
-    isVerified: true,
-    isOpenNow: false,
-    openingHours: "Sen–Jum, 09.00–17.00",
+    verification: {
+      review: "approved",
+      checkedOn: "2026-02-09",
+      validUntil: "2027-09-30",
+      source: "submission",
+    },
+    openingHours: [
+      { day: 1, opens: "09:00", closes: "17:00" },
+      { day: 2, opens: "09:00", closes: "17:00" },
+      { day: 3, opens: "09:00", closes: "17:00" },
+      { day: 4, opens: "09:00", closes: "17:00" },
+      { day: 5, opens: "09:00", closes: "17:00" },
+      { day: 6, opens: null, closes: null },
+      { day: 7, opens: null, closes: null },
+    ],
+    openingNote: null,
+    timeZone: "Asia/Makassar",
     services: [
       services.konselingKeluarga,
       services.psikoterapi,
@@ -217,7 +346,8 @@ const careCentres: CareCentre[] = [
     coordinates: { latitude: -8.6705, longitude: 115.2126 },
     phone: "(0361) 5550 771",
     acceptsBpjs: false,
-    professionalCount: 4,
+    professionalSlugs: ["gita-maheswari"],
+    professionalCount: 1,
     createdAt: "2026-04-24T02:00:00.000Z",
   },
   {
@@ -226,9 +356,24 @@ const careCentres: CareCentre[] = [
     name: "RSU Sekar Arum",
     kind: "Rumah Sakit",
     photoUrl: null,
-    isVerified: true,
-    isOpenNow: true,
-    openingHours: "Setiap hari, 24 jam",
+    verification: {
+      review: "approved",
+      checkedOn: "2026-06-02",
+      validUntil: "2030-06-01",
+      source: "registry",
+    },
+    openingHours: [
+      { day: 1, opens: "00:00", closes: "24:00" },
+      { day: 2, opens: "00:00", closes: "24:00" },
+      { day: 3, opens: "00:00", closes: "24:00" },
+      { day: 4, opens: "00:00", closes: "24:00" },
+      { day: 5, opens: "00:00", closes: "24:00" },
+      { day: 6, opens: "00:00", closes: "24:00" },
+      { day: 7, opens: "00:00", closes: "24:00" },
+    ],
+    openingNote:
+      "Jam di atas jam layanan gawat darurat. Poliklinik jiwa mengikuti jadwal dokter.",
+    timeZone: "Asia/Jakarta",
     services: [
       services.konsultasiPsikiatri,
       services.gawatDarurat,
@@ -244,7 +389,8 @@ const careCentres: CareCentre[] = [
     coordinates: { latitude: -6.9932, longitude: 110.4203 },
     phone: "(024) 5550 8890",
     acceptsBpjs: true,
-    professionalCount: 10,
+    professionalSlugs: ["hendra-saputra", "mahesa-pratama"],
+    professionalCount: 2,
     createdAt: "2026-04-28T02:00:00.000Z",
   },
   {
@@ -253,9 +399,23 @@ const careCentres: CareCentre[] = [
     name: "Klinik Anindya Mandiri",
     kind: "Klinik",
     photoUrl: null,
-    isVerified: false,
-    isOpenNow: true,
-    openingHours: "Sen–Sab, 08.00–18.00",
+    verification: {
+      review: "approved",
+      checkedOn: "2024-09-11",
+      validUntil: "2026-06-30",
+      source: "submission",
+    },
+    openingHours: [
+      { day: 1, opens: "08:00", closes: "18:00" },
+      { day: 2, opens: "08:00", closes: "18:00" },
+      { day: 3, opens: "08:00", closes: "18:00" },
+      { day: 4, opens: "08:00", closes: "18:00" },
+      { day: 5, opens: "08:00", closes: "18:00" },
+      { day: 6, opens: "08:00", closes: "18:00" },
+      { day: 7, opens: null, closes: null },
+    ],
+    openingNote: null,
+    timeZone: "Asia/Makassar",
     services: [
       services.tesPsikologi,
       services.psikoterapi,
@@ -271,7 +431,8 @@ const careCentres: CareCentre[] = [
     coordinates: { latitude: -5.1477, longitude: 119.4327 },
     phone: "(0411) 5550 913",
     acceptsBpjs: true,
-    professionalCount: 5,
+    professionalSlugs: ["intan-larasati"],
+    professionalCount: 1,
     createdAt: "2026-05-02T02:00:00.000Z",
   },
 ];
@@ -284,6 +445,24 @@ export async function getCareCentreBySlug(
   slug: string,
 ): Promise<CareCentre | null> {
   return careCentres.find((item) => item.slug === slug) ?? null;
+}
+
+/**
+ * Centre tempat seorang profesional praktik.
+ *
+ * Arah relasinya dari centre ke profesional (`professionalSlugs`), jadi
+ * pencariannya harus menyapu daftar centre — bukan membaca sebuah field di
+ * profesionalnya. Mengembalikan `null` untuk profesional yang praktik mandiri,
+ * dan itu keadaan yang sah, bukan data yang belum diisi.
+ */
+export async function getCentreOfProfessional(
+  professionalSlug: string,
+): Promise<CareCentre | null> {
+  return (
+    careCentres.find((centre) =>
+      centre.professionalSlugs.includes(professionalSlug),
+    ) ?? null
+  );
 }
 
 export async function getCareCentreFacets(): Promise<CareCentreFacets> {

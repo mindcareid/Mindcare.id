@@ -5,6 +5,7 @@ import { getSolutions } from "./solutions/data/solutions";
 import { getUpcomingEvents } from "./events/data/events";
 import { getArticles } from "./insights/data/articles";
 const HOME_SECTION_LIMIT = 3;
+export const revalidate = 300;
 
 export default async function UserPage() {
   const now = new Date().toISOString();

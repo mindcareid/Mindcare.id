@@ -32,11 +32,22 @@ const sortOptions: SortOption[] = [
 type ProfessionalsProps = {
   professionals: Professional[];
   facets: ProfessionalFacets;
+  /**
+   * Acuan waktu tunggal dari `page.tsx`, ISO string.
+   *
+   * Ditambahkan 24 Agustus 2026, pola yang sama dengan `CareCentres.tsx`. Wajib
+   * datang dari server: kalau komponen ini memanggil `Date.now()` sendiri, render
+   * server dan hidrasi klien bisa berbeda dan React akan mengeluh soal hidrasi —
+   * dan yang lebih buruk, kartu di halaman ini bisa berbeda pendapat dengan hero
+   * di halaman detail soal orang yang sama.
+   */
+  now: string;
 };
 
 export default function Professionals({
   professionals,
   facets,
+  now,
 }: ProfessionalsProps) {
   const [query, setQuery] = useState("");
   const [filters, setFilters] =
@@ -146,23 +157,6 @@ export default function Professionals({
               onToggle={toggleFilter}
               onReset={resetAll}
             />
-            <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-              <h3 className="font-heading text-xl font-semibold text-foreground">
-                Not sure where to start?
-              </h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Take our short quiz and we will point you to the right kind of
-                support.
-              </p>
-              <Button
-                variant="outline"
-                className="mt-4 w-full"
-                disabled
-                title="Coming soon"
-              >
-                Take the quiz
-              </Button>
-            </div>
           </div>
 
           <div>
@@ -193,6 +187,7 @@ export default function Professionals({
 
             <ProfessionalsGrid
               professionals={visible}
+              now={now}
               resetAction={
                 <Button variant="outline" onClick={resetAll}>
                   Reset all filters
