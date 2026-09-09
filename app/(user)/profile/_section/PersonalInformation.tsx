@@ -1,8 +1,8 @@
 "use client";
-import { formatDate } from "@/lib/utils/FormatDate";
+//import { formatDate } from "@/lib/utils/FormatDate";
 import { IoIosPhonePortrait } from "react-icons/io";
 import { MdAlternateEmail, MdEmail } from "react-icons/md";
-import { FaRegCalendarCheck } from "react-icons/fa6";
+//import { FaRegCalendarCheck } from "react-icons/fa6";
 import { useForm, UseFormRegister } from "react-hook-form";
 import Image from "next/image";
 import { useState } from "react";
@@ -206,6 +206,7 @@ export default function PersonalInformation({ user }: { user: User }) {
       toast.success("Profile updated successfully");
       reset(data);
     } catch (error) {
+      console.error("Update profile error:", error);
       setLocalUser(previousUser);
       toast.error("Update failed");
     } finally {

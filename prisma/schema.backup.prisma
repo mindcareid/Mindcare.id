@@ -7,11 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | ENUMS
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| ENUMS
+|--------------------------------------------------------------------------
+*/
 
 enum UserRole {
   SUPERADMIN
@@ -21,9 +21,9 @@ enum UserRole {
 }
 
 enum UserGender {
-  male
-  female
-  other
+  MALE
+  FEMALE
+  OTHER
 }
 
 enum CompanyStatus {
@@ -168,34 +168,34 @@ enum SolutionType {
   OTHER
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | USER
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| USER
+|--------------------------------------------------------------------------
+*/
 
 model User {
   id Int @id @default(autoincrement())
 
-  email    String @unique @db.VarChar(255)
-  username String @unique @db.VarChar(100)
-  name     String @db.VarChar(255)
+  email    String  @unique @db.VarChar(255)
+  username String  @unique @db.VarChar(100)
+  name     String  @db.VarChar(255)
 
   password String? @db.VarChar(255)
 
-  emailVerified             Boolean   @default(false)
-  emailVerifiedAt           DateTime?
-  emailVerificationToken    String?   @unique @db.VarChar(255)
-  emailVerificationExpires  DateTime?
-  emailResendCooldown       DateTime?
-  emailVerificationAttempts Int       @default(0)
+  emailVerified            Boolean   @default(false)
+  emailVerifiedAt          DateTime?
+  emailVerificationToken   String?   @unique @db.VarChar(255)
+  emailVerificationExpires DateTime?
+  emailResendCooldown      DateTime?
+  emailVerificationAttempts Int      @default(0)
 
   resetPasswordToken   String?   @unique @db.VarChar(255)
   resetPasswordExpires DateTime?
 
-  phoneNumber              String?   @unique @db.VarChar(50)
-  phoneVerified            Boolean   @default(false)
-  phoneVerificationCode    String?   @db.VarChar(20)
+  phoneNumber          String?   @unique @db.VarChar(50)
+  phoneVerified        Boolean   @default(false)
+  phoneVerificationCode String?  @db.VarChar(20)
   phoneVerificationExpires DateTime?
 
   bio      String? @db.Text
@@ -211,14 +211,14 @@ model User {
   facebook  String? @db.VarChar(255)
   linkedin  String? @db.VarChar(255)
 
-  role      UserRole  @default(USER)
-  isActive  Boolean   @default(true)
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
   deletedAt DateTime?
 
-  companies     CompanyUser[]
-  professional  Professional?
-  orders        Order[]
-  notifications Notification[]
+  companies      CompanyUser[]
+  professional   Professional?
+  orders         Order[]
+  notifications  Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -227,11 +227,11 @@ model User {
   @@index([deletedAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | COMPANY / ORGANIZATION
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| COMPANY / ORGANIZATION
+|--------------------------------------------------------------------------
+*/
 
 model Company {
   id Int @id @default(autoincrement())
@@ -241,10 +241,10 @@ model Company {
   publicId    String? @unique @db.VarChar(255)
   description String? @db.Text
 
-  logo    String? @db.VarChar(500)
-  website String? @db.VarChar(500)
-  email   String? @db.VarChar(255)
-  phone   String? @db.VarChar(50)
+  logo        String? @db.VarChar(500)
+  website     String? @db.VarChar(500)
+  email       String? @db.VarChar(255)
+  phone       String? @db.VarChar(50)
 
   instagram String? @db.VarChar(255)
   facebook  String? @db.VarChar(255)
@@ -259,14 +259,14 @@ model Company {
   latitude  Decimal? @db.Decimal(10, 7)
   longitude Decimal? @db.Decimal(10, 7)
 
-  status       CompanyStatus      @default(PENDING)
-  verification VerificationStatus @default(UNVERIFIED)
+  status           CompanyStatus     @default(PENDING)
+  verification     VerificationStatus @default(UNVERIFIED)
 
   isFeatured Boolean @default(false)
 
   deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   users         CompanyUser[]
   careCentres   CareCentre[]
@@ -281,11 +281,11 @@ model Company {
   @@index([deletedAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | COMPANY USERS
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| COMPANY USERS
+|--------------------------------------------------------------------------
+*/
 
 model CompanyUser {
   id Int @id @default(autoincrement())
@@ -307,17 +307,129 @@ model CompanyUser {
   @@index([userId, status])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | CARE CENTRE
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| PROFESSIONAL
+|--------------------------------------------------------------------------
+*/
+
+model Professional {
+  id Int @id @default(autoincrement())
+
+  userId Int @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  publicId String? @unique @db.VarChar(255)
+  slug     String  @unique @db.VarChar(255)
+
+  headline String? @db.VarChar(255)
+  bio      String? @db.Text
+
+  availability ProfessionalAvailability @default(AVAILABLE)
+  listingStatus ListingStatus @default(DRAFT)
+
+  verification VerificationStatus @default(UNVERIFIED)
+
+  isFeatured Boolean @default(false)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companies ProfessionalCompany[]
+  specialties ProfessionalSpecialty[]
+  media       Media[]
+
+  @@index([listingStatus, isFeatured])
+  @@index([verification])
+}
+
+/*
+|--------------------------------------------------------------------------
+| PROFESSIONAL <-> COMPANY
+|--------------------------------------------------------------------------
+*/
+
+model ProfessionalCompany {
+  professionalId Int
+  companyId     Int
+
+  professional Professional @relation(
+    fields: [professionalId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  company Company @relation(
+    fields: [companyId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  role      String?  @db.VarChar(255)
+  isPrimary Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@id([professionalId, companyId])
+  @@index([companyId])
+}
+
+/*
+|--------------------------------------------------------------------------
+| PROFESSIONAL SPECIALTY
+|--------------------------------------------------------------------------
+*/
+
+model ProfessionalSpecialty {
+  professionalId Int
+  specialtyId    Int
+
+  professional Professional @relation(
+    fields: [professionalId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  specialty Specialty @relation(
+    fields: [specialtyId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@id([professionalId, specialtyId])
+  @@index([specialtyId])
+}
+
+model Specialty {
+  id Int @id @default(autoincrement())
+
+  name String @db.VarChar(255)
+  slug String @unique @db.VarChar(255)
+
+  isActive Boolean @default(true)
+
+  professionals ProfessionalSpecialty[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/*
+|--------------------------------------------------------------------------
+| CARE CENTRE
+|--------------------------------------------------------------------------
+*/
 
 model CareCentre {
   id Int @id @default(autoincrement())
 
   companyId Int
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company   Company @relation(
+    fields: [companyId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   name String @db.VarChar(255)
   slug String @unique @db.VarChar(255)
@@ -328,11 +440,11 @@ model CareCentre {
 
   type CareCentreType
 
-  listingStatus ListingStatus      @default(DRAFT)
-  verification  VerificationStatus @default(UNVERIFIED)
+  listingStatus ListingStatus @default(DRAFT)
+  verification VerificationStatus @default(UNVERIFIED)
 
-  logo       String? @db.VarChar(500)
-  coverImage String? @db.VarChar(500)
+  logo        String? @db.VarChar(500)
+  coverImage  String? @db.VarChar(500)
 
   phone   String? @db.VarChar(50)
   email   String? @db.VarChar(255)
@@ -353,8 +465,8 @@ model CareCentre {
   isFeatured Boolean @default(false)
 
   deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   services      CareCentreService[]
   professionals CareCentreProfessional[]
@@ -367,11 +479,11 @@ model CareCentre {
   @@index([deletedAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | CARE CENTRE SERVICE
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| CARE CENTRE SERVICE
+|--------------------------------------------------------------------------
+*/
 
 model CareCentreService {
   id Int @id @default(autoincrement())
@@ -379,14 +491,21 @@ model CareCentreService {
   careCentreId Int
   serviceId    Int
 
-  careCentre CareCentre @relation(fields: [careCentreId], references: [id], onDelete: Cascade)
+  careCentre CareCentre @relation(
+    fields: [careCentreId],
+    references: [id],
+    onDelete: Cascade
+  )
 
-  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  service Service @relation(
+    fields: [serviceId],
+    references: [id],
+    onDelete: Cascade
+  )
 
-  createdAt     DateTime              @default(now())
-  professionals ProfessionalService[]
+  createdAt DateTime @default(now())
 
-  @@unique([careCentreId, serviceId])
+  @@id([careCentreId, serviceId])
   @@index([serviceId])
 }
 
@@ -402,22 +521,56 @@ model Service {
 
   careCentres CareCentreService[]
 
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  professionalServices ProfessionalService[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | SOLUTION
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| CARE CENTRE <-> PROFESSIONAL
+|--------------------------------------------------------------------------
+*/
+
+model CareCentreProfessional {
+  careCentreId  Int
+  professionalId Int
+
+  careCentre CareCentre @relation(
+    fields: [careCentreId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  professional Professional @relation(
+    fields: [professionalId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  role      String?  @db.VarChar(255)
+  isPrimary Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@id([careCentreId, professionalId])
+  @@index([professionalId])
+}
+
+/*
+|--------------------------------------------------------------------------
+| SOLUTION
+|--------------------------------------------------------------------------
+*/
 
 model Solution {
   id Int @id @default(autoincrement())
 
   companyId Int
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company   Company @relation(
+    fields: [companyId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   name String @db.VarChar(255)
   slug String @unique @db.VarChar(255)
@@ -432,14 +585,14 @@ model Solution {
   coverImage String? @db.VarChar(500)
   logo       String? @db.VarChar(500)
 
-  listingStatus ListingStatus      @default(DRAFT)
+  listingStatus ListingStatus @default(DRAFT)
   verification  VerificationStatus @default(UNVERIFIED)
 
   isFeatured Boolean @default(false)
 
   deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   categories SolutionCategoryMap[]
   audiences  SolutionAudienceMap[]
@@ -452,11 +605,11 @@ model Solution {
   @@index([deletedAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | SOLUTION CATEGORY
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| SOLUTION CATEGORY
+|--------------------------------------------------------------------------
+*/
 
 model SolutionCategory {
   id Int @id @default(autoincrement())
@@ -467,7 +620,7 @@ model SolutionCategory {
   description String? @db.Text
   icon        String? @db.VarChar(255)
 
-  orderIndex Int     @default(0)
+  orderIndex Int @default(0)
   isActive   Boolean @default(true)
 
   solutions SolutionCategoryMap[]
@@ -482,19 +635,27 @@ model SolutionCategoryMap {
   solutionId Int
   categoryId Int
 
-  solution Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  solution Solution @relation(
+    fields: [solutionId],
+    references: [id],
+    onDelete: Cascade
+  )
 
-  category SolutionCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category SolutionCategory @relation(
+    fields: [categoryId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   @@id([solutionId, categoryId])
   @@index([categoryId])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | SOLUTION AUDIENCE
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| SOLUTION AUDIENCE
+|--------------------------------------------------------------------------
+*/
 
 model SolutionAudience {
   id Int @id @default(autoincrement())
@@ -514,24 +675,32 @@ model SolutionAudienceMap {
   solutionId Int
   audienceId Int
 
-  solution Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  solution Solution @relation(
+    fields: [solutionId],
+    references: [id],
+    onDelete: Cascade
+  )
 
-  audience SolutionAudience @relation(fields: [audienceId], references: [id], onDelete: Cascade)
+  audience SolutionAudience @relation(
+    fields: [audienceId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   @@id([solutionId, audienceId])
   @@index([audienceId])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | MEDIA
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| MEDIA
+|--------------------------------------------------------------------------
+*/
 
 model Media {
   id Int @id @default(autoincrement())
 
-  url      String  @db.VarChar(1000)
+  url      String @db.VarChar(1000)
   publicId String? @db.VarChar(500)
 
   type MediaType @default(IMAGE)
@@ -543,13 +712,29 @@ model Media {
   careCentreId   Int?
   professionalId Int?
 
-  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company Company? @relation(
+    fields: [companyId],
+    references: [id],
+    onDelete: Cascade
+  )
 
-  solution Solution? @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  solution Solution? @relation(
+    fields: [solutionId],
+    references: [id],
+    onDelete: Cascade
+  )
 
-  careCentre CareCentre? @relation(fields: [careCentreId], references: [id], onDelete: Cascade)
+  careCentre CareCentre? @relation(
+    fields: [careCentreId],
+    references: [id],
+    onDelete: Cascade
+  )
 
-  professional Professional? @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  professional Professional? @relation(
+    fields: [professionalId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   sortOrder Int @default(0)
 
@@ -561,11 +746,11 @@ model Media {
   @@index([professionalId, sortOrder])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | NOTIFICATION
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| NOTIFICATION
+|--------------------------------------------------------------------------
+*/
 
 model Notification {
   id Int @id @default(autoincrement())
@@ -573,8 +758,8 @@ model Notification {
   userId Int
 
   type    NotificationType
-  title   String           @db.VarChar(255)
-  message String           @db.Text
+  title   String @db.VarChar(255)
+  message String @db.Text
 
   data Json?
 
@@ -582,7 +767,11 @@ model Notification {
 
   status NotificationStatus @default(PENDING)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   createdAt DateTime @default(now())
 
@@ -591,11 +780,11 @@ model Notification {
   @@index([status])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | HERO / CMS
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| HERO / CMS
+|--------------------------------------------------------------------------
+*/
 
 model HeroSlider {
   id Int @id @default(autoincrement())
@@ -625,12 +814,12 @@ model HeroSlider {
 model WhyUs {
   id Int @id @default(autoincrement())
 
-  title       String  @db.VarChar(255)
+  title       String @db.VarChar(255)
   description String? @db.Text
 
-  image         String? @db.VarChar(500)
-  publicId      String? @db.VarChar(500)
-  hoverImage    String? @db.VarChar(500)
+  image        String? @db.VarChar(500)
+  publicId     String? @db.VarChar(500)
+  hoverImage   String? @db.VarChar(500)
   hoverPublicId String? @db.VarChar(500)
 
   type WhyUsType @default(WHY_US)
@@ -655,8 +844,8 @@ model AboutSection {
   title       String @db.VarChar(255)
   description String @db.Text
 
-  imageUrl String? @db.VarChar(500)
-  publicId String? @db.VarChar(500)
+  imageUrl  String? @db.VarChar(500)
+  publicId  String? @db.VarChar(500)
 
   orderIndex Int @default(0)
 
@@ -670,11 +859,11 @@ model AboutSection {
   @@index([isActive, orderIndex])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | EVENT
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| EVENT
+|--------------------------------------------------------------------------
+*/
 
 model Event {
   id Int @id @default(autoincrement())
@@ -691,7 +880,7 @@ model Event {
 
   timeZone String @default("Asia/Jakarta") @db.VarChar(100)
 
-  price    Int    @default(0)
+  price    Int @default(0)
   currency String @default("IDR") @db.VarChar(10)
 
   quota Int?
@@ -706,13 +895,19 @@ model Event {
   status EventStatus @default(DRAFT)
 
   companyId Int
-  company   Company @relation(fields: [companyId], references: [id])
+  company   Company @relation(
+    fields: [companyId],
+    references: [id]
+  )
 
   categoryId Int
-  category   EventCategory @relation(fields: [categoryId], references: [id])
+  category   EventCategory @relation(
+    fields: [categoryId],
+    references: [id]
+  )
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   deletedAt DateTime?
 
   orders         Order[]
@@ -725,11 +920,11 @@ model Event {
   @@index([deletedAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | EVENT CATEGORY
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| EVENT CATEGORY
+|--------------------------------------------------------------------------
+*/
 
 model EventCategory {
   id Int @id @default(autoincrement())
@@ -745,11 +940,11 @@ model EventCategory {
   updatedAt DateTime @updatedAt
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | INDUSTRY
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| INDUSTRY
+|--------------------------------------------------------------------------
+*/
 
 model Industry {
   id Int @id @default(autoincrement())
@@ -769,19 +964,27 @@ model EventIndustry {
   eventId    Int
   industryId Int
 
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event Event @relation(
+    fields: [eventId],
+    references: [id],
+    onDelete: Cascade
+  )
 
-  industry Industry @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  industry Industry @relation(
+    fields: [industryId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   @@id([eventId, industryId])
   @@index([industryId])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | ARTICLE / INSIGHTS
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| ARTICLE / INSIGHTS
+|--------------------------------------------------------------------------
+*/
 
 model Article {
   id Int @id @default(autoincrement())
@@ -816,11 +1019,11 @@ model Article {
   @@index([deletedAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | ORDERS
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| ORDERS
+|--------------------------------------------------------------------------
+*/
 
 model Order {
   id String @id @default(cuid())
@@ -828,9 +1031,15 @@ model Order {
   eventId Int
   userId  Int
 
-  event Event @relation(fields: [eventId], references: [id])
+  event Event @relation(
+    fields: [eventId],
+    references: [id]
+  )
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(
+    fields: [userId],
+    references: [id]
+  )
 
   amount   Int
   currency String @default("IDR") @db.VarChar(10)
@@ -853,18 +1062,22 @@ model Order {
   @@index([status, createdAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | PAYMENT LOG
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| PAYMENT LOG
+|--------------------------------------------------------------------------
+*/
 
 model PaymentLog {
   id String @id @default(cuid())
 
   orderId String
 
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order @relation(
+    fields: [orderId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   provider String @db.VarChar(50)
 
@@ -878,21 +1091,25 @@ model PaymentLog {
   @@index([provider, status])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | TICKET
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| TICKET
+|--------------------------------------------------------------------------
+*/
 
 model Ticket {
   id String @id @default(cuid())
 
   orderId String
 
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order @relation(
+    fields: [orderId],
+    references: [id],
+    onDelete: Cascade
+  )
 
-  attendeeName  String  @db.VarChar(255)
-  attendeeEmail String  @db.VarChar(255)
+  attendeeName  String @db.VarChar(255)
+  attendeeEmail String @db.VarChar(255)
   attendeePhone String? @db.VarChar(50)
 
   attendeeData Json
@@ -901,7 +1118,7 @@ model Ticket {
 
   qrCode String? @db.Text
 
-  isCheckedIn Boolean   @default(false)
+  isCheckedIn Boolean @default(false)
   checkedAt   DateTime?
 
   createdAt DateTime @default(now())
@@ -912,23 +1129,27 @@ model Ticket {
   @@index([isCheckedIn, checkedAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | EVENT ATTENDEE FIELDS
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| EVENT ATTENDEE FIELDS
+|--------------------------------------------------------------------------
+*/
 
 model EventAttendeeField {
   id String @id @default(cuid())
 
   eventId Int
 
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event Event @relation(
+    fields: [eventId],
+    references: [id],
+    onDelete: Cascade
+  )
 
-  label    String            @db.VarChar(255)
-  key      String            @db.VarChar(100)
+  label    String @db.VarChar(255)
+  key      String @db.VarChar(100)
   type     AttendeeFieldType
-  required Boolean           @default(false)
+  required Boolean @default(false)
 
   options Json?
 
@@ -940,17 +1161,17 @@ model EventAttendeeField {
   @@index([eventId, sortOrder])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | CONTACT MESSAGE
- * |--------------------------------------------------------------------------
- */
+/*
+|--------------------------------------------------------------------------
+| CONTACT MESSAGE
+|--------------------------------------------------------------------------
+*/
 
 model ContactMessage {
   id Int @id @default(autoincrement())
 
-  name        String  @db.VarChar(255)
-  email       String  @db.VarChar(255)
+  name        String @db.VarChar(255)
+  email       String @db.VarChar(255)
   phoneNumber String? @db.VarChar(50)
 
   subject String @db.VarChar(255)
@@ -966,20 +1187,21 @@ model ContactMessage {
   @@index([status, createdAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | PROFESSIONAL
- * |--------------------------------------------------------------------------
- */
+
+/*
+|--------------------------------------------------------------------------
+| PROFESSIONAL
+|--------------------------------------------------------------------------
+*/
 
 model Professional {
   id Int @id @default(autoincrement())
 
-  userId Int  @unique
+  userId Int @unique
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  publicId String? @unique @db.VarChar(255)
   slug     String  @unique @db.VarChar(255)
+  publicId String? @unique @db.VarChar(255)
 
   displayName String? @db.VarChar(255)
   headline    String? @db.VarChar(255)
@@ -987,35 +1209,28 @@ model Professional {
 
   profileImage String? @db.VarChar(500)
 
-  availability ProfessionalAvailability @default(AVAILABLE)
-
-  verification       VerificationStatus @default(UNVERIFIED)
   verificationStatus VerificationStatus @default(UNVERIFIED)
-
-  listingStatus ListingStatus @default(DRAFT)
+  listingStatus      ListingStatus      @default(DRAFT)
 
   isFeatured Boolean @default(false)
 
   deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  companies   ProfessionalCompany[]
   specialties ProfessionalSpecialty[]
-  media       Media[]
-
   locations   ProfessionalLocation[]
   educations  ProfessionalEducation[]
   experiences ProfessionalExperience[]
   credentials ProfessionalCredential[]
-  services    ProfessionalService[]
-  careCentres CareCentreProfessional[]
 
-  languages         ProfessionalLanguage[]
+  companies ProfessionalCompany[]
+  services  ProfessionalService[]
+
+  languages        ProfessionalLanguage[]
   professionalTypes ProfessionalTypeMap[]
 
   @@index([listingStatus, isFeatured])
-  @@index([verification])
   @@index([verificationStatus])
   @@index([deletedAt])
 }
@@ -1123,7 +1338,7 @@ model ProfessionalEducation {
 
   professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
 
-  institution String  @db.VarChar(255)
+  institution String @db.VarChar(255)
   degree      String? @db.VarChar(255)
   field       String? @db.VarChar(255)
 
@@ -1198,9 +1413,7 @@ model ProfessionalService {
 
   service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
-  createdAt           DateTime           @default(now())
-  careCentreService   CareCentreService? @relation(fields: [careCentreServiceId], references: [id])
-  careCentreServiceId Int?
+  createdAt DateTime @default(now())
 
   @@id([professionalId, serviceId])
   @@index([serviceId])
