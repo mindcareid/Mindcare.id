@@ -46,7 +46,7 @@ export async function PUT(
       type,
       required,
       options: options ?? null,
-      order,
+      sortOrder: order,
     },
   });
 

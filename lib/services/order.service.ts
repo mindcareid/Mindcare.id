@@ -18,7 +18,7 @@ export async function getOrdersByUserId(userId: number) {
       },
       _count: {
         select: {
-          ticket: true,
+          tickets: true,
         },
       },
     },
@@ -42,11 +42,11 @@ export async function getOrderByUser(
       },
             _count: {
         select: {
-          ticket: true,
+          tickets: true,
         },
       },
       user: true,
-      ticket: true,
+      tickets: true,
       paymentLogs: true,
     },
   });

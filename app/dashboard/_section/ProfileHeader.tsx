@@ -95,7 +95,7 @@ export default function ProfileHeader({ user }: { user: Session["user"] }) {
           <InfoRow
             icon={<FiPhone className="w-4 h-4" />}
             label="Phone Number"
-            value={user.phonenumber}
+            value={user.phoneNumber}
           />
           <InfoRow
             icon={<FiBriefcase className="w-4 h-4" />}

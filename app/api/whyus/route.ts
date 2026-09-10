@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 
 // CREATE
 export const POST = async (request: NextRequest) => {
-  const { title, description, image, publicId, hoverImg, hoverPublicId, isActive, type } = await request.json();
+  const { title, description, image, publicId, hoverImage, hoverPublicId, isActive, type } = await request.json();
 
   const whyUs = await prisma.whyUs.create({
     data: {
@@ -90,7 +90,7 @@ export const POST = async (request: NextRequest) => {
       description: description || null,
       image: image || null,
       publicId: publicId || null,
-      hoverImg: hoverImg || null,
+      hoverImage: hoverImage || null,
       hoverPublicId: hoverPublicId || null,
       isActive: typeof isActive === 'boolean' ? isActive : true,
       type: type || 'WHY_US',
@@ -104,7 +104,7 @@ export const POST = async (request: NextRequest) => {
 export const PUT = async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = Number(searchParams.get('id')) || 0;
-  const { title, description, image, publicId, hoverImg, hoverPublicId, isActive, type } = await request.json();
+  const { title, description, image, publicId, hoverImage, hoverPublicId, isActive, type } = await request.json();
 
   const whyUs = await prisma.whyUs.update({
     where: { id },
@@ -113,7 +113,7 @@ export const PUT = async (request: NextRequest) => {
       description: description || null,
       image: image || null,
       publicId: publicId || null,
-      hoverImg: hoverImg || null,
+      hoverImage: hoverImage || null,
       hoverPublicId: hoverPublicId || null,
       isActive: typeof isActive === 'boolean' ? isActive : true,
       type: type || 'WHY_US',

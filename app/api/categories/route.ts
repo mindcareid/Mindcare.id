@@ -65,7 +65,7 @@ export const DELETE = async (request: NextRequest) => {
 
   const categories = await prisma.categories.update({
     where: { id },
-    data: { isactive: false },
+    data: { isActive: false },
   });
 
   return NextResponse.json({ status: 200, message: "deactivated", categories });

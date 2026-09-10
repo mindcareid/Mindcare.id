@@ -16,7 +16,7 @@ export type ParticipantReportRow = {
   isFree: boolean;
   quantity: number;
   totalPayment: number;
-  status: "PENDING" | "PAID" | "EXPIRED" | "CANCELED";
+  status: "PENDING" | "PAID" | "EXPIRED" | "CANCELED" | "REFUNDED";
   attendees: {
     ticketId: string;
     name: string;

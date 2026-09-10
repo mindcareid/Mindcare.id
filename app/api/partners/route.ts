@@ -14,7 +14,7 @@ const companySelect = {
   phone: true,
   email: true,
   instagram: true,
-  linkedln: true,
+  linkedin: true,
 };
 
 async function getCompanyDetail(companyId: number) {

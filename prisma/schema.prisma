@@ -97,9 +97,10 @@ enum OrderStatus {
 
 enum PaymentStatus {
   PENDING
-  SUCCESS
+  PAID
   FAILED
   EXPIRED
+  CANCELED
   REFUNDED
 }
 
@@ -166,6 +167,34 @@ enum SolutionType {
   TRAINING
   ASSESSMENT
   OTHER
+}
+
+model Categories {
+  id            Int             @id @default(autoincrement())
+  slug          String          @db.VarChar(255)
+  title         String          @db.VarChar(255)
+  publicId      String?         @db.VarChar(255)
+  photo         String?
+  content       String?         @db.Text
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  CategoriesSub CategoriesSub[]
+}
+
+model CategoriesSub {
+  id           Int         @id @default(autoincrement())
+  categoriesId Int
+  slug         String      @db.VarChar(255)
+  title        String      @db.VarChar(255)
+  content      String?     @db.Text
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  categories   Categories? @relation(fields: [categoriesId], references: [id])
+
+  @@unique([categoriesId, slug])
+  @@index([categoriesId])
 }
 
 /**
@@ -250,7 +279,7 @@ model Company {
   facebook  String? @db.VarChar(255)
   linkedin  String? @db.VarChar(255)
 
-  address    String? @db.Text
+  location    String? @db.Text
   city       String? @db.VarChar(100)
   province   String? @db.VarChar(100)
   country    String? @db.VarChar(100)
@@ -263,6 +292,7 @@ model Company {
   verification VerificationStatus @default(UNVERIFIED)
 
   isFeatured Boolean @default(false)
+  isActive  Boolean   @default(true)
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
@@ -702,6 +732,7 @@ model Event {
 
   coverImage String? @db.VarChar(500)
   publicId   String? @db.VarChar(255)
+  isPublished Boolean  @default(false)
 
   status EventStatus @default(DRAFT)
 
@@ -803,6 +834,7 @@ model Article {
   publishedAt DateTime?
 
   isFeatured Boolean @default(false)
+  isActive  Boolean   @default(true)
 
   deletedAt DateTime?
 

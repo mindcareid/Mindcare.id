@@ -11,7 +11,7 @@ export type WhyUs = {
   description?: string;
   image?: string;
   publicId?: string;
-  hoverImg?: string;
+  hoverImage?: string;
   hoverPublicId?: string;
   type: string;
   isActive: boolean;
@@ -120,7 +120,7 @@ export default function WhyUsList() {
       name: "Hover Image",
       cell: (row) => (
         <Image
-          src={row.hoverImg?.trim() ? row.hoverImg : "/images/no-image.png"}
+          src={row.hoverImage?.trim() ? row.hoverImage : "/images/no-image.png"}
           width={60}
           height={60}
           alt="Why Us Hover"

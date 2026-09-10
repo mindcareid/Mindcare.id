@@ -7,7 +7,7 @@ export interface OrderWithEvent extends Order {
     location?: string | null;
   };
   _count: {
-    ticket: number;
+    tickets: number;
   };
 }
 
@@ -19,11 +19,11 @@ export type OrderEvent = Prisma.OrderGetPayload<{
         company: true;
       };
     };
-    ticket: true;
+    tickets: true;
     paymentLogs: true;
     _count: {
       select: {
-        ticket: true;
+        tickets: true;
       };
     };
   };

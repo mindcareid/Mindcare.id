@@ -113,17 +113,25 @@ export default function MyTicketList({
 /* ================= TICKET CARD ================= */
 
 function TicketCard({ ticket }: { ticket: TicketWithEvent }) {
-  const displayStatus: "PAID" | "PENDING" | "EXPIRED" =
+  const displayStatus: "PAID" | "PENDING" | "EXPIRED" | "CANCELED" | "REFUNDED" =
     ticket.order.status === "PAID" ||
     ticket.order.status === "PENDING" ||
+    ticket.order.status === "REFUNDED" ||
+    ticket.order.status === "CANCELED" || 
     ticket.order.status === "EXPIRED"
       ? ticket.order.status
       : "PENDING";
 
-  const statusColor =
-    displayStatus === "PAID"
-      ? "bg-green-100 text-green-700"
-      : "bg-yellow-100 text-yellow-700";
+      const statusColor =
+  displayStatus === "PAID"
+    ? "bg-green-100 text-green-700"
+    : displayStatus === "REFUNDED"
+      ? "bg-purple-100 text-purple-700"
+      : displayStatus === "CANCELED"
+        ? "bg-red-100 text-red-700"
+        : displayStatus === "EXPIRED"
+          ? "bg-gray-100 text-gray-700"
+          : "bg-yellow-100 text-yellow-700";
 
   return (
     <div className="border rounded-xl p-5 shadow-sm bg-white">

@@ -32,7 +32,7 @@ export async function getAllEventParticipantForExport(params: ExportExcel) {
 
     prisma.eventAttendeeField.findMany({
       where: { eventId },
-      orderBy: { order: "asc" },
+      orderBy: { sortOrder: "asc" },
       select: { id: true, key: true, label: true },
     }),
   ]);

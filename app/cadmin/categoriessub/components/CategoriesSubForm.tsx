@@ -15,7 +15,7 @@ type CategoriesSub = {
   slug: string;
   content?: string;
   categoriesId: number;
-  isactive: boolean;
+  isActive: boolean;
 };
 
 export default function CategoriesSubForm({ defaultValues }: { defaultValues?: Partial<CategoriesSub> }) {
@@ -32,7 +32,7 @@ export default function CategoriesSubForm({ defaultValues }: { defaultValues?: P
       slug: '',
       content: '',
       categoriesId: 0,
-      isactive: true,
+      isActive: true,
       ...defaultValues,
     },
   });
@@ -173,7 +173,7 @@ export default function CategoriesSubForm({ defaultValues }: { defaultValues?: P
       <div className="flex items-center space-x-3">
         <input
           type="checkbox"
-          {...register('isactive')}
+          {...register('isActive')}
           className="w-4 h-4"
         />
         <label className="text-sm font-medium">Active</label>

@@ -19,7 +19,7 @@ type CategoriesFormFields = {
   content: string;
   photo?: string;
   publicId?: string;
-  isactive: boolean;
+  isActive: boolean;
   image?: {
     secure_url: string;
     public_id: string;
@@ -31,7 +31,7 @@ export default function CategoriesForm({ id, defaultValues }: CategoriesFormProp
     slug: "",
     title: "",
     content: "",
-    isactive: true,
+    isActive: true,
     photo: defaultValues?.photo,
     publicId: defaultValues?.publicId,
     ...defaultValues,
@@ -180,8 +180,8 @@ export default function CategoriesForm({ id, defaultValues }: CategoriesFormProp
           <label className="inline-flex items-center">
             <input
               type="checkbox"
-              name="isactive"
-              checked={form.isactive}
+              name="isActive"
+              checked={form.isActive}
               onChange={handleChange}
               className="form-checkbox h-5 w-5 text-blue-600"
             />

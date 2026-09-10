@@ -9,7 +9,7 @@ type User = {
     id: number;
     name: string;
     email: string;
-    phonenumber: string;
+    phoneNumber: string;
     photo: string;
     bio: string;
     role: string;
@@ -66,7 +66,7 @@ export default function UserList() {
         },
         {
             name: "Phone",
-            selector: (row: User) => row.phonenumber,
+            selector: (row: User) => row.phoneNumber,
             wrap: true,
         },
         {

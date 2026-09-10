@@ -13,6 +13,7 @@ const Label: Record<ParticipantReportRow["status"], string> = {
   PENDING: "PENDING",
   EXPIRED: "EXPIRED",
   CANCELED: "CANCELED",
+  REFUNDED: "REFUNDED",
 };
 
 function shortOrderId(orderId: string, length = 8): string {

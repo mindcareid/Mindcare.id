@@ -63,7 +63,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id.toString(),
           email: user.email,
           name: user.name,
-          phonenumber: user.phonenumber,
+          phoneNumber: user.phoneNumber,
           username: user.username,
           // createAt: user.createdAt?.toISOString(),
           bio: user.bio,
@@ -223,7 +223,7 @@ export const authOptions: NextAuthOptions = {
       token.id = dbUser.id.toString();
       token.email = dbUser.email;
       token.name = dbUser.name;
-      token.phonenumber = dbUser.phonenumber;
+      token.phoneNumber = dbUser.phoneNumber;
       token.username = dbUser.username;
       token.bio = dbUser.bio;
       token.jobTitle = dbUser.jobTitle ?? null;
@@ -261,7 +261,7 @@ export const authOptions: NextAuthOptions = {
       session.user.id = token.id as string;
       session.user.email = token.email as string;
       session.user.name = token.name as string;
-      session.user.phonenumber = token.phonenumber ?? null;
+      session.user.phoneNumber = token.phoneNumber ?? null;
       session.user.bio = token.bio ?? null;
       session.user.jobTitle = token.jobTitle ?? null;
       session.user.jobName = token.jobName ?? null;

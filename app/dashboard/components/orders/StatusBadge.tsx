@@ -22,6 +22,10 @@ const statusConfig: Record<
     label: "Canceled",
     className: "bg-slate-500/10 text-slate-500 ring-slate-500/20",
   },
+  REFUNDED: {
+    label: "Refunded",
+    className: "bg-purple-100 text-purple-700",
+  },
 };
 
 export function StatusBadge({ status }: { status: Status }) {

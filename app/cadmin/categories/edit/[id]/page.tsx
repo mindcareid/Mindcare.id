@@ -11,7 +11,7 @@ type CategoriesData = {
   publicId: string;
   photo?: string;
   content?: string;
-  isactive: boolean;
+  isActive: boolean;
 };
 
 export default function EditCategoriesPage() {

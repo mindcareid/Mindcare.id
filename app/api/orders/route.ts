@@ -46,7 +46,7 @@ export async function GET() {
           },
         },
 
-        ticket: {
+        tickets: {
           select: {
             id: true,
             attendeeName: true,
@@ -59,7 +59,7 @@ export async function GET() {
 
         _count: {
           select: {
-            ticket: true,
+            tickets: true,
           },
         },
       },
@@ -77,11 +77,11 @@ export async function GET() {
 
       invoiceUrl: order.invoiceUrl,
 
-      ticketCount: order._count.ticket,
+      ticketCount: order._count.tickets,
 
       event: order.event,
 
-      tickets: order.ticket,
+      tickets: order.tickets,
     }));
 
     return NextResponse.json({

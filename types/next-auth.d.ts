@@ -9,7 +9,7 @@ declare module "next-auth" {
       name: string;
       role: user_role;
       photo: string | null;
-      phonenumber?: string | null;
+      phoneNumber?: string | null;
       bio?: string | null;
       createAt?: string | null;
       username: string;
@@ -33,7 +33,7 @@ declare module "next-auth" {
   interface User extends DefaultUser {
     id: string;
     role: user_role;
-    phonenumber?: string | null;
+    phoneNumber?: string | null;
     bio?: string | null;
     createAt?: string | null;
     photo?: string | null;
@@ -54,7 +54,7 @@ declare module "next-auth/jwt" {
     id: string;
     role: user_role;
     photo: string | null;
-    phonenumber?: string | null;
+    phoneNumber?: string | null;
     username: string;
     bio?: string | null;
     jobTitle?: string | null;

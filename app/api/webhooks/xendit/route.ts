@@ -45,7 +45,7 @@ export async function POST(req: Request) {
           paidAt: new Date(),
         },
         include: {
-          ticket: true,
+          tickets: true,
           event: true,
         },
       });
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
 
       // TODO: generate ticket di sini
       await Promise.all(
-        updatedOrder.ticket.map((t) =>
+        updatedOrder.tickets.map((t) =>
           sendTicketEmail({
             to: t.attendeeEmail,
             eventTitle: updatedOrder.event.title,

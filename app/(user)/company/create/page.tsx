@@ -43,7 +43,7 @@ export default function CreateCompanyPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [instagram, setInstagram] = useState("");
-  const [linkedln, setLinkedln] = useState("");
+  const [linkedin, setLinkedln] = useState("");
   const [logo, setLogo] = useState<string | null>(null);
   const [publicId, setPublicId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -98,7 +98,7 @@ export default function CreateCompanyPage() {
       phone,
       website,
       instagram,
-      linkedln,
+      linkedin,
       logo,
       publicId,
     };
@@ -398,11 +398,11 @@ export default function CreateCompanyPage() {
               </label>
               <input
                 type="text"
-                value={linkedln}
+                value={linkedin}
                 onChange={(e) => {
                   setLinkedln(e.target.value);
-                  if (fieldErrors.linkedln)
-                    setFieldErrors((p) => ({ ...p, linkedln: undefined }));
+                  if (fieldErrors.linkedin)
+                    setFieldErrors((p) => ({ ...p, linkedin: undefined }));
                 }}
                 placeholder="https://linkedin.com/company/..."
                 className="w-full rounded-lg border px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"

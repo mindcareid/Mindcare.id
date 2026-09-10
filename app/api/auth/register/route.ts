@@ -35,7 +35,7 @@ export async function POST(req: Request) {
 
     // Check phone Number
     const exisitingPhoneNumber = await prisma.user.findUnique({
-      where: { phonenumber: phoneNumber },
+      where: { phoneNumber: phoneNumber },
     });
     if (exisitingPhoneNumber) {
       return NextResponse.json(
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
         email,
         username,
         password: hashedPassword,
-        phonenumber: phoneNumber,
+        phoneNumber: phoneNumber,
         role: "USER",
         photo: "",
         publicId: "",

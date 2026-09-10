@@ -333,7 +333,7 @@ export default function PersonalInformation({ user }: { user: User }) {
           <ContactField
             icon={IoIosPhonePortrait}
             label="Phone"
-            value={user?.phonenumber ?? "-"}
+            value={user?.phoneNumber ?? "-"}
             isVerified={false}
           />
 

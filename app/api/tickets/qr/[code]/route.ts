@@ -17,7 +17,24 @@ export async function GET(
   const base64 = ticket.qrCode;
 
   // ambil bagian base64 saja
-  const base64Data = base64.split(",")[1];
+  if (!base64) {
+    return NextResponse.json(
+      { message: "QR code is not available." },
+      { status: 404 },
+    );
+  }
+
+  const base64Data = base64.includes(",")
+    ? base64.split(",")[1]
+    : base64;
+
+  if (!base64Data) {
+    return NextResponse.json(
+      { message: "Invalid QR code data." },
+      { status: 400 },
+    );
+  }
+
   const buffer = Buffer.from(base64Data, "base64");
 
   return new NextResponse(buffer, {

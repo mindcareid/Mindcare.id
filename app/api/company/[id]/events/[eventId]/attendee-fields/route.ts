@@ -22,7 +22,7 @@ export async function GET(
       eventId,
     },
     orderBy: {
-      order: "asc",
+      sortOrder: "asc",
     },
   });
   return NextResponse.json({ data: fields });
@@ -73,7 +73,7 @@ export async function POST(
       type: parsed.data.type,
       required: parsed.data.required,
       options: parsed.data.options ?? Prisma.JsonNull,
-      order: parsed.data.order,
+      sortOrder: parsed.data.order,
     },
   });
 
@@ -120,14 +120,14 @@ export async function PUT(
         type: field.type,
         required: field.required,
         options: field.options ?? Prisma.JsonNull,
-        order: i,
+        sortOrder: i,
       })),
     }),
   ]);
 
   const fields = await prisma.eventAttendeeField.findMany({
     where: { eventId },
-    orderBy: { order: "asc" },
+    orderBy: { sortOrder: "asc" },
   });
   return NextResponse.json({ data: fields });
 }
