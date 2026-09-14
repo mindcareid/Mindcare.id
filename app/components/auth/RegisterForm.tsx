@@ -15,9 +15,13 @@ import { GoXCircleFill } from "react-icons/go";
 import GoogleButton from "../../auth/component/GoogleButton";
 interface RegisterFormProps {
   className?: string;
+  callbackUrl?: string | null;
 }
 
-export default function RegisterForm({ className }: RegisterFormProps) {
+export default function RegisterForm({
+  className,
+  callbackUrl,
+}: RegisterFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [agree, setAgree] = useState(false);
@@ -70,7 +74,9 @@ export default function RegisterForm({ className }: RegisterFormProps) {
       });
 
       reset();
-      router.push("/auth/login?registered=true");
+      const next = new URLSearchParams({ registered: "true" });
+      if (callbackUrl) next.set("callbackUrl", callbackUrl);
+      router.push(`/auth/login?${next.toString()}`);
     } catch (err) {
       toast.error("Registration Failed", {
         description: err instanceof Error ? err.message : "Please try again",
