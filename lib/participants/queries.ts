@@ -14,11 +14,11 @@ export const participantOrderSelect = {
     select: {
       name: true,
       email: true,
-      phonenumber: true,
+      phoneNumber: true,
     },
   },
 
-  ticket: {
+  tickets: {
     select: {
       id: true,
       attendeeName: true,
@@ -61,7 +61,7 @@ export async function getEventParticipants(params: GetParticipantsParams) {
     }),
     prisma.eventAttendeeField.findMany({
       where: { eventId },
-      orderBy: { order: "asc" },
+      orderBy: { sortOrder: "asc" },
       select: { id: true, key: true, label: true },
     }),
   ]);

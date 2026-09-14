@@ -29,7 +29,7 @@ export default async function AttendeeFieldsCompany({ params }: Props) {
   if (!event) notFound();
   const fields = await prisma.eventAttendeeField.findMany({
     where: { eventId: event.id },
-    orderBy: { order: "asc" },
+    orderBy: { sortOrder: "asc" },
   });
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -54,7 +54,7 @@ export default async function AttendeeFieldsCompany({ params }: Props) {
             type: f.type as any,
             required: f.required,
             options: (f.options as string[]) ?? [],
-            order: f.order,
+            order: f.sortOrder,
           }))}
         />
       </div>

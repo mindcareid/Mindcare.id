@@ -26,7 +26,7 @@ export type Company = {
   phone: string | null;
   email: string | null;
   instagram: string | null;
-  linkedln: string | null;
+  linkedin: string | null;
 };
 
 export type FilterType = "upcoming" | "ongoing" | "past";

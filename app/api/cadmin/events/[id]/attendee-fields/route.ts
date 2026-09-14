@@ -40,7 +40,7 @@ export async function GET(
 
   const fields = await prisma.eventAttendeeField.findMany({
     where: { eventId },
-    orderBy: { order: "asc" },
+    orderBy: { sortOrder: "asc" },
   });
 
   return NextResponse.json({ data: fields });
@@ -117,7 +117,7 @@ export async function POST(
         key: safeFieldKey,
         type: type as AttendeeFieldType,
         required: Boolean(required),
-        order: Number(order) || 0,
+        sortOrder: Number(order) || 0,
         options:
           safeOptions !== null
             ? safeOptions

@@ -11,9 +11,9 @@ type HeroSlider = {
   title?: string;
   subtitle?: string;
   image?: string;
-  align_text?: string;
+  alignText?: string;
   order: number;
-  is_active: boolean;
+  isActive: boolean;
   created_at?: string;
 };
 
@@ -46,9 +46,9 @@ export default function HeroList() {
     },
     { name: "Title", selector: (row: HeroSlider) => row.title || "-" , wrap: true },
     { name: "Subtitle", selector: (row: HeroSlider) => row.subtitle || "-", wrap: true },
-    { name: "Align", selector: (row: HeroSlider) => row.align_text || "-" },
+    { name: "Align", selector: (row: HeroSlider) => row.alignText || "-" },
     { name: "Order", selector: (row: HeroSlider) => row.order.toString() },
-    { name: "Active", selector: (row: HeroSlider) => (row.is_active ? "Yes" : "No") },
+    { name: "Active", selector: (row: HeroSlider) => (row.isActive ? "Yes" : "No") },
     {
       name: "Created At",
       selector: (row: HeroSlider) =>

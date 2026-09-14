@@ -113,7 +113,7 @@ export async function GET(req: NextRequest) {
             id: true,
             status: true,
             user: {
-              select: { id: true, name: true, email: true, phonenumber: true },
+              select: { id: true, name: true, email: true, phoneNumber: true },
             },
           },
         },

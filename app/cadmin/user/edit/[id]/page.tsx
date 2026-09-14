@@ -10,12 +10,12 @@ type UserData = {
   username: string;
   name: string;
   password?: string;
-  phonenumber?: string;
+  phoneNumber?: string;
   bio?: string;
   instagram?: string;
   facebook?: string;
   role: "ADMIN" | "SUPERADMIN" | "USER";
-  isactive: boolean;
+  isActive: boolean;
   photo?: string;
   publicId?: string;
 };

@@ -15,11 +15,11 @@ type HeroFormFields = {
   description?: string;
   image?: string;
   publicId?: string;
-  button_text?: string;
-  button_url?: string;
-  align_text?: string;
+  buttonText?: string;
+  buttonUrl?: string;
+  alignText?: string;
   order: number;
-  is_active: boolean;
+  isActive: boolean;
 };
 
 export default function HeroForm({ id, defaultValues }: HeroFormProps) {
@@ -29,11 +29,11 @@ export default function HeroForm({ id, defaultValues }: HeroFormProps) {
     description: "",
     image: "",
     publicId: "",
-    button_text: "",
-    button_url: "",
-    align_text: "center",
+    buttonText: "",
+    buttonUrl: "",
+    alignText: "center",
     order: 0,
-    is_active: true,
+    isActive: true,
     ...defaultValues,
   });
 
@@ -162,24 +162,24 @@ export default function HeroForm({ id, defaultValues }: HeroFormProps) {
         />
 
         <input
-          name="button_text"
-          value={form.button_text || ""}
+          name="buttonText"
+          value={form.buttonText || ""}
           onChange={handleChange}
           placeholder="Button Text"
           className="w-full border px-3 py-2 rounded"
         />
 
         <input
-          name="button_url"
-          value={form.button_url || ""}
+          name="buttonUrl"
+          value={form.buttonUrl || ""}
           onChange={handleChange}
           placeholder="Button URL"
           className="w-full border px-3 py-2 rounded"
         />
 
         <select
-          name="align_text"
-          value={form.align_text || "center"}
+          name="alignText"
+          value={form.alignText || "center"}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded"
         >
@@ -221,8 +221,8 @@ export default function HeroForm({ id, defaultValues }: HeroFormProps) {
         <label className="inline-flex items-center">
           <input
             type="checkbox"
-            name="is_active"
-            checked={form.is_active}
+            name="isActive"
+            checked={form.isActive}
             onChange={handleChange}
             className="form-checkbox h-5 w-5 text-blue-600"
           />

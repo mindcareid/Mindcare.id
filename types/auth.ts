@@ -11,7 +11,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  phonenumber?: string | null;
+  phoneNumber?: string | null;
   username: string;
   createAt?: string | null;
   bio?: string | null;

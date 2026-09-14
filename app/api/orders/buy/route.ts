@@ -55,7 +55,7 @@ export async function POST(req: Request) {
       async (tx) => {
         const event = await tx.event.findUnique({
           where: { id: eventId },
-          include: { attendeeFields: { orderBy: { order: "asc" } } },
+          include: { attendeeFields: { orderBy: { sortOrder: "asc" } } },
         });
 
         if (!event) {

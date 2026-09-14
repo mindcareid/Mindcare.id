@@ -24,14 +24,14 @@ export default function Receipt({ order }: Props) {
 
   const paymentLog = [...order.paymentLogs]
     .reverse()
-    .find((log) => log.status === "PAID" || log.status === "SETTLED");
+    .find((log) => log.status === "PAID");
 
   const payload = paymentLog?.payload as XenditPayload | undefined;
 
   const paymentMethod = payload
     ? [payload.payment_method, payload.payment_channel ?? payload.bank_code]
-        .filter(Boolean)
-        .join(" - ")
+      .filter(Boolean)
+      .join(" - ")
     : order.amount === 0
       ? "Free"
       : "-";
@@ -167,7 +167,7 @@ export default function Receipt({ order }: Props) {
           <h2 className="font-bold text-xl mb-5">Participant Data</h2>
 
           <div className="space-y-2">
-            {order.ticket.map((ticket, index) => (
+            {order.tickets.map((ticket, index) => (
               <div
                 key={ticket.id}
                 className="flex justify-between border-b py-2"
@@ -205,12 +205,12 @@ export default function Receipt({ order }: Props) {
                 <td className="border p-3">{order.event.title}</td>
 
                 <td className="border p-3 text-center">
-                  {order.ticket.length}
+                  {order.tickets.length}
                 </td>
 
                 <td className="border p-3 text-right">
                   Rp{" "}
-                  {(order.amount / order.ticket.length).toLocaleString("id-ID")}
+                  {(order.amount / order.tickets.length).toLocaleString("id-ID")}
                 </td>
 
                 <td className="border p-3 text-right font-bold">

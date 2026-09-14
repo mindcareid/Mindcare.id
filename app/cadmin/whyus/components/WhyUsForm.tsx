@@ -18,7 +18,7 @@ type WhyUsFormFields = {
   description: string;
   image?: string;
   publicId?: string;
-  hoverImg?: string;
+  hoverImage?: string;
   hoverPublicId?: string;
   isActive: boolean;
   type: "WHY_US" | "SERVICES" | "OTHER"; 
@@ -32,7 +32,7 @@ export default function WhyUsForm({ id, defaultValues }: WhyUsFormProps) {
     isActive: true,
     image: defaultValues?.image,
     publicId: defaultValues?.publicId,
-    hoverImg: defaultValues?.hoverImg,
+    hoverImage: defaultValues?.hoverImage,
     hoverPublicId: defaultValues?.hoverPublicId,
     ...defaultValues,
   });
@@ -92,7 +92,7 @@ export default function WhyUsForm({ id, defaultValues }: WhyUsFormProps) {
       setForm((prev) => ({
         ...prev,
         ...(hover
-          ? { hoverImg: data.secure_url, hoverPublicId: data.public_id }
+          ? { hoverImage: data.secure_url, hoverPublicId: data.public_id }
           : { image: data.secure_url, publicId: data.public_id }),
       }));
     }
@@ -227,10 +227,10 @@ export default function WhyUsForm({ id, defaultValues }: WhyUsFormProps) {
               file:bg-blue-50 file:text-blue-700 
               hover:file:bg-blue-100"
           />
-          {form.hoverImg && (
+          {form.hoverImage && (
             <div className="mt-2">
               <Image
-                src={form.hoverImg}
+                src={form.hoverImage}
                 alt="Hover Preview"
                 width={120}
                 height={120}

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 }
 
 export const POST = async (request: NextRequest) => {
-  const { title, slug, content, categoriesId, isactive } = await request.json();
+  const { title, slug, content, categoriesId, isActive } = await request.json();
 
   const generatedSlug = slug ? slug : slugify(title, { lower: true });
 
@@ -34,7 +34,7 @@ export const POST = async (request: NextRequest) => {
       slug: generatedSlug,
       content,
       categoriesId: Number(categoriesId),
-      isactive: isactive ?? true,
+      isActive: isActive ?? true,
     },
   });
 
@@ -44,7 +44,7 @@ export const POST = async (request: NextRequest) => {
 export const PUT = async (request: NextRequest) => {
   const url = new URL(request.url);
   const id = Number(url.searchParams.get('id') || 0);
-  const { title, slug, content, categoriesId, isactive } = await request.json();
+  const { title, slug, content, categoriesId, isActive } = await request.json();
 
   const generatedSlug = slug ? slug : slugify(title, { lower: true });
 
@@ -55,7 +55,7 @@ export const PUT = async (request: NextRequest) => {
       slug: generatedSlug,
       content,
       categoriesId: Number(categoriesId),
-      isactive: isactive ?? true,
+      isActive: isActive ?? true,
     },
   });
 
@@ -66,10 +66,10 @@ export const DELETE = async (request: NextRequest) => {
   const url = new URL(request.url);
   const id = Number(url.searchParams.get('id') || 0);
 
-  // Soft delete by setting isactive to false
+  // Soft delete by setting isActive to false
   const deleted = await prisma.categoriesSub.update({
     where: { id },
-    data: { isactive: false },
+    data: { isActive: false },
   });
 
   return NextResponse.json({ status: 200, message: "soft-deleted", data: deleted });

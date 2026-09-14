@@ -47,6 +47,10 @@ const STATUS_STYLES: Record<
     label: "Canceled",
     className: "bg-red-100 text-red-600 border-red-200",
   },
+  REFUNDED: {
+    label: "Refunded",
+    className: "bg-orange-100 text-orange-700 border-orange-200",
+  },
 };
 
 function getAnswerValue(answers: Record<string, unknown>, key: string): string {

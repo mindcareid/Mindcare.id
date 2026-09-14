@@ -107,9 +107,9 @@ export default function PartnerDetail({ company, events }: Props) {
               </Link>
             )}
 
-            {company.linkedln && (
+            {company.linkedin && (
               <Link
-                href={`${company.linkedln}`}
+                href={`${company.linkedin}`}
                 target="_blank"
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 transition hover:bg-gray-200"
               >

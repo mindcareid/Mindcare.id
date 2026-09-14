@@ -25,7 +25,7 @@ export async function GET(
       phone: true,
       website: true,
       instagram: true,
-      linkedln: true,
+      linkedin: true,
       isActive: true,
     },
   });
@@ -83,7 +83,7 @@ export async function PUT(
     phone,
     website,
     instagram,
-    linkedln,
+    linkedin,
   } = parsed.data;
 
   const existingCompany = await prisma.company.findUnique({
@@ -111,7 +111,7 @@ export async function PUT(
       phone: phone || null,
       website: website || null,
       instagram: instagram || null,
-      linkedln: linkedln || null,
+      linkedin: linkedin || null,
     },
     select: {
       id: true,
@@ -125,7 +125,7 @@ export async function PUT(
       phone: true,
       email: true,
       instagram: true,
-      linkedln: true,
+      linkedin: true,
     },
   });
 

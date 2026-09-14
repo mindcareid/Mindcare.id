@@ -242,8 +242,8 @@ export default function DataCompanyOverView() {
           />
           <ContactItem
             icon={FaLinkedin}
-            href={company.linkedln ?? undefined}
-            value={company.linkedln}
+            href={company.linkedin ?? undefined}
+            value={company.linkedin}
             color="text-blue-700"
             external
           />

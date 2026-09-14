@@ -39,7 +39,7 @@ export async function getPartnerBySlug(slug: string) {
             location:true,
             website:true,
             instagram:true,
-            linkedln:true,
+            linkedin:true,
             phone:true,
             email:true,
             isActive:true,

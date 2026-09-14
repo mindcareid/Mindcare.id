@@ -35,7 +35,7 @@ export function OrderCard({ order }: { order: OrderWithEvent }) {
             Tickets
           </p>
           <p className="mt-0.5 text-sm font-medium text-foreground">
-            {order._count.ticket} ticket{order._count.ticket > 1 ? "s" : ""}
+            {order._count.tickets} ticket{order._count.tickets > 1 ? "s" : ""}
           </p>
         </div>
         <div>

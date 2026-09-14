@@ -25,9 +25,9 @@ export async function GET(request: NextRequest) {
     id?: number;
     username?: string;
     role?: UserRole;
-    isactive: boolean;
+    isActive: boolean;
   } = {
-    isactive: true,
+    isActive: true,
   };
 
   if (username) whereClause.username = username;
@@ -39,14 +39,14 @@ export async function GET(request: NextRequest) {
     email: true,
     username: true,
     name: true,
-    phonenumber: true,
+    phoneNumber: true,
     bio: true,
     photo: true,
     publicId: true,
     instagram: true,
     facebook: true,
     role: true,
-    isactive: true,
+    isActive: true,
     createdAt: true,
   };
 
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     name,
     email,
     password,
-    phonenumber,
+    phoneNumber,
     bio,
     facebook,
     instagram,
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
     name: string;
     email: string;
     password: string;
-    phonenumber?: string;
+    phoneNumber?: string;
     bio?: string;
     facebook?: string;
     instagram?: string;
@@ -118,14 +118,14 @@ export async function POST(request: NextRequest) {
       email,
       username: generateRandomString(8),
       password: passwordHash,
-      phonenumber,
+      phoneNumber,
       bio,
       facebook,
       instagram,
       publicId: image?.public_id ?? "",
       photo: image?.secure_url ?? "",
       role: UserRole.USER,
-      isactive: true,
+      isActive: true,
     },
   });
 
@@ -152,7 +152,7 @@ export async function PUT(request: NextRequest) {
       email,
       username,
       role,
-      phonenumber,
+      phoneNumber,
       bio,
       facebook,
       instagram,
@@ -162,7 +162,7 @@ export async function PUT(request: NextRequest) {
       email?: string;
       username?: string;
       role?: UserRole;
-      phonenumber?: string;
+      phoneNumber?: string;
       bio?: string;
       facebook?: string;
       instagram?: string;
@@ -192,7 +192,7 @@ export async function PUT(request: NextRequest) {
         email,
         username,
         role,
-        phonenumber,
+        phoneNumber,
         bio,
         facebook,
         instagram,
@@ -227,7 +227,7 @@ export async function DELETE(request: NextRequest) {
   const user = await prisma.user.update({
     where: { id },
     data: {
-      isactive: false,
+      isActive: false,
       deletedAt: new Date(),
     },
   });

@@ -60,7 +60,7 @@ export async function POST(req: Request) {
       phone,
       email,
       instagram,
-      linkedln,
+      linkedin,
     } = parsed.data;
 
     const slug = slugify(name, { lower: true, strict: true, trim: true });
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
         phone: phone || null,
         email: email || null,
         instagram: instagram || null,
-        linkedln: linkedln || null,
+        linkedin: linkedin || null,
         isActive: false,
         users: {
           create: {
@@ -170,7 +170,7 @@ export async function GET() {
           phone: true,
           email: true,
           instagram: true,
-          linkedln: true,
+          linkedin: true,
         },
       },
     },

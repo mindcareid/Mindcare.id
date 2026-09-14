@@ -272,7 +272,7 @@ export const CreateCompanySchema = z.object({
   phone: z.string().optional(),
   website: z.string().optional(),
   instagram: z.string().optional(),
-  linkedln: z.string().optional(),
+  linkedin: z.string().optional(),
   logo: z.string().nullable().optional(),
   publicId: z.string().nullable().optional(),
 });
@@ -287,7 +287,7 @@ export const UpdateCompanyScehma = z.object({
   phone: z.string().optional(),
   website: z.string().optional(),
   instagram: z.string().optional(),
-  linkedln: z.string().optional(),
+  linkedin: z.string().optional(),
 });
 
 export const AttendeeFieldSchema = z.object({
@@ -361,7 +361,7 @@ export const CreateArticleNewsSchema = z.object({
     .nullable(),
   publicId: z.string().optional(),
   isActive: z.boolean().default(true),
-  published: z.boolean().default(false),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
 });
 
 export const UpdateArticleSchema = CreateArticleNewsSchema.partial().extend({

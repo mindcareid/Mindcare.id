@@ -34,6 +34,7 @@ export async function PATCH(req: Request) {
       { status: 200 },
     );
   } catch (err: any) {
+    
     console.error("Update Profile Error:", err);
 
     if (err.name === "ZodError") {

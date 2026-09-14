@@ -48,7 +48,7 @@ export function OrderTable({ orders }: { orders: OrderWithEvent[] }) {
 
               {/* Ticket count */}
               <td className="px-4 py-3.5 text-center font-medium text-foreground">
-                {order._count.ticket}
+                {order._count.tickets}
               </td>
 
               {/* Amount */}

@@ -10,7 +10,7 @@ type CategoriesSub = {
   slug: string;
   content?: string;
   categoriesId: number;
-  isactive: boolean;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
   categories?: {
@@ -71,8 +71,8 @@ export default function CategoriesSubList({ categoriesId }: { categoriesId?: num
     {
       name: 'Status',
       cell: (row: CategoriesSub) => (
-        <span className={row.isactive ? 'text-green-600' : 'text-red-600'}>
-          {row.isactive ? 'Active' : 'Inactive'}
+        <span className={row.isActive ? 'text-green-600' : 'text-red-600'}>
+          {row.isActive ? 'Active' : 'Inactive'}
         </span>
       ),
       width: '100px',

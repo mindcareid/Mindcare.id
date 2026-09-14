@@ -1,0 +1,1471 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/*
+|--------------------------------------------------------------------------
+| ENUMS
+|--------------------------------------------------------------------------
+*/
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  USER
+  INSTITUTION
+}
+
+enum UserGender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum CompanyStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum CompanyUserStatus {
+  PENDING
+  ACTIVE
+  DECLINED
+}
+
+enum CompanyRole {
+  OWNER
+  ADMIN
+  TRAINER
+  FINANCE
+  EDITOR
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+}
+
+enum NotificationStatus {
+  PENDING
+  ACTIVE
+  DECLINED
+  READ
+}
+
+enum NotificationType {
+  COMPANY_INVITE
+  COMPANY_ACCEPTED
+  COMPANY_DECLINED
+  GENERAL
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum EventRegistrationType {
+  INTERNAL
+  EXTERNAL
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  EXPIRED
+  CANCELED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+enum ArticleType {
+  BLOG
+  NEWS
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ArticleCategory {
+  CORPORATE
+  EXECUTIVE
+  INSIGHT
+  UPDATE
+  EVENT
+}
+
+enum AttendeeFieldType {
+  TEXT
+  EMAIL
+  PHONE
+  NUMBER
+  DATE
+  SELECT
+}
+
+enum ContactMessageStatus {
+  UNREAD
+  READ
+  REPLIED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
+
+enum ProfessionalAvailability {
+  AVAILABLE
+  UNAVAILABLE
+}
+
+enum CareCentreType {
+  CLINIC
+  HOSPITAL
+  COUNSELLING_CENTRE
+  REHABILITATION
+  ONLINE_SERVICE
+  COMMUNITY_CENTRE
+  OTHER
+}
+
+enum SolutionType {
+  PLATFORM
+  PRODUCT
+  SERVICE
+  PROGRAM
+  TRAINING
+  ASSESSMENT
+  OTHER
+}
+
+/*
+|--------------------------------------------------------------------------
+| USER
+|--------------------------------------------------------------------------
+*/
+
+model User {
+  id Int @id @default(autoincrement())
+
+  email    String  @unique @db.VarChar(255)
+  username String  @unique @db.VarChar(100)
+  name     String  @db.VarChar(255)
+
+  password String? @db.VarChar(255)
+
+  emailVerified            Boolean   @default(false)
+  emailVerifiedAt          DateTime?
+  emailVerificationToken   String?   @unique @db.VarChar(255)
+  emailVerificationExpires DateTime?
+  emailResendCooldown      DateTime?
+  emailVerificationAttempts Int      @default(0)
+
+  resetPasswordToken   String?   @unique @db.VarChar(255)
+  resetPasswordExpires DateTime?
+
+  phoneNumber          String?   @unique @db.VarChar(50)
+  phoneVerified        Boolean   @default(false)
+  phoneVerificationCode String?  @db.VarChar(20)
+  phoneVerificationExpires DateTime?
+
+  bio      String? @db.Text
+  jobTitle String? @db.VarChar(255)
+  jobName  String? @db.VarChar(255)
+
+  gender UserGender?
+
+  publicId String? @unique @db.VarChar(255)
+  photo    String? @db.VarChar(500)
+
+  instagram String? @db.VarChar(255)
+  facebook  String? @db.VarChar(255)
+  linkedin  String? @db.VarChar(255)
+
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+
+  companies      CompanyUser[]
+  professional   Professional?
+  orders         Order[]
+  notifications  Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role, isActive])
+  @@index([deletedAt])
+}
+
+/*
+|--------------------------------------------------------------------------
+| COMPANY / ORGANIZATION
+|--------------------------------------------------------------------------
+*/
+
+model Company {
+  id Int @id @default(autoincrement())
+
+  name        String  @db.VarChar(255)
+  slug        String  @unique @db.VarChar(255)
+  publicId    String? @unique @db.VarChar(255)
+  description String? @db.Text
+
+  logo        String? @db.VarChar(500)
+  website     String? @db.VarChar(500)
+  email       String? @db.VarChar(255)
+  phone       String? @db.VarChar(50)
+
+  instagram String? @db.VarChar(255)
+  facebook  String? @db.VarChar(255)
+  linkedin  String? @db.VarChar(255)
+
+  address    String? @db.Text
+  city       String? @db.VarChar(100)
+  province   String? @db.VarChar(100)
+  country    String? @db.VarChar(100)
+  postalCode String? @db.VarChar(20)
+
+  latitude  Decimal? @db.Decimal(10, 7)
+  longitude Decimal? @db.Decimal(10, 7)
+
+  status           CompanyStatus     @default(PENDING)
+  verification     VerificationStatus @default(UNVERIFIED)
+
+  isFeatured Boolean @default(false)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         CompanyUser[]
+  careCentres   CareCentre[]
+  solutions     Solution[]
+  events        Event[]
+  professionals ProfessionalCompany[]
+
+  media Media[]
+
+  @@index([status, isFeatured])
+  @@index([city, province])
+  @@index([deletedAt])
+}
+
+/*
+|--------------------------------------------------------------------------
+| COMPANY USERS
+|--------------------------------------------------------------------------
+*/
+
+model CompanyUser {
+  id Int @id @default(autoincrement())
+
+  userId    Int
+  companyId Int
+
+  role   CompanyRole
+  status CompanyUserStatus @default(PENDING)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, companyId])
+  @@index([companyId, status])
+  @@index([userId, status])
+}
+
+/*
+|--------------------------------------------------------------------------
+| PROFESSIONAL
+|--------------------------------------------------------------------------
+*/
+
+model Professional {
+  id Int @id @default(autoincrement())
+
+  userId Int @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  publicId String? @unique @db.VarChar(255)
+  slug     String  @unique @db.VarChar(255)
+
+  headline String? @db.VarChar(255)
+  bio      String? @db.Text
+
+  availability ProfessionalAvailability @default(AVAILABLE)
+  listingStatus ListingStatus @default(DRAFT)
+
+  verification VerificationStatus @default(UNVERIFIED)
+
+  isFeatured Boolean @default(false)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companies ProfessionalCompany[]
+  specialties ProfessionalSpecialty[]
+  media       Media[]
+
+  @@index([listingStatus, isFeatured])
+  @@index([verification])
+}
+
+/*
+|--------------------------------------------------------------------------
+| PROFESSIONAL <-> COMPANY
+|--------------------------------------------------------------------------
+*/
+
+model ProfessionalCompany {
+  professionalId Int
+  companyId     Int
+
+  professional Professional @relation(
+    fields: [professionalId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  company Company @relation(
+    fields: [companyId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  role      String?  @db.VarChar(255)
+  isPrimary Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@id([professionalId, companyId])
+  @@index([companyId])
+}
+
+/*
+|--------------------------------------------------------------------------
+| PROFESSIONAL SPECIALTY
+|--------------------------------------------------------------------------
+*/
+
+model ProfessionalSpecialty {
+  professionalId Int
+  specialtyId    Int
+
+  professional Professional @relation(
+    fields: [professionalId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  specialty Specialty @relation(
+    fields: [specialtyId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@id([professionalId, specialtyId])
+  @@index([specialtyId])
+}
+
+model Specialty {
+  id Int @id @default(autoincrement())
+
+  name String @db.VarChar(255)
+  slug String @unique @db.VarChar(255)
+
+  isActive Boolean @default(true)
+
+  professionals ProfessionalSpecialty[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/*
+|--------------------------------------------------------------------------
+| CARE CENTRE
+|--------------------------------------------------------------------------
+*/
+
+model CareCentre {
+  id Int @id @default(autoincrement())
+
+  companyId Int
+  company   Company @relation(
+    fields: [companyId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  name String @db.VarChar(255)
+  slug String @unique @db.VarChar(255)
+
+  publicId String? @unique @db.VarChar(255)
+
+  description String? @db.LongText
+
+  type CareCentreType
+
+  listingStatus ListingStatus @default(DRAFT)
+  verification VerificationStatus @default(UNVERIFIED)
+
+  logo        String? @db.VarChar(500)
+  coverImage  String? @db.VarChar(500)
+
+  phone   String? @db.VarChar(50)
+  email   String? @db.VarChar(255)
+  website String? @db.VarChar(500)
+
+  address    String? @db.Text
+  city       String? @db.VarChar(100)
+  province   String? @db.VarChar(100)
+  country    String? @db.VarChar(100)
+  postalCode String? @db.VarChar(20)
+
+  latitude  Decimal? @db.Decimal(10, 7)
+  longitude Decimal? @db.Decimal(10, 7)
+
+  appointmentAvailable Boolean @default(false)
+  onlineAvailable      Boolean @default(false)
+
+  isFeatured Boolean @default(false)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  services      CareCentreService[]
+  professionals CareCentreProfessional[]
+  media         Media[]
+
+  @@index([companyId])
+  @@index([type, listingStatus])
+  @@index([city, province])
+  @@index([listingStatus, isFeatured])
+  @@index([deletedAt])
+}
+
+/*
+|--------------------------------------------------------------------------
+| CARE CENTRE SERVICE
+|--------------------------------------------------------------------------
+*/
+
+model CareCentreService {
+  id Int @id @default(autoincrement())
+
+  careCentreId Int
+  serviceId    Int
+
+  careCentre CareCentre @relation(
+    fields: [careCentreId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  service Service @relation(
+    fields: [serviceId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  createdAt DateTime @default(now())
+
+  @@id([careCentreId, serviceId])
+  @@index([serviceId])
+}
+
+model Service {
+  id Int @id @default(autoincrement())
+
+  name String @db.VarChar(255)
+  slug String @unique @db.VarChar(255)
+
+  description String? @db.Text
+
+  isActive Boolean @default(true)
+
+  careCentres CareCentreService[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/*
+|--------------------------------------------------------------------------
+| CARE CENTRE <-> PROFESSIONAL
+|--------------------------------------------------------------------------
+*/
+
+model CareCentreProfessional {
+  careCentreId  Int
+  professionalId Int
+
+  careCentre CareCentre @relation(
+    fields: [careCentreId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  professional Professional @relation(
+    fields: [professionalId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  role      String?  @db.VarChar(255)
+  isPrimary Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@id([careCentreId, professionalId])
+  @@index([professionalId])
+}
+
+/*
+|--------------------------------------------------------------------------
+| SOLUTION
+|--------------------------------------------------------------------------
+*/
+
+model Solution {
+  id Int @id @default(autoincrement())
+
+  companyId Int
+  company   Company @relation(
+    fields: [companyId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  name String @db.VarChar(255)
+  slug String @unique @db.VarChar(255)
+
+  publicId String? @unique @db.VarChar(255)
+
+  tagline     String? @db.VarChar(255)
+  description String? @db.LongText
+
+  type SolutionType
+
+  coverImage String? @db.VarChar(500)
+  logo       String? @db.VarChar(500)
+
+  listingStatus ListingStatus @default(DRAFT)
+  verification  VerificationStatus @default(UNVERIFIED)
+
+  isFeatured Boolean @default(false)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categories SolutionCategoryMap[]
+  audiences  SolutionAudienceMap[]
+
+  media Media[]
+
+  @@index([companyId])
+  @@index([type, listingStatus])
+  @@index([listingStatus, isFeatured])
+  @@index([deletedAt])
+}
+
+/*
+|--------------------------------------------------------------------------
+| SOLUTION CATEGORY
+|--------------------------------------------------------------------------
+*/
+
+model SolutionCategory {
+  id Int @id @default(autoincrement())
+
+  name String @db.VarChar(255)
+  slug String @unique @db.VarChar(255)
+
+  description String? @db.Text
+  icon        String? @db.VarChar(255)
+
+  orderIndex Int @default(0)
+  isActive   Boolean @default(true)
+
+  solutions SolutionCategoryMap[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, orderIndex])
+}
+
+model SolutionCategoryMap {
+  solutionId Int
+  categoryId Int
+
+  solution Solution @relation(
+    fields: [solutionId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  category SolutionCategory @relation(
+    fields: [categoryId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@id([solutionId, categoryId])
+  @@index([categoryId])
+}
+
+/*
+|--------------------------------------------------------------------------
+| SOLUTION AUDIENCE
+|--------------------------------------------------------------------------
+*/
+
+model SolutionAudience {
+  id Int @id @default(autoincrement())
+
+  name String @db.VarChar(255)
+  slug String @unique @db.VarChar(255)
+
+  isActive Boolean @default(true)
+
+  solutions SolutionAudienceMap[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SolutionAudienceMap {
+  solutionId Int
+  audienceId Int
+
+  solution Solution @relation(
+    fields: [solutionId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  audience SolutionAudience @relation(
+    fields: [audienceId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@id([solutionId, audienceId])
+  @@index([audienceId])
+}
+
+/*
+|--------------------------------------------------------------------------
+| MEDIA
+|--------------------------------------------------------------------------
+*/
+
+model Media {
+  id Int @id @default(autoincrement())
+
+  url      String @db.VarChar(1000)
+  publicId String? @db.VarChar(500)
+
+  type MediaType @default(IMAGE)
+
+  altText String? @db.VarChar(255)
+
+  companyId      Int?
+  solutionId     Int?
+  careCentreId   Int?
+  professionalId Int?
+
+  company Company? @relation(
+    fields: [companyId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  solution Solution? @relation(
+    fields: [solutionId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  careCentre CareCentre? @relation(
+    fields: [careCentreId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  professional Professional? @relation(
+    fields: [professionalId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([companyId, sortOrder])
+  @@index([solutionId, sortOrder])
+  @@index([careCentreId, sortOrder])
+  @@index([professionalId, sortOrder])
+}
+
+/*
+|--------------------------------------------------------------------------
+| NOTIFICATION
+|--------------------------------------------------------------------------
+*/
+
+model Notification {
+  id Int @id @default(autoincrement())
+
+  userId Int
+
+  type    NotificationType
+  title   String @db.VarChar(255)
+  message String @db.Text
+
+  data Json?
+
+  isRead Boolean @default(false)
+
+  status NotificationStatus @default(PENDING)
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+/*
+|--------------------------------------------------------------------------
+| HERO / CMS
+|--------------------------------------------------------------------------
+*/
+
+model HeroSlider {
+  id Int @id @default(autoincrement())
+
+  title       String? @db.VarChar(255)
+  subtitle    String? @db.VarChar(255)
+  description String? @db.Text
+
+  image    String? @db.VarChar(500)
+  publicId String? @db.VarChar(500)
+
+  buttonText String? @db.VarChar(255)
+  buttonUrl  String? @db.VarChar(500)
+
+  alignText String @default("left") @db.VarChar(20)
+
+  sortOrder Int @default(0)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model WhyUs {
+  id Int @id @default(autoincrement())
+
+  title       String @db.VarChar(255)
+  description String? @db.Text
+
+  image        String? @db.VarChar(500)
+  publicId     String? @db.VarChar(500)
+  hoverImage   String? @db.VarChar(500)
+  hoverPublicId String? @db.VarChar(500)
+
+  type WhyUsType @default(WHY_US)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum WhyUsType {
+  WHY_US
+  SERVICES
+  VISION
+  MISSION
+  OTHER
+}
+
+model AboutSection {
+  id Int @id @default(autoincrement())
+
+  title       String @db.VarChar(255)
+  description String @db.Text
+
+  imageUrl  String? @db.VarChar(500)
+  publicId  String? @db.VarChar(500)
+
+  orderIndex Int @default(0)
+
+  imagePosition String @default("left") @db.VarChar(20)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, orderIndex])
+}
+
+/*
+|--------------------------------------------------------------------------
+| EVENT
+|--------------------------------------------------------------------------
+*/
+
+model Event {
+  id Int @id @default(autoincrement())
+
+  title String @db.VarChar(255)
+  slug  String @unique @db.VarChar(255)
+
+  description String @db.LongText
+
+  location String? @db.VarChar(500)
+
+  startDate DateTime
+  endDate   DateTime
+
+  timeZone String @default("Asia/Jakarta") @db.VarChar(100)
+
+  price    Int @default(0)
+  currency String @default("IDR") @db.VarChar(10)
+
+  quota Int?
+
+  externalUrl String? @db.VarChar(500)
+
+  registrationType EventRegistrationType @default(INTERNAL)
+
+  coverImage String? @db.VarChar(500)
+  publicId   String? @db.VarChar(255)
+
+  status EventStatus @default(DRAFT)
+
+  companyId Int
+  company   Company @relation(
+    fields: [companyId],
+    references: [id]
+  )
+
+  categoryId Int
+  category   EventCategory @relation(
+    fields: [categoryId],
+    references: [id]
+  )
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  orders         Order[]
+  attendeeFields EventAttendeeField[]
+  industries     EventIndustry[]
+
+  @@index([companyId, status, startDate])
+  @@index([categoryId, status])
+  @@index([status, startDate])
+  @@index([deletedAt])
+}
+
+/*
+|--------------------------------------------------------------------------
+| EVENT CATEGORY
+|--------------------------------------------------------------------------
+*/
+
+model EventCategory {
+  id Int @id @default(autoincrement())
+
+  name String @db.VarChar(255)
+  slug String @unique @db.VarChar(255)
+
+  isActive Boolean @default(true)
+
+  events Event[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/*
+|--------------------------------------------------------------------------
+| INDUSTRY
+|--------------------------------------------------------------------------
+*/
+
+model Industry {
+  id Int @id @default(autoincrement())
+
+  name String @unique @db.VarChar(255)
+  slug String @unique @db.VarChar(255)
+
+  isActive Boolean @default(true)
+
+  events EventIndustry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EventIndustry {
+  eventId    Int
+  industryId Int
+
+  event Event @relation(
+    fields: [eventId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  industry Industry @relation(
+    fields: [industryId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@id([eventId, industryId])
+  @@index([industryId])
+}
+
+/*
+|--------------------------------------------------------------------------
+| ARTICLE / INSIGHTS
+|--------------------------------------------------------------------------
+*/
+
+model Article {
+  id Int @id @default(autoincrement())
+
+  publicId String @unique @default(uuid())
+
+  slug  String @unique @db.VarChar(255)
+  title String @db.VarChar(255)
+
+  excerpt String? @db.Text
+  content String? @db.LongText
+
+  coverImage String? @db.VarChar(500)
+
+  type     ArticleType
+  category ArticleCategory
+
+  status      ArticleStatus @default(DRAFT)
+  publishedAt DateTime?
+
+  isFeatured Boolean @default(false)
+
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([category, status])
+  @@index([type, status])
+  @@index([isFeatured, status])
+  @@index([deletedAt])
+}
+
+/*
+|--------------------------------------------------------------------------
+| ORDERS
+|--------------------------------------------------------------------------
+*/
+
+model Order {
+  id String @id @default(cuid())
+
+  eventId Int
+  userId  Int
+
+  event Event @relation(
+    fields: [eventId],
+    references: [id]
+  )
+
+  user User @relation(
+    fields: [userId],
+    references: [id]
+  )
+
+  amount   Int
+  currency String @default("IDR") @db.VarChar(10)
+
+  status OrderStatus @default(PENDING)
+
+  invoiceId  String? @unique @db.VarChar(255)
+  invoiceUrl String? @db.VarChar(1000)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  paidAt DateTime?
+
+  paymentLogs PaymentLog[]
+  tickets     Ticket[]
+
+  @@index([userId, status])
+  @@index([eventId, status])
+  @@index([status, createdAt])
+}
+
+/*
+|--------------------------------------------------------------------------
+| PAYMENT LOG
+|--------------------------------------------------------------------------
+*/
+
+model PaymentLog {
+  id String @id @default(cuid())
+
+  orderId String
+
+  order Order @relation(
+    fields: [orderId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  provider String @db.VarChar(50)
+
+  status PaymentStatus
+
+  payload Json
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+  @@index([provider, status])
+}
+
+/*
+|--------------------------------------------------------------------------
+| TICKET
+|--------------------------------------------------------------------------
+*/
+
+model Ticket {
+  id String @id @default(cuid())
+
+  orderId String
+
+  order Order @relation(
+    fields: [orderId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  attendeeName  String @db.VarChar(255)
+  attendeeEmail String @db.VarChar(255)
+  attendeePhone String? @db.VarChar(50)
+
+  attendeeData Json
+
+  code String @unique @db.VarChar(100)
+
+  qrCode String? @db.Text
+
+  isCheckedIn Boolean @default(false)
+  checkedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([attendeeEmail])
+  @@index([isCheckedIn, checkedAt])
+}
+
+/*
+|--------------------------------------------------------------------------
+| EVENT ATTENDEE FIELDS
+|--------------------------------------------------------------------------
+*/
+
+model EventAttendeeField {
+  id String @id @default(cuid())
+
+  eventId Int
+
+  event Event @relation(
+    fields: [eventId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  label    String @db.VarChar(255)
+  key      String @db.VarChar(100)
+  type     AttendeeFieldType
+  required Boolean @default(false)
+
+  options Json?
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, key])
+  @@index([eventId, sortOrder])
+}
+
+/*
+|--------------------------------------------------------------------------
+| CONTACT MESSAGE
+|--------------------------------------------------------------------------
+*/
+
+model ContactMessage {
+  id Int @id @default(autoincrement())
+
+  name        String @db.VarChar(255)
+  email       String @db.VarChar(255)
+  phoneNumber String? @db.VarChar(50)
+
+  subject String @db.VarChar(255)
+  message String @db.Text
+
+  status ContactMessageStatus @default(UNREAD)
+
+  repliedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| PROFESSIONAL
+|--------------------------------------------------------------------------
+*/
+
+model Professional {
+  id Int @id @default(autoincrement())
+
+  userId Int @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  slug     String  @unique @db.VarChar(255)
+  publicId String? @unique @db.VarChar(255)
+
+  displayName String? @db.VarChar(255)
+  headline    String? @db.VarChar(255)
+  bio         String? @db.LongText
+
+  profileImage String? @db.VarChar(500)
+
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  listingStatus      ListingStatus      @default(DRAFT)
+
+  isFeatured Boolean @default(false)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  specialties ProfessionalSpecialty[]
+  locations   ProfessionalLocation[]
+  educations  ProfessionalEducation[]
+  experiences ProfessionalExperience[]
+  credentials ProfessionalCredential[]
+
+  companies ProfessionalCompany[]
+  services  ProfessionalService[]
+
+  languages        ProfessionalLanguage[]
+  professionalTypes ProfessionalTypeMap[]
+
+  @@index([listingStatus, isFeatured])
+  @@index([verificationStatus])
+  @@index([deletedAt])
+}
+
+model Specialty {
+  id Int @id @default(autoincrement())
+
+  name String @db.VarChar(255)
+  slug String @unique @db.VarChar(255)
+
+  description String? @db.Text
+
+  isActive Boolean @default(true)
+
+  professionals ProfessionalSpecialty[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProfessionalSpecialty {
+  professionalId Int
+  specialtyId    Int
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  specialty Specialty @relation(fields: [specialtyId], references: [id], onDelete: Cascade)
+
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@id([professionalId, specialtyId])
+  @@index([specialtyId])
+}
+
+model ProfessionalLocation {
+  id Int @id @default(autoincrement())
+
+  professionalId Int
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  name String? @db.VarChar(255)
+
+  address    String? @db.Text
+  city       String? @db.VarChar(100)
+  province   String? @db.VarChar(100)
+  country    String? @db.VarChar(100)
+  postalCode String? @db.VarChar(20)
+
+  latitude  Decimal? @db.Decimal(10, 7)
+  longitude Decimal? @db.Decimal(10, 7)
+
+  isOnline  Boolean @default(false)
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalId])
+  @@index([city, province])
+}
+
+model ProfessionalCompany {
+  professionalId Int
+  companyId      Int
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  role String? @db.VarChar(255)
+
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@id([professionalId, companyId])
+  @@index([companyId])
+}
+
+model CareCentreProfessional {
+  careCentreId   Int
+  professionalId Int
+
+  careCentre CareCentre @relation(fields: [careCentreId], references: [id], onDelete: Cascade)
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  role String? @db.VarChar(255)
+
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@id([careCentreId, professionalId])
+  @@index([professionalId])
+}
+
+model ProfessionalEducation {
+  id Int @id @default(autoincrement())
+
+  professionalId Int
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  institution String @db.VarChar(255)
+  degree      String? @db.VarChar(255)
+  field       String? @db.VarChar(255)
+
+  startYear Int?
+  endYear   Int?
+
+  description String? @db.Text
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalId, sortOrder])
+}
+
+model ProfessionalExperience {
+  id Int @id @default(autoincrement())
+
+  professionalId Int
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  companyName String @db.VarChar(255)
+  position    String @db.VarChar(255)
+
+  startDate DateTime
+  endDate   DateTime?
+
+  isCurrent Boolean @default(false)
+
+  description String? @db.Text
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalId, startDate])
+}
+
+model ProfessionalCredential {
+  id Int @id @default(autoincrement())
+
+  professionalId Int
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  name         String  @db.VarChar(255)
+  issuer       String? @db.VarChar(255)
+  credentialNo String? @db.VarChar(255)
+
+  issuedAt  DateTime?
+  expiresAt DateTime?
+
+  documentUrl String? @db.VarChar(1000)
+
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalId])
+  @@index([verificationStatus])
+}
+
+model ProfessionalService {
+  professionalId Int
+  serviceId      Int
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([professionalId, serviceId])
+  @@index([serviceId])
+}
+
+model Language {
+  id Int @id @default(autoincrement())
+
+  name String @db.VarChar(100)
+  code String @unique @db.VarChar(20)
+
+  isActive Boolean @default(true)
+
+  professionals ProfessionalLanguage[]
+
+  createdAt DateTime @default(now())
+}
+
+model ProfessionalLanguage {
+  professionalId Int
+  languageId     Int
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+
+  @@id([professionalId, languageId])
+  @@index([languageId])
+}
+
+model ProfessionalType {
+  id Int @id @default(autoincrement())
+
+  name String @db.VarChar(255)
+  slug String @unique @db.VarChar(255)
+
+  isActive Boolean @default(true)
+
+  professionals ProfessionalTypeMap[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProfessionalTypeMap {
+  professionalId     Int
+  professionalTypeId Int
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  professionalType ProfessionalType @relation(fields: [professionalTypeId], references: [id], onDelete: Cascade)
+
+  @@id([professionalId, professionalTypeId])
+  @@index([professionalTypeId])
+}

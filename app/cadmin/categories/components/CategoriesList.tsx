@@ -12,7 +12,7 @@ export type Categories = {
   publicId: string;
   photo?: string;
   content?: string;
-  isactive: boolean;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -96,8 +96,8 @@ export default function CategoriesList() {
     {
       name: "Status",
       cell: (row: Categories) => (
-        <span className={row.isactive ? "text-green-600" : "text-red-600"}>
-          {row.isactive ? "Active" : "Inactive"}
+        <span className={row.isActive ? "text-green-600" : "text-red-600"}>
+          {row.isActive ? "Active" : "Inactive"}
         </span>
       ),
       width: "100px",

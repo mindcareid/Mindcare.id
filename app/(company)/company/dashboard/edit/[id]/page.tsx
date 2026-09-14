@@ -23,7 +23,7 @@ export default function EditCompanyPage() {
   const [phone, setPhone] = useState("");
   const [website, setWebsite] = useState("");
   const [instagram, setInstagram] = useState("");
-  const [linkedln, setLinkedln] = useState("");
+  const [linkedin, setLinkedln] = useState("");
   const [logo, setLogo] = useState<string | null>(null);
   const [publicId, setPublicId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -46,7 +46,7 @@ export default function EditCompanyPage() {
         setPhone(company.phone ?? "");
         setWebsite(company.website ?? "");
         setInstagram(company.instagram ?? "");
-        setLinkedln(company.linkedln ?? "");
+        setLinkedln(company.linkedin ?? "");
         setLogo(company.logo ?? null);
         setPublicId(company.publicId ?? null);
       } catch (err) {
@@ -99,7 +99,7 @@ export default function EditCompanyPage() {
       phone,
       website,
       instagram,
-      linkedln,
+      linkedin,
     };
 
     const parsed = UpdateCompanyScehma.safeParse(payload);
@@ -298,7 +298,7 @@ export default function EditCompanyPage() {
             </label>
             <input
               type="text"
-              value={linkedln}
+              value={linkedin}
               onChange={(e) => setLinkedln(e.target.value)}
               placeholder="linkedin.com/company/..."
               className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition"

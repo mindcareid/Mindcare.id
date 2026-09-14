@@ -12,7 +12,7 @@ interface OrderWithEvent extends Order {
         location?: string | null;
     };
     _count: {
-        ticket: number;
+        tickets: number;
     };
 }
 
@@ -172,6 +172,7 @@ function OrderRow({ order }: { order: OrderWithEvent }) {
         PENDING: "bg-yellow-100 text-yellow-700",
         EXPIRED: "bg-red-100 text-red-700",
         CANCELED: "bg-gray-200 text-gray-600",
+        REFUNDED: "bg-orange-100 text-orange-700",
     }[order.status];
 
     return (
@@ -186,7 +187,7 @@ function OrderRow({ order }: { order: OrderWithEvent }) {
             </td>
 
             <td className="p-3 text-center font-semibold">
-                {order._count.ticket}
+                {order._count.tickets}
             </td>
 
             <td className="p-3">

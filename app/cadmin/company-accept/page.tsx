@@ -20,7 +20,7 @@ type Company = {
       id: number;
       name: string;
       email: string;
-      phonenumber: string | null;
+      phoneNumber: string | null;
     };
   }[];
 };
@@ -205,7 +205,7 @@ export default function CompanyAcceptPage() {
                     </div>
                     <div>
                       <p className="text-xs text-gray-400">Phone</p>
-                      <p>{owner.user.phonenumber ?? "-"}</p>
+                      <p>{owner.user.phoneNumber ?? "-"}</p>
                     </div>
                   </div>
                 )}

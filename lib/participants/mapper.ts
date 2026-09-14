@@ -8,14 +8,14 @@ export function mapOrderToParticipantRow(
     buyer: {
       name: order.user.name,
       email: order.user.email,
-      phone: order.user.phonenumber,
+      phone: order.user.phoneNumber,
     },
     transactionDate: order.createdAt,
     isFree: order.amount === 0,
-    quantity: order.ticket.length,
+    quantity: order.tickets.length,
     totalPayment: order.amount,
     status: order.status,
-    attendees: order.ticket.map((t) => ({
+    attendees: order.tickets.map((t) => ({
       ticketId: t.id,
       name: t.attendeeName,
       email: t.attendeeEmail,

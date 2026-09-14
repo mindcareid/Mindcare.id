@@ -18,12 +18,12 @@ type UserFormFields = {
   username: string;
   name: string;
   password?: string;
-  phonenumber?: string;
+  phoneNumber?: string;
   bio?: string;
   instagram?: string;
   facebook?: string;
   role: "ADMIN" | "SUPERADMIN" | "USER";
-  isactive: boolean;
+  isActive: boolean;
   image?: {
     secure_url: string;
     public_id: string;
@@ -36,12 +36,12 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
     username: "",
     name: "",
     password: "",
-    phonenumber: "",
+    phoneNumber: "",
     bio: "",
     instagram: "",
     facebook: "",
     role: "USER",
-    isactive: true,
+    isActive: true,
     image: defaultValues?.image ?? undefined, // 👈 ini penting
     ...defaultValues,
   });
@@ -169,8 +169,8 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
             className="w-full border border-gray-300 px-3 py-2 rounded"
           />
           <input
-            name="phonenumber"
-            value={form.phonenumber || ""}
+            name="phoneNumber"
+            value={form.phoneNumber || ""}
             onChange={handleChange}
             placeholder="Phone Number"
             className="w-full border border-gray-300 px-3 py-2 rounded"

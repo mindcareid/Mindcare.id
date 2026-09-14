@@ -5,7 +5,7 @@ export type CompanyData = {
   logo: string | null;
   description: string | null;
   instagram: string | null;
-  linkedln: string | null;
+  linkedin: string | null;
   website: string | null;
   phone: string | null;
   email: string | null;

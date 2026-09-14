@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   }
 
   const data = await prisma.heroSlider.findMany({
-    orderBy: { order: 'asc' },
+    orderBy: { sortOrder: 'asc' },
   });
 
   return NextResponse.json({ status: 200, message: 'success', data });
@@ -41,11 +41,11 @@ export async function POST(req: Request) {
         description: data.description,
         image: data.image,
         publicId: data.publicId ?? null,
-        button_text: data.button_text,
-        button_url: data.button_url,
-        align_text: data.align_text,
-        order: data.order ?? 0,
-        is_active: data.is_active ?? true,
+        buttonText: data.buttonText,
+        buttonUrl: data.buttonUrl,
+        alignText: data.alignText,
+        sortOrder: data.order ?? 0,
+        isActive: data.isActive ?? true,
       },
     });
 
@@ -71,11 +71,11 @@ export async function PUT(req: Request) {
         description: data.description,
         image: data.image,
         publicId: data.publicId ?? null,
-        button_text: data.button_text,
-        button_url: data.button_url,
-        align_text: data.align_text,
-        order: data.order ?? 0,
-        is_active: data.is_active ?? true,
+        buttonText: data.buttonText,
+        buttonUrl: data.buttonUrl,
+        alignText: data.alignText,
+        sortOrder: data.order ?? 0,
+        isActive: data.isActive ?? true,
       },
     });
 
