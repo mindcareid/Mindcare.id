@@ -4,26 +4,11 @@ import type {
   CentreKind,
   CentreService,
 } from "../type/careCentre";
-
-// Perubahan 24 Agustus 2026 (alasan lengkap di `design.md` bagian 20):
-//
-//   - `openingHours` yang dulu satu baris teks ("Sen–Sab, 08.00–20.00") kini
-//     tujuh entri per centre. Jamnya sama dengan teks lamanya, tidak ada jam
-//     baru yang dikarang — cuma bentuknya yang berubah supaya bisa dihitung.
-//   - `isOpenNow` dihapus. Statusnya sekarang dihitung `isOpenAt()` di
-//     `centreHours.ts` dari jam praktik plus waktu sekarang.
-//   - `timeZone` ditambahkan. Denpasar dan Makassar `Asia/Makassar` (WITA),
-//     tujuh sisanya `Asia/Jakarta` (WIB).
-//   - `professionalCount` yang dulu ditulis tangan (7, 5, 4, 12, 3, 6, 4, 10, 5)
-//     sekarang wajib sama dengan `professionalSlugs.length`. Angka lamanya tidak
-//     bisa dibuktikan oleh apa pun; angka barunya bisa dihitung ulang siapa saja
-//     dari daftar slugnya. Konsekuensinya angkanya jadi kecil — dua rumah sakit
-//     di bawah berbunyi 3 dan 2, bukan 12 dan 10.
-//
-// Semua entri tujuh baris ditulis apa adanya, tanpa helper pembangun, supaya
-// harness di `scripts/check-data-invariants.mjs` bisa membacanya dari teks file.
-// Harness itu `.mjs` dan tidak mengimpor TypeScript; kalau jamnya dihasilkan
-// fungsi, invarian "tepat tujuh hari berurutan" tidak bisa diperiksa sama sekali.
+import prisma from "@/lib/prisma";
+import {
+  PUBLIC_CARE_CENTRE_SELECT,
+  mapCareCentre,
+} from "../../data/listingMappers";
 
 const services = {
   konsultasiPsikiatri: {
@@ -59,8 +44,7 @@ const services = {
     name: "Layanan Gawat Darurat",
   },
 } satisfies Record<string, CentreService>;
-
-const careCentres: CareCentre[] = [
+export const careCentres: CareCentre[] = [
   {
     id: "centre-1",
     slug: "klinik-jiwa-sehat-kemang",
@@ -438,28 +422,31 @@ const careCentres: CareCentre[] = [
 ];
 
 export async function getCareCentres(): Promise<CareCentre[]> {
-  return [...careCentres].sort((a, b) => a.name.localeCompare(b.name, "id-ID"));
+  const rows = await prisma.careCentre.findMany({
+    where: { listingStatus: "LISTED", deletedAt: null },
+    select: PUBLIC_CARE_CENTRE_SELECT,
+    orderBy: { name: "asc" },
+  });
+
+  return rows.map(mapCareCentre);
 }
 
 export async function getCareCentreBySlug(
   slug: string,
 ): Promise<CareCentre | null> {
-  return careCentres.find((item) => item.slug === slug) ?? null;
+  const row = await prisma.careCentre.findFirst({
+    where: { slug, listingStatus: "LISTED", deletedAt: null },
+    select: PUBLIC_CARE_CENTRE_SELECT,
+  });
+
+  return row ? mapCareCentre(row) : null;
 }
 
-/**
- * Centre tempat seorang profesional praktik.
- *
- * Arah relasinya dari centre ke profesional (`professionalSlugs`), jadi
- * pencariannya harus menyapu daftar centre — bukan membaca sebuah field di
- * profesionalnya. Mengembalikan `null` untuk profesional yang praktik mandiri,
- * dan itu keadaan yang sah, bukan data yang belum diisi.
- */
 export async function getCentreOfProfessional(
   professionalSlug: string,
 ): Promise<CareCentre | null> {
   return (
-    careCentres.find((centre) =>
+    (await getCareCentres()).find((centre) =>
       centre.professionalSlugs.includes(professionalSlug),
     ) ?? null
   );
@@ -470,7 +457,7 @@ export async function getCareCentreFacets(): Promise<CareCentreFacets> {
   const servicesBySlug = new Map<string, CentreService>();
   const cities = new Set<string>();
 
-  for (const centre of careCentres) {
+  for (const centre of await getCareCentres()) {
     kinds.add(centre.kind);
     cities.add(centre.address.city);
     for (const service of centre.services) {

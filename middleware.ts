@@ -12,7 +12,10 @@ export async function middleware(request: NextRequest) {
 
   if (!token) {
     const loginUrl = new URL("/auth/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", request.url);
+    loginUrl.searchParams.set(
+      "callbackUrl",
+      `${pathname}${request.nextUrl.search}`,
+    );
     return NextResponse.redirect(loginUrl);
   }
   if (pathname.startsWith("/cadmin")) {

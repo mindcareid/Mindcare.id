@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { Building2, CalendarClock, MapPin, Stethoscope } from "lucide-react";
 import Container from "@/app/components/reusable/Container";
+import EmptyState from "@/app/components/reusable/EmptyState";
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 import FilterBar, {
   type FilterBarField,
 } from "@/app/components/reusable/FilterBar";
@@ -12,14 +15,6 @@ import CareCentresGrid from "./section/CareCentresGrid";
 import CentresMapPlaceholder from "./section/CentresMapPlaceholder";
 import { isOpenAt } from "./data/centreHours";
 import type { CareCentre, CareCentreFacets } from "./type/careCentre";
-
-// Satu-satunya client component di fitur ini. `page.tsx` tetap server component
-// yang memanggil accessor lalu menurunkannya sebagai props (rules.md pasal 4).
-//
-// Filternya SINGLE-SELECT, berbeda dari Professionals yang multi-select. Itu
-// bukan kelalaian: `FilterBar` di mockup berbentuk deretan field dengan satu
-// nilai terbaca per field, sedangkan `FilterSidebar` Professionals berbentuk
-// accordion dengan kotak centang. Bentuknya memang menyiratkan semantik berbeda.
 const ALL = "all";
 const ANY_TIME = "any";
 const OPEN_NOW = "open";
@@ -42,12 +37,6 @@ function matchesQuery(centre: CareCentre, query: string) {
 type CareCentresProps = {
   centres: CareCentre[];
   facets: CareCentreFacets;
-  /**
-   * Acuan waktu tunggal, difiksasi `page.tsx`. Filter "Open now" dan baris jam
-   * di kartu wajib memakai instan yang SAMA — kalau komponen ini memanggil
-   * `new Date()` sendiri, sebuah centre bisa lolos filter "Open now" sementara
-   * kartunya menulis jam yang sudah lewat.
-   */
   now: string;
 };
 
@@ -77,9 +66,6 @@ export default function CareCentres({
       ) {
         return false;
       }
-      // "Open now" dihitung dari jam praktik dan `now`, bukan dari sebuah field
-      // di datanya. Sebelum 24 Agustus 2026 ini membaca `centre.isOpenNow` yang
-      // ditulis tangan — nilainya tidak pernah berubah walau jamnya berubah.
       if (availability === OPEN_NOW && !isOpenAt(centre, now)) return false;
       return true;
     });
@@ -100,9 +86,6 @@ export default function CareCentres({
     setAvailability(ANY_TIME);
   }
 
-  // Pilihan filter dibangun dari facet yang diturunkan dari data, bukan didaftar
-  // manual di sini — jadi pusat layanan baru dengan layanan baru langsung ikut
-  // muncul tanpa menyunting komponen.
   const fields: FilterBarField[] = [
     {
       id: "city",
@@ -171,18 +154,42 @@ export default function CareCentres({
       </PageHero>
 
       <Container as="section" className="pb-20">
-        <FilterBar fields={fields} onReset={isFiltered ? resetAll : undefined} />
+        {centres.length === 0 ? (
+          <EmptyState
+            icon={Building2}
+            title="No care centres are listed yet"
+            description="Every centre here has its operating permit checked before it appears. Listings show up as soon as they are approved — if you represent a clinic, hospital, or counselling centre, you can register it now."
+            action={
+              <Link
+                href="/apply/care-centre"
+                className={buttonStyles({ size: "lg" })}
+              >
+                Register a care centre
+              </Link>
+            }
+          />
+        ) : (
+          <>
+            <FilterBar
+              fields={fields}
+              onReset={isFiltered ? resetAll : undefined}
+            />
 
-        <p className="mt-6 text-sm text-muted-foreground">
-          Showing <span className="font-semibold text-foreground">{visibleCentres.length}</span>{" "}
-          of {centres.length} centres
-        </p>
+            <p className="mt-6 text-sm text-muted-foreground">
+              Showing{" "}
+              <span className="font-semibold text-foreground">
+                {visibleCentres.length}
+              </span>{" "}
+              of {centres.length} centres
+            </p>
 
-        <CareCentresGrid
-          centres={visibleCentres}
-          now={now}
-          className="mt-6"
-        />
+            <CareCentresGrid
+              centres={visibleCentres}
+              now={now}
+              className="mt-6"
+            />
+          </>
+        )}
       </Container>
     </div>
   );
