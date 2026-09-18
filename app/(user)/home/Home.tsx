@@ -95,12 +95,12 @@ export default function Home({
             Join the directory
           </p>
           <h2 className="mt-3 font-heading text-3xl font-semibold text-foreground">
-            Are you a professional or a centre?
+            Are you a practitioner, centre, or solutions provider?
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground">
-            Psychologists, psychiatrists, counsellors, and care centres can
-            apply to be listed. Every application is reviewed before a listing
-            goes live.
+            Psychologists, psychiatrists, care centres and solutions provider
+            can apply to be listed. Every application is reviewed before a
+            listing goes live.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
