@@ -35,10 +35,26 @@ export default function ApplySubmittedPage() {
             </Link>
             .
           </p>
+          <p>
+            You can follow the status any time from your dashboard, under{" "}
+            <span className="font-medium text-foreground">
+              My Professional Listing
+            </span>{" "}
+            or{" "}
+            <span className="font-medium text-foreground">My Care Centre</span>.
+          </p>
         </div>
-        <Link href="/" className={buttonStyles({ size: "lg" })}>
-          Back to the directory
-        </Link>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Link href="/dashboard" className={buttonStyles({ size: "lg" })}>
+            Go to my dashboard
+          </Link>
+          <Link
+            href="/"
+            className={buttonStyles({ variant: "outline", size: "lg" })}
+          >
+            Back to the directory
+          </Link>
+        </div>
       </div>
     </Container>
   );

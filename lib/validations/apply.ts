@@ -213,3 +213,33 @@ export type ProfessionalServiceFormData = z.infer<
   typeof professionalServiceSchema
 >;
 export type OpeningHourFormData = z.infer<typeof openingHourSchema>;
+export const EditProfessionalSchema = ApplyProfessionalSchema.omit({
+  acceptTerms: true,
+});
+
+export const EditCareCentreSchema = ApplyCareCentreSchema.omit({
+  acceptTerms: true,
+});
+
+export type EditProfessionalFormData = z.infer<typeof EditProfessionalSchema>;
+export type EditCareCentreFormData = z.infer<typeof EditCareCentreSchema>;
+export const PROFESSIONAL_IDENTITY_FIELDS = [
+  "fullName",
+  "credentials",
+  "profession",
+  "licenceType",
+  "licenceNumber",
+  "licenceValidUntil",
+] as const;
+
+export const CARE_CENTRE_IDENTITY_FIELDS = [
+  "name",
+  "kind",
+  "street",
+  "city",
+  "province",
+  "postalCode",
+  "permitType",
+  "permitNumber",
+  "permitValidUntil",
+] as const;

@@ -2,19 +2,43 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MdOutlineGridView, MdConfirmationNumber } from "react-icons/md";
+import {
+  MdOutlineGridView,
+  MdConfirmationNumber,
+  MdWorkOutline,
+} from "react-icons/md";
 import { FaRegCreditCard } from "react-icons/fa6";
-import { TbWorld } from "react-icons/tb";
-
-const menu = [
+import { FiUser } from "react-icons/fi";
+import { useMyListings } from "./listing/useMyListings";
+const baseMenu = [
   { name: "Overview", path: "/dashboard", icon: MdOutlineGridView },
   { name: "Orders", path: "/dashboard/orders", icon: FaRegCreditCard },
   { name: "Ticket", path: "/dashboard/my-ticket", icon: MdConfirmationNumber },
-  { name: "Events", path: "/events", icon: TbWorld },
+  { name: "Profile", path: "/profile", icon: FiUser },
 ];
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const hasListing = useMyListings();
+  const onListingPage =
+    pathname.startsWith("/dashboard/professional") ||
+    pathname.startsWith("/dashboard/care-centre");
+
+  const menu =
+    onListingPage && (hasListing.professional || hasListing.careCentre)
+      ? [
+          { name: "Overview", path: "/dashboard", icon: MdOutlineGridView },
+          {
+            name: hasListing.professional ? "My Listing" : "My Centre",
+            path: hasListing.professional
+              ? "/dashboard/professional"
+              : "/dashboard/care-centre",
+            icon: MdWorkOutline,
+          },
+          { name: "Orders", path: "/dashboard/orders", icon: FaRegCreditCard },
+          { name: "Profile", path: "/profile", icon: FiUser },
+        ]
+      : baseMenu;
 
   return (
     <nav

@@ -5,11 +5,14 @@ import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiUser, FiLogOut } from "react-icons/fi";
+import { MdWorkOutline, MdLocalHospital } from "react-icons/md";
 import Link from "next/link";
+import { useMyListings } from "./listing/useMyListings";
 
 export default function MobileTopbar() {
   const { data: session } = useSession();
-  const [userOpen, setUserOpen] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);.
+  const hasListing = useMyListings();
 
   const userInitial = session?.user?.name?.charAt(0).toUpperCase() ?? "U";
 
@@ -68,6 +71,32 @@ export default function MobileTopbar() {
                          border border-black rounded-xl
                          shadow-xl overflow-hidden z-50"
             >
+              {hasListing.professional && (
+                <Link
+                  href="/dashboard/professional"
+                  onClick={() => setUserOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3
+                             text-neutral-900 font-semibold hover:bg-white/5
+                             hover:text-blue-500 transition text-sm"
+                >
+                  <MdWorkOutline size={17} />
+                  My Professional Listing
+                </Link>
+              )}
+
+              {hasListing.careCentre && (
+                <Link
+                  href="/dashboard/care-centre"
+                  onClick={() => setUserOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3
+                             text-neutral-900 font-semibold hover:bg-white/5
+                             hover:text-blue-500 transition text-sm"
+                >
+                  <MdLocalHospital size={17} />
+                  My Care Centre
+                </Link>
+              )}
+
               <Link
                 href="/profile"
                 onClick={() => setUserOpen(false)}
