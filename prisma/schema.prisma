@@ -26,6 +26,11 @@ enum UserGender {
   other
 }
 
+enum AdminRole {
+  ADMIN
+  SUPERADMIN
+}
+
 enum CompanyStatus {
   PENDING
   ACTIVE
@@ -50,6 +55,7 @@ enum CompanyRole {
 enum ListingStatus {
   DRAFT
   PENDING_REVIEW
+  APPROVED
   PUBLISHED
   REJECTED
   ARCHIVED
@@ -197,6 +203,22 @@ model CategoriesSub {
   @@index([categoriesId])
 }
 
+model AdminAccess {
+  id Int @id @default(autoincrement())
+
+  userId Int @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role AdminRole @default(ADMIN)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role, isActive])
+}
+
 /**
  * |--------------------------------------------------------------------------
  * | USER
@@ -233,7 +255,7 @@ model User {
 
   gender UserGender?
 
-  publicId String? @unique @db.VarChar(255)
+  publicId String? @db.VarChar(255)
   photo    String? @db.VarChar(500)
 
   instagram String? @db.VarChar(255)
@@ -246,6 +268,7 @@ model User {
 
   companies     CompanyUser[]
   professional  Professional?
+  adminAccess  AdminAccess?
   orders        Order[]
   notifications Notification[]
 
@@ -267,7 +290,7 @@ model Company {
 
   name        String  @db.VarChar(255)
   slug        String  @unique @db.VarChar(255)
-  publicId    String? @unique @db.VarChar(255)
+  publicId    String? @db.VarChar(255)
   description String? @db.Text
 
   logo    String? @db.VarChar(500)
@@ -352,7 +375,7 @@ model CareCentre {
   name String @db.VarChar(255)
   slug String @unique @db.VarChar(255)
 
-  publicId String? @unique @db.VarChar(255)
+  publicId String? @db.VarChar(255)
 
   description String? @db.LongText
 
@@ -363,6 +386,8 @@ model CareCentre {
 
   logo       String? @db.VarChar(500)
   coverImage String? @db.VarChar(500)
+
+  kind String?
 
   phone   String? @db.VarChar(50)
   email   String? @db.VarChar(255)
@@ -452,7 +477,7 @@ model Solution {
   name String @db.VarChar(255)
   slug String @unique @db.VarChar(255)
 
-  publicId String? @unique @db.VarChar(255)
+  publicId String? @db.VarChar(255)
 
   tagline     String? @db.VarChar(255)
   description String? @db.LongText
@@ -1010,8 +1035,9 @@ model Professional {
   userId Int  @unique
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  publicId String? @unique @db.VarChar(255)
+  publicId String? @db.VarChar(255)
   slug     String  @unique @db.VarChar(255)
+  fullName String? @db.VarChar(255)
 
   displayName String? @db.VarChar(255)
   headline    String? @db.VarChar(255)
