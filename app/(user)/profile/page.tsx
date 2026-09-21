@@ -23,7 +23,7 @@ export default function ProfilePage() {
         className="p-4 my-4 mx-auto  flex md:hidden items-center gap-4 border border-transparent "
       >
         <FaArrowLeft className="w-5 h-5" />
-        <span className="text-md font-medium">My Profile </span>
+        <span className="text-base font-medium">My Profile </span>
       </Link>
       <p className="hidden md:block text-2xl font-medium py-4">My Profile</p>
       <ProfileHeader user={session?.user} />

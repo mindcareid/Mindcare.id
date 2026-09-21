@@ -4,9 +4,7 @@ import { dirname, join, resolve } from "node:path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const { compile } = await import(
-  pathToFileURL(
-    resolve(root, "node_modules/tailwindcss/dist/lib.mjs"),
-  ).href
+  pathToFileURL(resolve(root, "node_modules/tailwindcss/dist/lib.mjs")).href
 );
 
 const targets = process.argv.slice(2);
@@ -28,7 +26,30 @@ function collectFiles(entry, found = []) {
 
 const files = scanRoots.flatMap((entry) => collectFiles(entry));
 
-const candidates = new Map(); 
+const candidates = new Map();
+function templateParts(raw) {
+  const parts = [];
+  const expression = /\$\{([\s\S]*?)\}/g;
+  let cursor = 0;
+  let match;
+
+  while ((match = expression.exec(raw)) !== null) {
+    parts.push(raw.slice(cursor, match.index));
+    const withoutComparisons = match[1].replace(
+      /[=!]==?\s*(?:"[^"]*"|'[^']*'|`[^`]*`)/g,
+      "",
+    );
+    for (const quoted of withoutComparisons.matchAll(
+      /"([^"]*)"|'([^']*)'|`([^`]*)`/g,
+    )) {
+      parts.push(quoted[1] ?? quoted[2] ?? quoted[3] ?? "");
+    }
+    cursor = match.index + match[0].length;
+  }
+
+  parts.push(raw.slice(cursor));
+  return parts;
+}
 
 for (const file of files) {
   const source = readFileSync(file, "utf8");
@@ -47,7 +68,10 @@ for (const file of files) {
             .replace(/[=!]==?\s*(?:"[^"]*"|`[^`]*`)/g, "")
             .matchAll(/"([^"]*)"|`([^`]*)`/g),
         ].map((m) => m[1] ?? m[2])
-      : [region];
+      : match[2] !== undefined
+        ? // className={`...`} — template literal, pisahkan ekspresinya.
+          templateParts(region)
+        : [region];
 
     for (const literal of literals) {
       for (const cls of literal.split(/\s+/)) {

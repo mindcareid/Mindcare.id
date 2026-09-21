@@ -31,8 +31,7 @@ export function OrderTable({ orders }: { orders: OrderWithEvent[] }) {
         <tbody className="divide-y divide-border bg-card">
           {orders.map((order) => (
             <tr key={order.id} className="transition-colors hover:bg-muted/30">
-              {/* Order ID — cukup tampilkan short ID, full ID bisa di detail page */}
-              <td className="px-4 py-3.5 font-mono text-md text-muted-foreground">
+              <td className="px-4 py-3.5 font-mono text-base text-muted-foreground">
                 #{shortOrderId(order.id)}
               </td>
 

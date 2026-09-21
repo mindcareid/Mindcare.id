@@ -11,7 +11,7 @@ import { useMyListings } from "./listing/useMyListings";
 
 export default function MobileTopbar() {
   const { data: session } = useSession();
-  const [userOpen, setUserOpen] = useState(false);.
+  const [userOpen, setUserOpen] = useState(false);
   const hasListing = useMyListings();
 
   const userInitial = session?.user?.name?.charAt(0).toUpperCase() ?? "U";

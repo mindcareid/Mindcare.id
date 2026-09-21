@@ -1,4 +1,4 @@
-import { user_gender, user_role } from "@prisma/client";
+import { UserGender, UserRole } from "@prisma/client";
 import { DefaultSession, DefaultUser } from "next-auth";
 
 declare module "next-auth" {
@@ -7,7 +7,7 @@ declare module "next-auth" {
       id: string;
       email: string;
       name: string;
-      role: user_role;
+      role: UserRole;
       photo: string | null;
       phoneNumber?: string | null;
       bio?: string | null;
@@ -17,7 +17,7 @@ declare module "next-auth" {
       expertId: number | null;
       jobTitle?: string | null;
       jobName?: string | null;
-      gender?: user_gender | null;
+      gender?: UserGender | null;
       companyId?: number | null;
       companyRole?: string | null;
       companyStatus?: string | null;
@@ -32,7 +32,7 @@ declare module "next-auth" {
   //Menambahkan Role Company dan CompanyId
   interface User extends DefaultUser {
     id: string;
-    role: user_role;
+    role: UserRole;
     phoneNumber?: string | null;
     bio?: string | null;
     createAt?: string | null;
@@ -40,7 +40,7 @@ declare module "next-auth" {
     emailVerified: boolean;
     jobTitle?: string | null;
     jobName?: string | null;
-    gender?: user_gender | null;
+    gender?: UserGender | null;
     companyId?: number | null;
     companies?: {
       id: number;
@@ -52,14 +52,14 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
-    role: user_role;
+    role: UserRole;
     photo: string | null;
     phoneNumber?: string | null;
     username: string;
     bio?: string | null;
     jobTitle?: string | null;
     jobName?: string | null;
-    gender?: user_gender | null;
+    gender?: UserGender | null;
     createAt?: string | null;
     emailVerified: boolean;
     expertId: number | null;
