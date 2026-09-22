@@ -32,7 +32,7 @@ function VerticalMarquee({
   useEffect(() => {
     if (onItemsRef && containerRef.current) {
       const items = Array.from(
-        containerRef.current.querySelectorAll(".marquee-item"),
+        containerRef.current.querySelectorAll("[data-marquee-item]"),
       ) as HTMLElement[];
       onItemsRef(items);
     }
@@ -88,7 +88,7 @@ export default function CTAWithVerticalMarquee({
     if (!marqueeContainer) return;
     let frameId: number;
     const updateOpacity = () => {
-      const items = marqueeContainer.querySelectorAll(".marquee-item");
+      const items = marqueeContainer.querySelectorAll("[data-marquee-item]");
       const containerRect = marqueeContainer.getBoundingClientRect();
       const centerY = containerRect.top + containerRect.height / 2;
 
@@ -146,7 +146,8 @@ export default function CTAWithVerticalMarquee({
                 {marqueeItems.map((item, idx) => (
                   <div
                     key={idx}
-                    className="text-4xl md:text-5xl lg:text-6xl  font-light tracking-tight py-8 marquee-item"
+                    data-marquee-item=""
+                    className="text-4xl md:text-5xl lg:text-6xl  font-light tracking-tight py-8"
                   >
                     {item}
                   </div>

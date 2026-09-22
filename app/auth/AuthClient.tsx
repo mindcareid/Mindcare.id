@@ -13,7 +13,8 @@ import RegisterForm from "../components/auth/RegisterForm";
 export default function AuthPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/events";
+  const rawCallbackUrl = searchParams.get("callbackUrl");
+  const callbackUrl = rawCallbackUrl || "/events";
   const tabParam = searchParams.get("tab");
   const [tab, setTab] = useState<"login" | "register">(
     tabParam === "register" ? "register" : "login",
@@ -71,7 +72,11 @@ export default function AuthPage() {
             setTab={(v) => {
               setDirection(v === "login" ? -1 : 1);
               setTab(v);
-              router.replace(`/auth?tab=${v}`);
+              const params = new URLSearchParams({ tab: v });
+              if (rawCallbackUrl) {
+                params.set("callbackUrl", rawCallbackUrl);
+              }
+              router.replace(`/auth?${params.toString()}`);
             }}
           />
 
@@ -95,7 +100,7 @@ export default function AuthPage() {
                   exit={{ opacity: 0, x: direction * -30 }}
                   transition={{ duration: 0.25 }}
                 >
-                  <RegisterForm />
+                  <RegisterForm callbackUrl={rawCallbackUrl} />
                 </motion.div>
               )}
             </AnimatePresence>

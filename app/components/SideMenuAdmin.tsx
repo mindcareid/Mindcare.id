@@ -22,6 +22,7 @@ import {
   faArrowUpRightFromSquare,
   faRightFromBracket,
   faEnvelope,
+  faClipboardCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import clsx from "clsx";
 import { signOut } from "next-auth/react";
@@ -202,6 +203,12 @@ export default function SideMenuAdmin() {
             icon={faBuilding}
             label="Company Accept"
             active={isActive("/cadmin/company-accept")}
+          />
+          <MenuItem
+            href="/cadmin/applications"
+            icon={faClipboardCheck}
+            label="Directory Applications"
+            active={isActive("/cadmin/applications")}
           />
         </ul>
         <li className="pt-4 mt-4 border-t">

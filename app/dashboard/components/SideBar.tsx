@@ -4,7 +4,13 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MdOutlineGridView, MdConfirmationNumber } from "react-icons/md";
+import {
+  MdOutlineGridView,
+  MdConfirmationNumber,
+  MdWorkOutline,
+  MdLocalHospital,
+} from "react-icons/md";
+import { useMyListings } from "./listing/useMyListings";
 //import { FiBookOpen } from "react-icons/fi";
 import { FaRegCreditCard } from "react-icons/fa6";
 //import { GrCertificate } from "react-icons/gr";
@@ -16,15 +22,8 @@ import { AnimatePresence, motion } from "framer-motion";
 
 const menu: MenuItems[] = [
   { name: "Overview", path: "/dashboard", icon: MdOutlineGridView },
-  // { name: "Schedules", path: "/dashboard/schedules", icon: BsCalendar2Date },
   { name: "Orders", path: "/dashboard/orders", icon: FaRegCreditCard },
   { name: "Ticket", path: "/dashboard/my-ticket", icon: MdConfirmationNumber },
-  //{ name: "My Classes", path: "/dashboard/my-classes", icon: FiBookOpen },
-  /* {
-    name: "Certificate",
-    path: "/dashboard/my-certificate",
-    icon: GrCertificate,
-  }, */
   {
     name: "Find All Events",
     path: "/events",
@@ -41,6 +40,30 @@ export default function Sidebar() {
   const isCollapsed = collapsed && !locked;
   const { data: session } = useSession();
   const [userOpen, setUserOpen] = useState(false);
+  const hasListing = useMyListings();
+
+  const listingMenu: MenuItems[] = [
+    ...(hasListing.professional
+      ? [
+          {
+            name: "My Professional Listing",
+            path: "/dashboard/professional",
+            icon: MdWorkOutline,
+          },
+        ]
+      : []),
+    ...(hasListing.careCentre
+      ? [
+          {
+            name: "My Care Centre",
+            path: "/dashboard/care-centre",
+            icon: MdLocalHospital,
+          },
+        ]
+      : []),
+  ];
+
+  const navigationMenu: MenuItems[] = [...menu, ...listingMenu];
 
   const userInitial = session?.user?.name?.charAt(0).toUpperCase() ?? "U";
 
@@ -110,7 +133,7 @@ export default function Sidebar() {
         )}
       </div>
       <nav className="mt-6 space-y-1 px-2 flex-1">
-        {menu.map((item) => {
+        {navigationMenu.map((item) => {
           const isActive =
             item.path === "/dashboard"
               ? pathname === "/dashboard"

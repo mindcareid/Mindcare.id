@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Container from "@/app/components/reusable/Container";
 import PageHero from "@/app/components/reusable/PageHero";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 import HomeSection from "./section/HomeSection";
@@ -84,10 +85,39 @@ export default function Home({
         title="Latest articles"
         description="Written by the professionals listed in this directory."
         href="/insights"
-        className="pb-20"
       >
         <InsightsGrid articles={articles} />
       </HomeSection>
+
+      <Container as="section" className="pb-20 pt-4">
+        <div className="rounded-xl border border-border bg-brand-lavender-100 px-6 py-10 text-center md:px-10 md:py-14">
+          <p className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
+            Join the directory
+          </p>
+          <h2 className="mt-3 font-heading text-3xl font-semibold text-foreground">
+            Are you a practitioner, centre, or solutions provider?
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground">
+            Psychologists, psychiatrists, care centres and solutions provider
+            can apply to be listed. Every application is reviewed before a
+            listing goes live.
+          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href="/apply/professional"
+              className={buttonStyles({ variant: "secondary", size: "lg" })}
+            >
+              Apply as a professional
+            </Link>
+            <Link
+              href="/apply/care-centre"
+              className={buttonStyles({ variant: "outline", size: "lg" })}
+            >
+              Register a care centre
+            </Link>
+          </div>
+        </div>
+      </Container>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 
 type TransactionStatus = "PENDING" | "PAID" | "EXPIRED" | "CANCELED";
 
@@ -77,7 +78,7 @@ export default function PaymentSuccessClient({ orderId }: Props) {
         </h1>
         <p className="text-gray-600 mt-2">{error}</p>
 
-        <Link href="/" className="btn-primary mt-6">
+        <Link href="/" className={buttonStyles({ className: "mt-6" })}>
           Back to Home
         </Link>
       </StatusLayout>
@@ -111,7 +112,7 @@ export default function PaymentSuccessClient({ orderId }: Props) {
           Please try again.
         </p>
 
-        <Link href="/" className="btn-primary mt-6">
+        <Link href="/" className={buttonStyles({ className: "mt-6" })}>
           Back to Home
         </Link>
       </StatusLayout>
@@ -130,7 +131,10 @@ export default function PaymentSuccessClient({ orderId }: Props) {
       </p>
 
       <div className="mt-6 flex flex-col gap-3">
-        <Link href="/dashboard/my-ticket" className="btn-primary">
+        <Link
+          href="/dashboard/my-ticket"
+          className={buttonStyles()}
+        >
           View My Ticket
         </Link>
 

@@ -31,6 +31,30 @@ const Industries = [
   "Cross-Industry / General",
 ];
 
+const AreasOfSupport: Array<[string, string]> = [
+  ["Kecemasan", "kecemasan"],
+  ["Stres", "stres"],
+  ["Burnout", "burnout"],
+  ["Depresi", "depresi"],
+  ["Trauma", "trauma"],
+  ["Hubungan", "hubungan"],
+  ["Pengembangan Diri", "pengembangan-diri"],
+  ["Pola Tidur", "pola-tidur"],
+  ["Pengasuhan", "pengasuhan"],
+  ["Duka Cita", "duka-cita"],
+];
+
+const CentreServices: Array<[string, string]> = [
+  ["Konsultasi Psikiatri", "konsultasi-psikiatri"],
+  ["Psikoterapi", "psikoterapi"],
+  ["Tes Psikologi", "tes-psikologi"],
+  ["Konseling Keluarga", "konseling-keluarga"],
+  ["Konseling Anak & Remaja", "konseling-anak-remaja"],
+  ["Terapi Kelompok", "terapi-kelompok"],
+  ["Rehabilitasi", "rehabilitasi"],
+  ["Layanan Gawat Darurat", "layanan-gawat-darurat"],
+];
+
 async function main() {
   console.log("Seeding industries...");
 
@@ -46,6 +70,30 @@ async function main() {
   }
 
   console.log("✓ Industries seeded.");
+
+  console.log("Seeding areas of support...");
+
+  for (const [name, slug] of AreasOfSupport) {
+    await prisma.areaOfSupport.upsert({
+      where: { slug },
+      update: { name },
+      create: { name, slug },
+    });
+  }
+
+  console.log("✓ Areas of support seeded.");
+
+  console.log("Seeding centre services...");
+
+  for (const [name, slug] of CentreServices) {
+    await prisma.service.upsert({
+      where: { slug },
+      update: { name },
+      create: { name, slug },
+    });
+  }
+
+  console.log("✓ Centre services seeded.");
 }
 
 main()

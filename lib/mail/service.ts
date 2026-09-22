@@ -1,4 +1,5 @@
 import { transporter } from "./transporter";
+import { isMailConfigured } from "./config";
 import Mail from "nodemailer/lib/mailer";
 import SMTPTransport from "nodemailer/lib/smtp-transport";
 
@@ -16,6 +17,12 @@ export class EmailService {
     from,
     ...options
   }: Mail.Options): Promise<SMTPTransport.SentMessageInfo> {
+    if (!isMailConfigured()) {
+      throw new Error(
+        "SMTP is not configured — set SMTP_USER and SMTP_HOST in .env",
+      );
+    }
+
     try {
       const startedAt = Date.now();
 

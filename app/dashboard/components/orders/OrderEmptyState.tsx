@@ -14,7 +14,7 @@ export function OrderEmptyState({
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background py-16 px-6 text-center">
       <div className="relative mb-5">
         <div
-          className={`w-18 h-18 rounded-full flex items-center justify-content-center p-5 ${
+          className={`w-18 h-18 rounded-full flex items-center justify-center p-5 ${
             isFiltered ? "bg-amber-50" : "bg-blue-50"
           }`}
         >

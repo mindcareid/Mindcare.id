@@ -3,15 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
-
-/**
- * |--------------------------------------------------------------------------
- * | ENUMS
- * |--------------------------------------------------------------------------
- */
 
 enum UserRole {
   SUPERADMIN
@@ -51,20 +46,62 @@ enum CompanyRole {
   FINANCE
   EDITOR
 }
-
 enum ListingStatus {
-  DRAFT
-  PENDING_REVIEW
+  PENDING
+  LISTED
+  REJECTED
   APPROVED
   PUBLISHED
-  REJECTED
-  ARCHIVED
+  DRAFT
 }
+
 
 enum VerificationStatus {
   UNVERIFIED
   PENDING
   VERIFIED
+}
+
+enum VerificationReview {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+  REVOKED
+}
+
+enum VerificationSource {
+  SUBMISSION
+  REGISTRY
+}
+
+enum Profession {
+  PSIKOLOG
+  PSIKIATER
+  KONSELOR
+}
+
+enum SessionMode {
+  ONLINE
+  IN_PERSON
+}
+
+enum CentreKind {
+  KLINIK
+  RUMAH_SAKIT
+  PUSKESMAS
+  PUSAT_KONSELING
+}
+
+enum CareCentreRole {
+  OWNER
+  ADMIN
+}
+
+enum CareCentreUserStatus {
+  PENDING
+  ACTIVE
+  DECLINED
 }
 
 enum NotificationStatus {
@@ -150,21 +187,6 @@ enum MediaType {
   DOCUMENT
 }
 
-enum ProfessionalAvailability {
-  AVAILABLE
-  UNAVAILABLE
-}
-
-enum CareCentreType {
-  CLINIC
-  HOSPITAL
-  COUNSELLING_CENTRE
-  REHABILITATION
-  ONLINE_SERVICE
-  COMMUNITY_CENTRE
-  OTHER
-}
-
 enum SolutionType {
   PLATFORM
   PRODUCT
@@ -219,12 +241,6 @@ model AdminAccess {
   @@index([role, isActive])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | USER
- * |--------------------------------------------------------------------------
- */
-
 model User {
   id Int @id @default(autoincrement())
 
@@ -266,11 +282,12 @@ model User {
   isActive  Boolean   @default(true)
   deletedAt DateTime?
 
-  companies     CompanyUser[]
-  professional  Professional?
-  adminAccess  AdminAccess?
-  orders        Order[]
-  notifications Notification[]
+  companies             CompanyUser[]
+  professional          Professional?
+  adminAccess           AdminAccess?
+  careCentreMemberships CareCentreUser[]
+  orders                Order[]
+  notifications         Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -279,18 +296,12 @@ model User {
   @@index([deletedAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | COMPANY / ORGANIZATION
- * |--------------------------------------------------------------------------
- */
-
 model Company {
   id Int @id @default(autoincrement())
 
   name        String  @db.VarChar(255)
   slug        String  @unique @db.VarChar(255)
-  publicId    String? @db.VarChar(255)
+  publicId    String? @unique @db.VarChar(255)
   description String? @db.Text
 
   logo    String? @db.VarChar(500)
@@ -302,7 +313,7 @@ model Company {
   facebook  String? @db.VarChar(255)
   linkedin  String? @db.VarChar(255)
 
-  location    String? @db.Text
+  location   String? @db.Text
   city       String? @db.VarChar(100)
   province   String? @db.VarChar(100)
   country    String? @db.VarChar(100)
@@ -315,17 +326,15 @@ model Company {
   verification VerificationStatus @default(UNVERIFIED)
 
   isFeatured Boolean @default(false)
-  isActive  Boolean   @default(true)
+  isActive   Boolean @default(true)
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  users         CompanyUser[]
-  careCentres   CareCentre[]
-  solutions     Solution[]
-  events        Event[]
-  professionals ProfessionalCompany[]
+  users     CompanyUser[]
+  solutions Solution[]
+  events    Event[]
 
   media Media[]
 
@@ -333,12 +342,6 @@ model Company {
   @@index([city, province])
   @@index([deletedAt])
 }
-
-/**
- * |--------------------------------------------------------------------------
- * | COMPANY USERS
- * |--------------------------------------------------------------------------
- */
 
 model CompanyUser {
   id Int @id @default(autoincrement())
@@ -360,113 +363,111 @@ model CompanyUser {
   @@index([userId, status])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | CARE CENTRE
- * |--------------------------------------------------------------------------
- */
-
 model CareCentre {
-  id Int @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
+  slug        String     @unique @db.VarChar(255)
+  name        String     @db.VarChar(255)
+  kind        CentreKind
+  photoUrl    String?    @db.VarChar(500)
+  publicId    String? @db.VarChar(255)
+  description String?    @db.Text
 
-  companyId Int
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  name String @db.VarChar(255)
-  slug String @unique @db.VarChar(255)
-
-  publicId String? @db.VarChar(255)
-
-  description String? @db.LongText
-
-  type CareCentreType
-
-  listingStatus ListingStatus      @default(DRAFT)
-  verification  VerificationStatus @default(UNVERIFIED)
-
-  logo       String? @db.VarChar(500)
-  coverImage String? @db.VarChar(500)
-
-  kind String?
-
-  phone   String? @db.VarChar(50)
-  email   String? @db.VarChar(255)
-  website String? @db.VarChar(500)
-
-  address    String? @db.Text
-  city       String? @db.VarChar(100)
-  province   String? @db.VarChar(100)
+  street     String  @db.VarChar(255)
+  city       String  @db.VarChar(100)
+  province   String  @db.VarChar(100)
+  postalCode String  @db.VarChar(10)
+  phone      String  @db.VarChar(25)
+  website    String? @db.VarChar(255)
   country    String? @db.VarChar(100)
-  postalCode String? @db.VarChar(20)
 
-  latitude  Decimal? @db.Decimal(10, 7)
-  longitude Decimal? @db.Decimal(10, 7)
-
+  acceptsBpjs Boolean @default(false)
+  timeZone    String  @default("Asia/Jakarta") @db.VarChar(50)
+  openingNote String? @db.VarChar(500)
+  latitude    Float?
+  longitude   Float?
   appointmentAvailable Boolean @default(false)
   onlineAvailable      Boolean @default(false)
-
   isFeatured Boolean @default(false)
+
+  listingStatus          ListingStatus       @default(PENDING)
+  verificationReview     VerificationReview  @default(NONE)
+  verificationCheckedOn  DateTime?
+  verificationValidUntil DateTime?
+  verificationSource     VerificationSource?
+  verificationAdminId    Int?
+  verificationNote       String?             @db.VarChar(500)
+  permitType       String?   @db.VarChar(100)
+  permitNumber     String?   @db.VarChar(100)
+  permitValidUntil DateTime?
+
+  openingHours CareCentreOpeningHour[]
+  services     CareCentreService[]
+  users        CareCentreUser[]
+  media        Media[]
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  services      CareCentreService[]
-  professionals CareCentreProfessional[]
-  media         Media[]
-
-  @@index([companyId])
-  @@index([type, listingStatus])
-  @@index([city, province])
-  @@index([listingStatus, isFeatured])
-  @@index([deletedAt])
+  @@index([listingStatus, deletedAt])
+  @@index([kind, city])
+  @@index([city])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | CARE CENTRE SERVICE
- * |--------------------------------------------------------------------------
- */
+model CareCentreOpeningHour {
+  id       Int        @id @default(autoincrement())
+  centreId Int
+  centre   CareCentre @relation(fields: [centreId], references: [id], onDelete: Cascade)
+
+  day    Int
+  opens  String? @db.VarChar(5)
+  closes String? @db.VarChar(5)
+
+  createdAt DateTime @default(now())
+
+  @@unique([centreId, day])
+}
+
+model CareCentreUser {
+  id           Int                  @id @default(autoincrement())
+  userId       Int
+  centreId     Int
+  role         CareCentreRole       @default(OWNER)
+  status       CareCentreUserStatus @default(PENDING)
+  activeUserId Int?                 @unique
+
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  centre CareCentre @relation(fields: [centreId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, centreId])
+  @@index([centreId])
+  @@index([userId])
+}
 
 model CareCentreService {
-  id Int @id @default(autoincrement())
+  centreId  Int
+  serviceId Int
 
-  careCentreId Int
-  serviceId    Int
+  centre  CareCentre @relation(fields: [centreId], references: [id], onDelete: Cascade)
+  service Service    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
-  careCentre CareCentre @relation(fields: [careCentreId], references: [id], onDelete: Cascade)
-
-  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-
-  createdAt     DateTime              @default(now())
-  professionals ProfessionalService[]
-
-  @@unique([careCentreId, serviceId])
+  @@id([centreId, serviceId])
   @@index([serviceId])
 }
 
 model Service {
-  id Int @id @default(autoincrement())
-
-  name String @db.VarChar(255)
-  slug String @unique @db.VarChar(255)
-
-  description String? @db.Text
-
+  id       Int     @id @default(autoincrement())
+  slug     String  @unique @db.VarChar(255)
+  name     String  @db.VarChar(255)
   isActive Boolean @default(true)
 
-  careCentres CareCentreService[]
+  centres CareCentreService[]
 
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  professionalServices ProfessionalService[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
-
-/**
- * |--------------------------------------------------------------------------
- * | SOLUTION
- * |--------------------------------------------------------------------------
- */
 
 model Solution {
   id Int @id @default(autoincrement())
@@ -487,7 +488,7 @@ model Solution {
   coverImage String? @db.VarChar(500)
   logo       String? @db.VarChar(500)
 
-  listingStatus ListingStatus      @default(DRAFT)
+  listingStatus ListingStatus      @default(PENDING)
   verification  VerificationStatus @default(UNVERIFIED)
 
   isFeatured Boolean @default(false)
@@ -506,12 +507,6 @@ model Solution {
   @@index([listingStatus, isFeatured])
   @@index([deletedAt])
 }
-
-/**
- * |--------------------------------------------------------------------------
- * | SOLUTION CATEGORY
- * |--------------------------------------------------------------------------
- */
 
 model SolutionCategory {
   id Int @id @default(autoincrement())
@@ -545,11 +540,6 @@ model SolutionCategoryMap {
   @@index([categoryId])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | SOLUTION AUDIENCE
- * |--------------------------------------------------------------------------
- */
 
 model SolutionAudience {
   id Int @id @default(autoincrement())
@@ -577,11 +567,6 @@ model SolutionAudienceMap {
   @@index([audienceId])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | MEDIA
- * |--------------------------------------------------------------------------
- */
 
 model Media {
   id Int @id @default(autoincrement())
@@ -616,11 +601,6 @@ model Media {
   @@index([professionalId, sortOrder])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | NOTIFICATION
- * |--------------------------------------------------------------------------
- */
 
 model Notification {
   id Int @id @default(autoincrement())
@@ -646,11 +626,6 @@ model Notification {
   @@index([status])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | HERO / CMS
- * |--------------------------------------------------------------------------
- */
 
 model HeroSlider {
   id Int @id @default(autoincrement())
@@ -725,12 +700,6 @@ model AboutSection {
   @@index([isActive, orderIndex])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | EVENT
- * |--------------------------------------------------------------------------
- */
-
 model Event {
   id Int @id @default(autoincrement())
 
@@ -755,9 +724,9 @@ model Event {
 
   registrationType EventRegistrationType @default(INTERNAL)
 
-  coverImage String? @db.VarChar(500)
-  publicId   String? @db.VarChar(255)
-  isPublished Boolean  @default(false)
+  coverImage  String? @db.VarChar(500)
+  publicId    String? @db.VarChar(255)
+  isPublished Boolean @default(false)
 
   status EventStatus @default(DRAFT)
 
@@ -781,11 +750,6 @@ model Event {
   @@index([deletedAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | EVENT CATEGORY
- * |--------------------------------------------------------------------------
- */
 
 model EventCategory {
   id Int @id @default(autoincrement())
@@ -801,11 +765,6 @@ model EventCategory {
   updatedAt DateTime @updatedAt
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | INDUSTRY
- * |--------------------------------------------------------------------------
- */
 
 model Industry {
   id Int @id @default(autoincrement())
@@ -833,11 +792,6 @@ model EventIndustry {
   @@index([industryId])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | ARTICLE / INSIGHTS
- * |--------------------------------------------------------------------------
- */
 
 model Article {
   id Int @id @default(autoincrement())
@@ -859,7 +813,7 @@ model Article {
   publishedAt DateTime?
 
   isFeatured Boolean @default(false)
-  isActive  Boolean   @default(true)
+  isActive   Boolean @default(true)
 
   deletedAt DateTime?
 
@@ -872,12 +826,6 @@ model Article {
   @@index([isFeatured, status])
   @@index([deletedAt])
 }
-
-/**
- * |--------------------------------------------------------------------------
- * | ORDERS
- * |--------------------------------------------------------------------------
- */
 
 model Order {
   id String @id @default(cuid())
@@ -910,12 +858,6 @@ model Order {
   @@index([status, createdAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | PAYMENT LOG
- * |--------------------------------------------------------------------------
- */
-
 model PaymentLog {
   id String @id @default(cuid())
 
@@ -934,12 +876,6 @@ model PaymentLog {
   @@index([orderId, createdAt])
   @@index([provider, status])
 }
-
-/**
- * |--------------------------------------------------------------------------
- * | TICKET
- * |--------------------------------------------------------------------------
- */
 
 model Ticket {
   id String @id @default(cuid())
@@ -969,11 +905,6 @@ model Ticket {
   @@index([isCheckedIn, checkedAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | EVENT ATTENDEE FIELDS
- * |--------------------------------------------------------------------------
- */
 
 model EventAttendeeField {
   id String @id @default(cuid())
@@ -997,12 +928,6 @@ model EventAttendeeField {
   @@index([eventId, sortOrder])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | CONTACT MESSAGE
- * |--------------------------------------------------------------------------
- */
-
 model ContactMessage {
   id Int @id @default(autoincrement())
 
@@ -1023,294 +948,84 @@ model ContactMessage {
   @@index([status, createdAt])
 }
 
-/**
- * |--------------------------------------------------------------------------
- * | PROFESSIONAL
- * |--------------------------------------------------------------------------
- */
 
 model Professional {
-  id Int @id @default(autoincrement())
+  id     Int   @id @default(autoincrement())
+  userId Int?  @unique
+  user   User? @relation(fields: [userId], references: [id])
 
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  slug        String     @unique @db.VarChar(255)
+  fullName    String     @db.VarChar(255)
+  credentials String     @db.VarChar(255)
+  profession  Profession
+  headline    String     @db.VarChar(500)
+  bio         String?    @db.Text
+  photoUrl    String?    @db.VarChar(500)
   publicId String? @db.VarChar(255)
-  slug     String  @unique @db.VarChar(255)
-  fullName String? @db.VarChar(255)
+  baseCity     String @db.VarChar(100)
+  baseProvince String @db.VarChar(100)
+  languages Json?
 
-  displayName String? @db.VarChar(255)
-  headline    String? @db.VarChar(255)
-  bio         String? @db.LongText
+  yearsOfExperience Int @default(0)
+  startingPriceIdr Int?
 
-  profileImage String? @db.VarChar(500)
+  listingStatus          ListingStatus       @default(PENDING)
+  verificationReview     VerificationReview  @default(NONE)
+  verificationCheckedOn  DateTime?
+  verificationValidUntil DateTime?
+  verificationSource     VerificationSource?
+  verificationAdminId    Int?
+  verificationNote       String?             @db.VarChar(500)
+  licenceType       String?   @db.VarChar(100)
+  licenceNumber     String?   @db.VarChar(100)
+  licenceValidUntil DateTime?
 
-  availability ProfessionalAvailability @default(AVAILABLE)
-
-  verification       VerificationStatus @default(UNVERIFIED)
-  verificationStatus VerificationStatus @default(UNVERIFIED)
-
-  listingStatus ListingStatus @default(DRAFT)
-
-  isFeatured Boolean @default(false)
+  services ProfessionalService[]
+  areas    ProfessionalAreaOfSupport[]
+  media    Media[]
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  companies   ProfessionalCompany[]
-  specialties ProfessionalSpecialty[]
-  media       Media[]
-
-  locations   ProfessionalLocation[]
-  educations  ProfessionalEducation[]
-  experiences ProfessionalExperience[]
-  credentials ProfessionalCredential[]
-  services    ProfessionalService[]
-  careCentres CareCentreProfessional[]
-
-  languages         ProfessionalLanguage[]
-  professionalTypes ProfessionalTypeMap[]
-
-  @@index([listingStatus, isFeatured])
-  @@index([verification])
-  @@index([verificationStatus])
-  @@index([deletedAt])
+  @@index([listingStatus, deletedAt])
+  @@index([profession])
+  @@index([baseCity])
 }
-
-model Specialty {
-  id Int @id @default(autoincrement())
-
-  name String @db.VarChar(255)
-  slug String @unique @db.VarChar(255)
-
-  description String? @db.Text
-
-  isActive Boolean @default(true)
-
-  professionals ProfessionalSpecialty[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model ProfessionalSpecialty {
-  professionalId Int
-  specialtyId    Int
-
-  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-
-  specialty Specialty @relation(fields: [specialtyId], references: [id], onDelete: Cascade)
-
-  isPrimary Boolean @default(false)
-
-  createdAt DateTime @default(now())
-
-  @@id([professionalId, specialtyId])
-  @@index([specialtyId])
-}
-
-model ProfessionalLocation {
-  id Int @id @default(autoincrement())
-
-  professionalId Int
-
-  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-
-  name String? @db.VarChar(255)
-
-  address    String? @db.Text
-  city       String? @db.VarChar(100)
-  province   String? @db.VarChar(100)
-  country    String? @db.VarChar(100)
-  postalCode String? @db.VarChar(20)
-
-  latitude  Decimal? @db.Decimal(10, 7)
-  longitude Decimal? @db.Decimal(10, 7)
-
-  isOnline  Boolean @default(false)
-  isPrimary Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([professionalId])
-  @@index([city, province])
-}
-
-model ProfessionalCompany {
-  professionalId Int
-  companyId      Int
-
-  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-
-  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  role String? @db.VarChar(255)
-
-  isPrimary Boolean @default(false)
-
-  createdAt DateTime @default(now())
-
-  @@id([professionalId, companyId])
-  @@index([companyId])
-}
-
-model CareCentreProfessional {
-  careCentreId   Int
-  professionalId Int
-
-  careCentre CareCentre @relation(fields: [careCentreId], references: [id], onDelete: Cascade)
-
-  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-
-  role String? @db.VarChar(255)
-
-  isPrimary Boolean @default(false)
-
-  createdAt DateTime @default(now())
-
-  @@id([careCentreId, professionalId])
-  @@index([professionalId])
-}
-
-model ProfessionalEducation {
-  id Int @id @default(autoincrement())
-
-  professionalId Int
-
-  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-
-  institution String  @db.VarChar(255)
-  degree      String? @db.VarChar(255)
-  field       String? @db.VarChar(255)
-
-  startYear Int?
-  endYear   Int?
-
-  description String? @db.Text
-
-  sortOrder Int @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([professionalId, sortOrder])
-}
-
-model ProfessionalExperience {
-  id Int @id @default(autoincrement())
-
-  professionalId Int
-
-  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-
-  companyName String @db.VarChar(255)
-  position    String @db.VarChar(255)
-
-  startDate DateTime
-  endDate   DateTime?
-
-  isCurrent Boolean @default(false)
-
-  description String? @db.Text
-
-  sortOrder Int @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([professionalId, startDate])
-}
-
-model ProfessionalCredential {
-  id Int @id @default(autoincrement())
-
-  professionalId Int
-
-  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-
-  name         String  @db.VarChar(255)
-  issuer       String? @db.VarChar(255)
-  credentialNo String? @db.VarChar(255)
-
-  issuedAt  DateTime?
-  expiresAt DateTime?
-
-  documentUrl String? @db.VarChar(1000)
-
-  verificationStatus VerificationStatus @default(UNVERIFIED)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([professionalId])
-  @@index([verificationStatus])
-}
-
 model ProfessionalService {
+  id             Int          @id @default(autoincrement())
   professionalId Int
-  serviceId      Int
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
 
-  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-
-  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-
-  createdAt           DateTime           @default(now())
-  careCentreService   CareCentreService? @relation(fields: [careCentreServiceId], references: [id])
-  careCentreServiceId Int?
-
-  @@id([professionalId, serviceId])
-  @@index([serviceId])
-}
-
-model Language {
-  id Int @id @default(autoincrement())
-
-  name String @db.VarChar(100)
-  code String @unique @db.VarChar(20)
-
-  isActive Boolean @default(true)
-
-  professionals ProfessionalLanguage[]
+  name            String      @db.VarChar(255)
+  mode            SessionMode
+  durationMinutes Int         @default(60)
+  priceIdr        Int
 
   createdAt DateTime @default(now())
+
+  @@index([professionalId])
 }
 
-model ProfessionalLanguage {
-  professionalId Int
-  languageId     Int
-
-  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-
-  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
-
-  @@id([professionalId, languageId])
-  @@index([languageId])
-}
-
-model ProfessionalType {
-  id Int @id @default(autoincrement())
-
-  name String @db.VarChar(255)
-  slug String @unique @db.VarChar(255)
-
+model AreaOfSupport {
+  id       Int     @id @default(autoincrement())
+  slug     String  @unique @db.VarChar(255)
+  name     String  @db.VarChar(255)
   isActive Boolean @default(true)
 
-  professionals ProfessionalTypeMap[]
+  professionals ProfessionalAreaOfSupport[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model ProfessionalTypeMap {
-  professionalId     Int
-  professionalTypeId Int
+model ProfessionalAreaOfSupport {
+  professionalId Int
+  areaId         Int
 
-  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  professional Professional  @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  area         AreaOfSupport @relation(fields: [areaId], references: [id], onDelete: Cascade)
 
-  professionalType ProfessionalType @relation(fields: [professionalTypeId], references: [id], onDelete: Cascade)
-
-  @@id([professionalId, professionalTypeId])
-  @@index([professionalTypeId])
+  @@id([professionalId, areaId])
+  @@index([areaId])
 }

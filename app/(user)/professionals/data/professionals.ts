@@ -28,6 +28,11 @@ import type {
   SessionMode,
   TherapyApproach,
 } from "../type/professional";
+import prisma from "@/lib/prisma";
+import {
+  PUBLIC_PROFESSIONAL_SELECT,
+  mapProfessional,
+} from "../../data/listingMappers";
 
 const areas = {
   kecemasan: { id: "aos-1", slug: "kecemasan", name: "Kecemasan" },
@@ -45,11 +50,6 @@ const areas = {
   pengasuhan: { id: "aos-9", slug: "pengasuhan", name: "Pengasuhan" },
   dukaCita: { id: "aos-10", slug: "duka-cita", name: "Duka Cita" },
 } satisfies Record<string, AreaOfSupport>;
-
-// Pendekatan terapi. Singkatan Inggris yang sudah dipakai apa adanya di kalangan
-// praktisi Indonesia (CBT, ACT, EMDR) dibiarkan; yang punya padanan Indonesia yang
-// lazim ditulis Indonesia. Pola yang sama dengan nama kategori event di
-// `design.md` bagian 13.
 const approaches = {
   cbt: { id: "apr-1", slug: "cbt", name: "CBT" },
   act: { id: "apr-2", slug: "act", name: "ACT" },
@@ -66,7 +66,7 @@ const approaches = {
   farmakoterapi: { id: "apr-9", slug: "farmakoterapi", name: "Farmakoterapi" },
 } satisfies Record<string, TherapyApproach>;
 
-const professionals: Professional[] = [
+export const professionals: Professional[] = [
   {
     id: "prof-1",
     slug: "anindita-rahmawati",
@@ -1018,13 +1018,26 @@ const professionals: Professional[] = [
 ];
 
 export async function getProfessionals(): Promise<Professional[]> {
-  return professionals;
+  const rows = await prisma.professional.findMany({
+    where: { listingStatus: "LISTED", deletedAt: null },
+    select: PUBLIC_PROFESSIONAL_SELECT,
+    orderBy: { fullName: "asc" },
+  });
+
+  return rows.map(mapProfessional);
 }
 
 export async function getProfessionalBySlug(
   slug: string,
 ): Promise<Professional | null> {
-  return professionals.find((item) => item.slug === slug) ?? null;
+  // `listingStatus` ikut di mana, bukan disaring setelah ambil: pengajuan
+  // yang belum lolos tidak boleh punya halaman publik sama sekali.
+  const row = await prisma.professional.findFirst({
+    where: { slug, listingStatus: "LISTED", deletedAt: null },
+    select: PUBLIC_PROFESSIONAL_SELECT,
+  });
+
+  return row ? mapProfessional(row) : null;
 }
 
 /**
@@ -1038,10 +1051,11 @@ export async function getRelatedProfessionals(
   slug: string,
   limit = 3,
 ): Promise<Professional[]> {
-  const current = professionals.find((item) => item.slug === slug);
+  const all = await getProfessionals();
+  const current = all.find((item) => item.slug === slug);
   if (!current) return [];
 
-  const others = professionals.filter((item) => item.slug !== slug);
+  const others = all.filter((item) => item.slug !== slug);
   const sameCity = others.filter(
     (item) => item.location.city === current.location.city,
   );
@@ -1065,7 +1079,7 @@ export async function getProfessionalFacets(): Promise<ProfessionalFacets> {
   const cities = new Set<string>();
   const areaBySlug = new Map<string, AreaOfSupport>();
 
-  for (const item of professionals) {
+  for (const item of await getProfessionals()) {
     professions.add(item.profession);
     item.sessionModes.forEach((mode) => sessionModes.add(mode));
     cities.add(item.location.city);

@@ -31,7 +31,7 @@ export function NewsTopbar({ active, onChange }: Props) {
           />
         </div>
         <div>
-          <p className="text-sm md:text-md font-semibold text-gray-900 leading-none">
+          <p className="text-sm md:text-base font-semibold text-gray-900 leading-none">
             News
           </p>
           <p className="text-[11px] text-gray-400 mt-0.5">

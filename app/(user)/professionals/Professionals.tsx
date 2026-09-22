@@ -1,11 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
+import { SlidersHorizontal, UserRoundPlus } from "lucide-react";
 import Button from "@/app/components/reusable/Button";
 import Container from "@/app/components/reusable/Container";
+import EmptyState from "@/app/components/reusable/EmptyState";
 import PageHero from "@/app/components/reusable/PageHero";
 import SearchBar from "@/app/components/reusable/SearchBar";
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 import SortSelect, {
   type SortOption,
 } from "@/app/components/reusable/SortSelect";
@@ -149,53 +152,69 @@ export default function Professionals({
       </PageHero>
 
       <Container className="pb-20 max-w-none">
-        <div className="grid gap-8 lg:grid-cols-[400px_1fr]">
-          <div className="space-y-4">
-            <ProfessionalsFilter
-              facets={facets}
-              value={filters}
-              onToggle={toggleFilter}
-              onReset={resetAll}
-            />
-          </div>
-
-          <div>
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-              <p className="text-sm text-muted-foreground">
-                Showing{" "}
-                <span className="font-semibold text-foreground">
-                  {visible.length}
-                </span>{" "}
-                of {professionals.length} professionals
-                {activeCount > 0 && (
-                  <span className="ml-2 inline-flex items-center gap-1 text-secondary">
-                    <SlidersHorizontal
-                      className="size-3.5"
-                      aria-hidden="true"
-                    />
-                    {activeCount} filter{activeCount > 1 ? "s" : ""} active
-                  </span>
-                )}
-              </p>
-
-              <SortSelect
-                value={sort}
-                onValueChange={(next) => setSort(next as ProfessionalSort)}
-                options={sortOptions}
+        {professionals.length === 0 ? (
+          <EmptyState
+            icon={UserRoundPlus}
+            title="No professionals are listed yet"
+            description="Every profile in this directory goes through a practice-licence check before it appears. Listings show up here as soon as they are approved — if you are a psychologist, psychiatrist, or counsellor, you can apply now."
+            action={
+              <Link
+                href="/apply/professional"
+                className={buttonStyles({ size: "lg" })}
+              >
+                Apply as a professional
+              </Link>
+            }
+          />
+        ) : (
+          <div className="grid gap-8 lg:grid-cols-[400px_1fr]">
+            <div className="space-y-4">
+              <ProfessionalsFilter
+                facets={facets}
+                value={filters}
+                onToggle={toggleFilter}
+                onReset={resetAll}
               />
             </div>
 
-            <ProfessionalsGrid
-              professionals={visible}
-              now={now}
-              resetAction={
-                <Button variant="outline" onClick={resetAll}>
-                  Reset all filters
-                </Button>
-              }
-            />
+            <div>
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <p className="text-sm text-muted-foreground">
+                  Showing{" "}
+                  <span className="font-semibold text-foreground">
+                    {visible.length}
+                  </span>{" "}
+                  of {professionals.length} professionals
+                  {activeCount > 0 && (
+                    <span className="ml-2 inline-flex items-center gap-1 text-secondary">
+                      <SlidersHorizontal
+                        className="size-3.5"
+                        aria-hidden="true"
+                      />
+                      {activeCount} filter{activeCount > 1 ? "s" : ""} active
+                    </span>
+                  )}
+                </p>
+
+                <SortSelect
+                  value={sort}
+                  onValueChange={(next) => setSort(next as ProfessionalSort)}
+                  options={sortOptions}
+                />
+              </div>
+
+              <ProfessionalsGrid
+                professionals={visible}
+                now={now}
+                resetAction={
+                  <Button variant="outline" onClick={resetAll}>
+                    Reset all filters
+                  </Button>
+                }
+              />
+            </div>
           </div>
-        </div>
+        )}
       </Container>
     </div>
   );

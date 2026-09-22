@@ -42,7 +42,7 @@ function SearchBox({
           border
           border-border
           bg-background
-          text-md
+          text-base
           md:text-lg
           placeholder:text-muted-foreground/60
           focus:outline-none

@@ -1,16 +1,11 @@
 const smtpUser = process.env.SMTP_USER;
-
-if (!smtpUser) {
-  throw new Error("SMTP_USER environment variable is required.");
-}
-
 export const mailConfig = {
-  appName: "Executive Corner",
+  appName: "Mindcare.Id",
 
-  from: `"Executive Corner" <${smtpUser}>`,
+  from: `"Mindcare.Id" <${smtpUser ?? "info@mindcare.id"}>`,
   appUrl: process.env.NEXT_PUBLIC_BASE_URL,
 
-  supportEmail: smtpUser,
+  supportEmail: smtpUser ?? "info@mindcare.id",
 
   contactRecipients: [
     smtpUser,
@@ -18,3 +13,7 @@ export const mailConfig = {
     process.env.CONTACT_FORWARD,
   ].filter(Boolean) as string[],
 };
+
+export function isMailConfigured(): boolean {
+  return Boolean(process.env.SMTP_USER && process.env.SMTP_HOST);
+}

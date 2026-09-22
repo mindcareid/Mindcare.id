@@ -86,7 +86,7 @@ export default function ProgramSectionPage() {
             isSticky ? "shadow-lg" : ""
           }`}
         >
-          <div className="overflow-x-auto hide-scrollbar">
+          <div className="overflow-x-auto no-scrollbar">
             <div className="flex gap-2 py-4">
               {categories.map((cat) => {
                 const Icon = cat.icons;
@@ -279,15 +279,6 @@ export default function ProgramSectionPage() {
           </div>
         </div>
       </div>
-      <style jsx global>{`
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </section>
   );
 }

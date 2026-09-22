@@ -52,6 +52,9 @@ export function OrderFilterBar({
 
       {/* Sort + count */}
       <div className="flex justify-end items-center gap-3">
+        <p className="text-xs text-muted-foreground">
+          {totalCount} {totalCount === 1 ? "order" : "orders"}
+        </p>
         <select
           value={activeSort}
           onChange={(e) => onSortChange(e.target.value as SortOptions)}

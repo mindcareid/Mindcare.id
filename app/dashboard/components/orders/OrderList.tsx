@@ -63,7 +63,7 @@ export default function OrderList({ orders }: { orders: OrderWithEvent[] }) {
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           My Orders
         </h1>
-        <p className="mt-1 text-md text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           Track and manage your event registrations.
         </p>
       </div>
