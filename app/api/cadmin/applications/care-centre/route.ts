@@ -5,11 +5,7 @@ import { getAdminUser } from "@/lib/adminGuard";
 const STATUS_VALUES = ["PENDING", "LISTED", "REJECTED"] as const;
 type StatusFilter = (typeof STATUS_VALUES)[number];
 
-/**
- * GET /api/cadmin/applications/care-centre?status=PENDING
- *
- * Termasuk klaim izin (permit*) dan data OWNER — konteks admin saja.
- */
+
 export async function GET(req: NextRequest) {
   const admin = await getAdminUser();
   if (!admin) {

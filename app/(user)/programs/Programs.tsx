@@ -11,14 +11,14 @@ export default function ProgramsPage() {
   const [selectedSubCategory, setSelectedSubCategory] = useState("all");
   const [selectedLevel, setSelectedLevel] = useState("all");
 
-  // Get subcategories based on selected category
+  
   const availableSubCategories = useMemo(() => {
     if (selectedCategory === "all") return [];
     const category = categories.find((cat) => cat.slug === selectedCategory);
     return category?.subCategories || [];
   }, [selectedCategory]);
 
-  // Filter programs
+  
   const filteredPrograms = useMemo(() => {
     return programs.filter((program) => {
       const matchesSearch =

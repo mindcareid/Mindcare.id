@@ -89,8 +89,4 @@ function FilterSelectComponent<T extends string>({
   );
 }
 
-// IMPORTANT: preserve generic with memo
-
-export default memo(
-  FilterSelectComponent,
-) as typeof FilterSelectComponent;
+export default memo(FilterSelectComponent) as typeof FilterSelectComponent;

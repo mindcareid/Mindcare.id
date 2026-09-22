@@ -13,20 +13,8 @@ import {
 } from "../data/centreHours";
 import type { CareCentre } from "../type/careCentre";
 
-// Tabel tujuh baris. Selalu tujuh, termasuk hari tutup — daftar yang cuma memuat
-// hari buka memaksa pembaca menyimpulkan sisanya, dan "Minggu tidak disebut"
-// terbaca sama saja dengan "Minggu lupa diisi".
-//
-// Barisnya dirender dari `CENTRE_DAYS`, bukan dari `centre.openingHours.map()`.
-// Bedanya kelihatan justru ketika datanya rusak: kalau suatu hari sebuah centre
-// kehilangan satu entri, versi ini tetap menampilkan tujuh baris dengan satu
-// bertanda "—" alih-alih diam-diam menampilkan enam baris yang tampak lengkap.
-// Harness menjaga supaya keadaan itu tidak sampai lolos, tapi UI-nya tidak boleh
-// bergantung pada harness untuk tampil benar.
-
 type CentreHoursProps = {
   centre: CareCentre;
-  /** Acuan waktu tunggal dari `page.tsx`, ISO string. */
   now: string;
   className?: string;
 };
@@ -62,9 +50,6 @@ export default function CentreHours({
               key={day}
               className={cn(
                 "flex flex-wrap items-center justify-between gap-3 px-5 py-4",
-                // Baris hari ini diberi latar, bukan huruf tebal saja: tabelnya
-                // dibaca sambil mencari satu baris, dan latar lebih cepat
-                // ditemukan mata daripada perbedaan ketebalan huruf.
                 isToday && "bg-brand-mint-100",
               )}
             >
@@ -93,10 +78,9 @@ export default function CentreHours({
                 >
                   {entry === null ? "—" : formatOpeningRange(entry)}
                 </span>
-                {/* Titik status hanya di baris hari ini, dan hanya kalau memang
-                    sedang buka. Di baris hari lain ia akan berarti "buka pada
-                    hari Kamis", yang bukan informasi yang ditanyakan siapa pun. */}
-                {isToday && open && <StatusDot status="open" label="Open now" />}
+                {isToday && open && (
+                  <StatusDot status="open" label="Open now" />
+                )}
               </dd>
             </div>
           );

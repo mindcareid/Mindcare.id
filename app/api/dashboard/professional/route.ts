@@ -60,8 +60,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Selisih identitas dihitung dari NILAI, bukan dari niat pengguna: kalau
-    // nilainya sama persis, tidak ada yang perlu diperiksa ulang.
     const professionEnum = PROFESSION_TO_ENUM[data.profession];
     const identityChanged =
       current.fullName !== data.fullName ||
@@ -74,7 +72,6 @@ export async function PATCH(req: NextRequest) {
     const requiresReview =
       identityChanged || current.listingStatus === "REJECTED";
 
-    // Nilai turunan dihitung ulang setiap layanan berubah (prd.md bagian 7).
     const startingPriceIdr = Math.min(
       ...data.services.map((service) => service.priceIdr),
     );
@@ -90,15 +87,12 @@ export async function PATCH(req: NextRequest) {
         languages: data.languages,
         yearsOfExperience: data.yearsOfExperience,
         startingPriceIdr,
-        // Identitas — nilainya boleh berubah, konsekuensinya di bawah.
         fullName: data.fullName,
         credentials: data.credentials,
         profession: professionEnum,
         licenceType: data.licenceType,
         licenceNumber: data.licenceNumber,
         licenceValidUntil: new Date(data.licenceValidUntil),
-        // Layanan & area diganti utuh: menghitung selisih per baris tidak
-        // memberi manfaat apa pun dan menambah jalan bagi data yang menyimpang.
         services: {
           deleteMany: {},
           create: data.services.map((service) => ({
@@ -114,11 +108,6 @@ export async function PATCH(req: NextRequest) {
         },
         ...(requiresReview
           ? {
-              // Kembali menunggu pemeriksaan. Keputusan lama DIKOSONGKAN, bukan
-              // dibiarkan: `checkedOn`/`validUntil`/`adminId`/`note` menjelaskan
-              // pemeriksaan atas isi yang sudah tidak berlaku lagi. Riwayat
-              // lengkapnya adalah pekerjaan `VerificationCase` (design.md 21.3),
-              // yang belum dibangun.
               listingStatus: "PENDING",
               verificationReview: "PENDING",
               verificationCheckedOn: null,
@@ -128,9 +117,6 @@ export async function PATCH(req: NextRequest) {
               verificationNote: null,
             }
           : {}),
-        // `slug` sengaja TIDAK ikut berubah walau nama berubah: slug adalah
-        // alamat yang mungkin sudah dibagikan, dan mengubahnya mematikan
-        // tautan lama tanpa memberi manfaat.
       },
       select: { id: true },
     });
@@ -139,7 +125,7 @@ export async function PATCH(req: NextRequest) {
       success: true,
       message: requiresReview
         ? "Saved. Your listing is back under review and hidden from the directory until it is approved again."
-        : "Saved.",
+        : "Successfully Saved data Professionals.",
       data: { requiresReview },
     });
   } catch (error) {

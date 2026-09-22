@@ -9,11 +9,6 @@ export default function SolutionCurriculum({
   solution,
 }: SolutionCurriculumProps) {
   if (solution.curriculum.length === 0) return null;
-
-  // Judul section menyebut jumlahnya, dan angka itu SENGAJA diambil dari
-  // `curriculum.length`, bukan dari `sessionCount` — supaya kalau keduanya
-  // pernah berselisih, yang tampil tetap sama dengan yang benar-benar
-  // dirender di bawahnya. Harness menjaga keduanya sama; ini lapis kedua.
   const total = solution.curriculum.length;
 
   return (

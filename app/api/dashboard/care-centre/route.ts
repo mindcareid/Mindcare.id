@@ -134,9 +134,6 @@ export async function PATCH(req: NextRequest) {
       });
 
       if (requiresReview) {
-        // Pengajuan ulang harus terlihat admin lagi, dan `activeUserId`
-        // dikembalikan supaya aturan satu-pengajuan-aktif tetap menahan
-        // pengajuan kedua dari akun yang sama.
         await tx.careCentreUser.update({
           where: { id: membership.id },
           data: { status: "PENDING", activeUserId: userId },
@@ -148,7 +145,7 @@ export async function PATCH(req: NextRequest) {
       success: true,
       message: requiresReview
         ? "Saved. Your centre is back under review and hidden from the directory until it is approved again."
-        : "Saved.",
+        : "Successfully Saved data care-centre.",
       data: { requiresReview },
     });
   } catch (error) {

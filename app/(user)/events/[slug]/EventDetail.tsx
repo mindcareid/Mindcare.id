@@ -18,7 +18,6 @@ type EventDetailProps = {
     centre: CareCentre | null;
   };
   related: MindcareEvent[];
-  /** Ditetapkan sekali di server lalu diturunkan — lihat catatan di page.tsx. */
   now: string;
 };
 

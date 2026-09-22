@@ -91,13 +91,10 @@ export default function AddUserCompany() {
   }, [companyId]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchMembers();
   }, [fetchMembers]);
 
-  /* ================= INVITE USER ================= */
-
-  const handleInvite = async (e: React.FormEvent) => {
+  const handleInvite = async (e: React.SubmitEvent) => {
     e.preventDefault();
 
     if (!companyId || !usernameOrEmail.trim()) return;

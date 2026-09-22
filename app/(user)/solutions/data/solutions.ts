@@ -1,38 +1,3 @@
-// PERINGATAN: SELURUH ISI SEMBILAN SOLUSI DI FILE INI FIKTIF.
-//
-// Nama program, uraiannya, daftar pertemuan, dan harganya semuanya karangan.
-// Tidak ada satu pun program di bawah ini yang benar-benar ditawarkan siapa pun.
-// Wajib diganti data asli sebelum pernah tayang publik — program kesehatan
-// mental karangan bisa dianggap tawaran sungguhan oleh orang yang sedang
-// mencari bantuan, dan harga karangan bisa dianggap komitmen harga.
-//
-// Karena itu isi di bawah ditulis dengan tiga pantangan yang HARUS dipertahankan
-// selama datanya masih karangan — sama seperti di `insights/data/articles.ts`:
-// tidak ada angka statistik, tidak ada rujukan penelitian, dan tidak ada nama
-// obat maupun dosis.
-//
-// Catatan nilai turunan (jangan diubah sepihak, ada harness yang menjaganya —
-// `scripts/check-data-invariants.mjs`):
-//
-// 1. `curriculum.length` WAJIB sama dengan `sessionCount`. Daftar pertemuan itu
-//    rincian dari angka yang sama, bukan data lain. Kalau tidak dijaga, halaman
-//    detail bisa bilang "12 sessions" sambil memperlihatkan lima baris.
-// 2. `priceIdr` boleh `null`, dan `null` BERARTI SESUATU: tombolnya berubah jadi
-//    "Contact us". Dipakai untuk program yang di dunia nyata dinegosiasi per
-//    klien (workplaces dan sebagian communities). Angka wajib bulat ribuan.
-// 3. Untuk kategori `individuals` yang berharga, `priceIdr` tidak boleh melebihi
-//    `sessionCount x startingPriceIdr` milik `leadProfessionalSlug`. Paket yang
-//    lebih mahal daripada membeli sesi satu-satu itu bug, bukan pilihan harga.
-//    Batas ini SENGAJA hanya untuk `individuals`: program workplace dihitung per
-//    perusahaan dan program kelompok dihitung per peserta, jadi perbandingannya
-//    tidak berlaku di sana.
-// 4. `leadProfessionalSlug` wajib ada di `professionals/data/professionals.ts`
-//    atau `null`. Salah tulis satu huruf = tautan 404 yang bisa diklik.
-//
-// Urutan array `solutions` SENGAJA diacak per kategori — jangan disortir. Kalau
-// digrup per kategori, baris pertama di halaman daftar jadi tiga tombol ungu
-// semua (lihat `design.md` bagian 11).
-
 import type {
   Solution,
   SolutionCategory,
@@ -718,11 +683,6 @@ export async function getSolutionBySlug(
 ): Promise<Solution | null> {
   return solutions.find((item) => item.slug === slug) ?? null;
 }
-
-// Urutannya: kategori sama dulu, lalu yang berbagi minimal satu focus area, lalu
-// siapa pun — supaya rail terakhir di halaman detail tidak pernah kosong.
-// Berbeda dengan `getRelatedArticles`, cabang pertama di sini BENAR-BENAR
-// terpakai: sembilan solusi terbagi rata tiga-tiga per kategori.
 export async function getRelatedSolutions(
   slug: string,
   limit = 3,

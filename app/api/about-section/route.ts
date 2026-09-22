@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-/**
- * GET
- * - /api/about-sections
- * - /api/about-sections?id=1
- * - /api/about-sections?active=true
- */
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -16,10 +11,6 @@ export async function GET(req: NextRequest) {
 
     const isActive =
       activeParam === null ? undefined : activeParam === "true";
-
-    /* ======================
-       GET BY ID
-    ====================== */
     if (id) {
       const section = await prisma.aboutSection.findUnique({
         where: { id: Number(id) },
@@ -73,12 +64,9 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-/**
- * POST
- * - Create About Section
- */
+
 export async function POST(req: NextRequest) {
-  try {
+  try{
     const body = await req.json();
 
     const {

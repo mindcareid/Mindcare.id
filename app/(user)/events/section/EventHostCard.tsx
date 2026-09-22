@@ -27,22 +27,11 @@ const avatarClass =
 
 type EventHostCardProps = {
   host: EventHost;
-  /** Terisi kalau `host.kind === "professional"` dan slugnya benar-benar ada. */
   professional: Professional | null;
-  /** Terisi kalau `host.kind === "centre"` dan slugnya benar-benar ada. */
   centre: CareCentre | null;
-  /** Acuan waktu tunggal dari `page.tsx`, ISO string. Dipakai badge verifikasi. */
   now: string;
 };
 
-// Judulnya "Hosted by", bukan "Speaker" atau "Facilitator": `host` di kontrak
-// event bisa berupa orang ATAU tempat, dan lima dari sembilan event mock
-// diselenggarakan klinik. Menyebutnya "Speaker" akan salah untuk yang klinik.
-//
-// Perhatikan komponen ini merender DUA subjek yang berbeda, jadi labelnya juga
-// dua: penyelenggara orang dapat "Licence checked", penyelenggara klinik dapat
-// "Licence & permit checked". Sebelum 24 Agustus 2026 dua-duanya berbunyi
-// "Verified" — satu file, satu kata, dua klaim yang tidak sama.
 export default function EventHostCard({
   host,
   professional,
@@ -148,26 +137,9 @@ export default function EventHostCard({
                 </Tag>
               ))}
             </div>
-
-            {/* SENGAJA tanpa tautan "View care centre" dan tanpa nomor telepon.
-                Nomor teleponnya masih karangan, jadi memasangnya di sini berarti
-                mengundang orang menelepon nomor yang bukan milik siapa-siapa.
-
-                Catatan 24 Agustus 2026: alasan aslinya ada DUA, dan yang satu
-                sudah kedaluwarsa — rute `/care-centres/<slug>` dulu belum ada
-                (tugas #28) sehingga tautannya akan 404. Rute itu sekarang sudah
-                jadi, jadi yang menahan tautannya tinggal keputusan tata letak,
-                bukan halaman yang belum dibangun. Menambahkannya perlu
-                persetujuan diaze lebih dulu karena ia mengubah tampilan halaman
-                yang sudah ditinjau. Lihat design.md bagian 19. */}
           </div>
         </div>
       ) : (
-        // Slug penyelenggara tidak ketemu di data mana pun. Harness menjaga ini
-        // (invarian untuk kind professional maupun centre), jadi kalau kartu ini
-        // yang tampil, berarti harnessnya yang perlu diperiksa — bukan halaman
-        // yang perlu diperbaiki. Namanya tetap ditampilkan supaya halaman tidak
-        // kehilangan informasi siapa penyelenggaranya.
         <div className={cardClass}>
           <span className={avatarClass}>
             <span aria-hidden="true">{initialsOf(host.name)}</span>

@@ -8,10 +8,6 @@ export const metadata: Metadata = {
     "Webinars, workshops, training, and support groups on mental health across Indonesia.",
 };
 
-// Alasannya sama dengan `[slug]/page.tsx`: `now` di bawah menentukan mana yang
-// "Sold out" dan mana yang "Event has ended", dan tanpa ini nilainya membeku di
-// jam build. Halaman daftar bahkan lebih terasa — filter "When" akan menyaring
-// terhadap tanggal yang sudah usang.
 export const revalidate = 3600;
 
 export default async function EventsPage() {

@@ -2,22 +2,6 @@ import { Check } from "lucide-react";
 import SectionHeader from "@/app/components/reusable/SectionHeader";
 import type { CareCentre } from "../type/careCentre";
 
-// Layanan yang tersedia di sebuah pusat layanan.
-//
-// SENGAJA tidak memakai bentuk daftar bergaris seperti `ProfessionalServices`.
-// Bentuk itu punya kolom harga dan durasi di kanan tiap baris, sementara
-// `CentreService` hanya berisi `{ id, slug, name }` — tidak ada harga, tidak ada
-// durasi. Kalau bentuknya disamakan, tiap baris akan punya ruang kanan yang
-// kosong dan halamannya terbaca seperti sedang gagal memuat sesuatu.
-//
-// Harganya juga tidak boleh dikarang. Tarif satu klinik itu keterangan yang
-// orang pakai untuk memutuskan datang atau tidak, dan angka karangan di situ
-// jauh lebih merugikan daripada tidak ada angka sama sekali. Jadi bentuknya
-// petak-petak nama layanan, dan ketiadaan tarif dinyatakan terang-terangan di
-// bawahnya — sebagai keterangan tentang direktorinya, bukan tentang kliniknya.
-//
-// Nama layanannya tetap bahasa Indonesia ("Konsultasi Psikiatri"), sesuai
-// rules.md pasal 7: label antarmuka Inggris, isi konten Indonesia.
 
 type CentreServicesProps = {
   centre: CareCentre;

@@ -1,37 +1,3 @@
-// Daftar topik untuk halaman /help. Bedanya dengan file data lain di repo ini:
-// isinya BUKAN karangan. Setiap entri menunjuk halaman yang benar-benar ada di
-// repo ini, atau dokumen yang memang direncanakan dan ditandai `draft`.
-//
-// Satu pantangan yang HARUS dipertahankan di file ini: `summary` untuk entri
-// `draft` hanya boleh menyebut CAKUPAN dokumennya — jangan pernah menuliskan
-// klausul, janji, atau kewajiban hukum yang belum ada dokumennya. Menulis
-// "kami tidak menjual data Anda" di ringkasan Privacy Policy yang belum
-// diterbitkan sama saja menerbitkan klausul lewat pintu belakang, dan yang
-// terikat olehnya bukan saya. Aturan yang sama sudah ditulis di `rules.md`
-// pasal 10.
-//
-// Catatan nilai turunan (jangan diubah sepihak, ada harness yang menjaganya —
-// `scripts/check-data-invariants.mjs`):
-//
-// 1. `path` DISIMPAN, tidak diturunkan dari `slug`. Kelompok `using-mindcare`
-//    menunjuk ke luar /help (mis. /professionals), jadi rumus
-//    `/help/${slug}` akan salah untuk separuh entri.
-// 2. Untuk `status: "published"`, harness memeriksa KE DISK bahwa
-//    `app/(user)<path>/page.tsx` benar-benar ada. Dengan begitu tautan mati
-//    gagal di verifikasi, bukan ketemu waktu ada yang kebetulan mengklik.
-// 3. Untuk `status: "draft"`, harness memastikan halamannya memang belum ada
-//    ATAU isinya placeholder (`NotFound` / `NotPublishedYet`). Kalau suatu hari
-//    dokumennya sudah betulan ditulis tapi statusnya lupa dinaikkan, harness
-//    yang mengingatkan.
-// 4. `slug` dan `path` wajib unik — itu dijaga harness. Sedangkan `icon`,
-//    `group`, dan `status` TIDAK dicek harness dan memang tidak perlu:
-//    ketiganya union bertipe di `../type/helpTopic` dan array ini
-//    dideklarasikan `HelpTopic[]`, jadi salah tulis satu huruf sudah dijegal
-//    `tsc`. Mengulanginya di harness cuma menambah tempat yang harus disamakan.
-//
-// Urutan array = urutan tampil. Kelompok `using-mindcare` dulu karena orang yang
-// membuka /help umumnya sedang mencari bantuan, bukan sedang membaca ketentuan.
-
 import type { HelpTopic, HelpTopicGroup } from "../type/helpTopic";
 
 const helpTopics: HelpTopic[] = [

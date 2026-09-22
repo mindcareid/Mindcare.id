@@ -15,10 +15,6 @@ import type { Professional } from "../type/professional";
 
 type ProfessionalProfileProps = {
   professional: Professional;
-  /**
-   * Tempat praktiknya, atau `null` kalau belum terikat centre mana pun. Dua dari
-   * lima belas profesional di mock data memang belum, dan itu keadaan yang sah.
-   */
   centre: CareCentre | null;
   articles: Article[];
   events: MindcareEvent[];

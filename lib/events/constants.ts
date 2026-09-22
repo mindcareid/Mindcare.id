@@ -69,7 +69,7 @@ export function resolveEventFilters(
   };
 }
 
-/** EventFilters (state UI, pakai "all") → GetEventsParams (query, pakai undefined). */
+
 export function filtersToQueryParams(filters: EventFilters) {
   return {
     page: filters.page,

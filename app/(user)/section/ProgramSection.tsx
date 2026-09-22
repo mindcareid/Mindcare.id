@@ -43,7 +43,6 @@ export default function ProgramSectionPage() {
     useState<string>("Programming");
   const [isSticky, setIsSticky] = useState(false);
 
-  // Detect scroll for sticky behavior
   useEffect(() => {
     const handleScroll = () => {
       setIsSticky(window.scrollY > 100);

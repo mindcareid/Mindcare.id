@@ -3,26 +3,6 @@ import SectionHeader from "@/app/components/reusable/SectionHeader";
 import CentresMapPlaceholder from "./CentresMapPlaceholder";
 import type { CareCentre } from "../type/careCentre";
 
-// Alamat dan satu-satunya peta placeholder di halaman ini (hero-nya sengaja
-// tidak punya media — alasannya di `CentreHero.tsx`).
-//
-// Tiga hal yang TIDAK ada di sini, ketiganya keputusan sadar dan tercatat di
-// `design.md` bagian 20:
-//
-//   1. Nomor telepon. `CareCentre.phone` memang terisi, tapi isinya karangan.
-//      Nomor karangan yang dipasang di bawah nama klinik yang terbaca sungguhan
-//      adalah satu-satunya konten fiktif di proyek ini yang bisa membuat orang
-//      menelepon nomor asing — dan orang yang menelepon direktori kesehatan
-//      jiwa kadang sedang dalam keadaan yang tidak baik. Jadi tidak dirender
-//      sampai nomornya nyata.
-//   2. Tombol "Get directions". Tautan itu akan mengirim orang ke peta luar
-//      berdasarkan `coordinates` karangan, jadi janjinya lebih besar daripada
-//      yang bisa dipenuhi datanya.
-//   3. Angka lintang/bujurnya sendiri. Ia dipakai peta nanti, bukan dibaca
-//      manusia; menampilkannya hanya memindahkan data mentah ke layar.
-//
-// Ketiadaan kontak dinyatakan satu baris, bukan dibiarkan kosong: bagian alamat
-// tanpa keterangan apa pun terbaca seperti ada yang lupa diisi.
 
 type CentreLocationProps = {
   centre: CareCentre;

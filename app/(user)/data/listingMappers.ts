@@ -113,18 +113,10 @@ const SOURCE_VALUES: Record<string, VerificationSource> = {
   REGISTRY: "registry",
 };
 
-/** Tanggal berketelitian hari → "YYYY-MM-DD" (UTC, sesuai cara menulisnya). */
 function toDateOnly(value: Date | null): string | null {
   return value ? value.toISOString().slice(0, 10) : null;
 }
 
-/**
- * Kolom verifikasi → kontrak `Verification`, sekaligus MENJAGA invarian
- * kontraknya (app/(user)/data/verification.ts): tanggal dan sumber hanya
- * terisi kalau memang sudah ada hasil review, dan masa berlaku hanya ada
- * kalau hasilnya `approved`. Baris database yang tidak konsisten karena itu
- * tidak bisa berubah menjadi badge yang mengklaim lebih dari yang diperiksa.
- */
 function toVerification(row: {
   verificationReview: string;
   verificationCheckedOn: Date | null;
@@ -147,7 +139,7 @@ function toVerification(row: {
   };
 }
 
-/** Paragraf bio disimpan satu kolom teks; kontrak meminta array paragraf. */
+
 function toParagraphs(text: string | null): string[] {
   if (!text) return [];
   return text
@@ -171,8 +163,6 @@ export function mapProfessional(row: PublicProfessionalRow): Professional {
     priceIdr: service.priceIdr,
   }));
 
-  // Mode sesi tidak disimpan sebagai kolom — ia fakta tentang layanan yang
-  // ditawarkan, jadi diturunkan dari daftarnya supaya tidak ada dua sumber.
   const sessionModes = [
     ...new Set(services.map((service) => service.mode)),
   ].sort((a, b) => a.localeCompare(b));
@@ -191,8 +181,6 @@ export function mapProfessional(row: PublicProfessionalRow): Professional {
     profession: PROFESSION_LABELS[row.profession] ?? "Psikolog",
     photoUrl: row.photoUrl,
     verification: toVerification(row),
-    // Belum ada sumber data ketersediaan (butuh jadwal/booking) — `false`
-    // jujur berarti "tidak sedang online", bukan klaim yang dikarang.
     isAvailableNow: false,
     areasOfSupport: row.areas.map((entry) => ({
       id: String(entry.area.id),
@@ -207,8 +195,6 @@ export function mapProfessional(row: PublicProfessionalRow): Professional {
     createdAt: row.createdAt.toISOString(),
     headline: row.headline,
     bio: toParagraphs(row.bio),
-    // Belum ada tabelnya (pendekatan terapi, pendidikan). Seksi terkait
-    // disembunyikan saat kosong — bukan dirender sebagai kerangka kosong.
     approaches: [],
     education: [],
     services,
@@ -217,8 +203,6 @@ export function mapProfessional(row: PublicProfessionalRow): Professional {
 }
 
 export function mapCareCentre(row: PublicCareCentreRow): CareCentre {
-  // Kontrak menuntut tepat tujuh entri hari 1..7 walau barisnya tidak lengkap —
-  // hari yang tidak ada diperlakukan sebagai tutup, bukan dihilangkan.
   const hoursByDay = new Map(row.openingHours.map((hour) => [hour.day, hour]));
   const openingHours = [1, 2, 3, 4, 5, 6, 7].map((day) => {
     const hour = hoursByDay.get(day);
@@ -250,16 +234,12 @@ export function mapCareCentre(row: PublicCareCentreRow): CareCentre {
       province: row.province,
       postalCode: row.postalCode,
     },
-    // Koordinat hanya diisi admin/geocoding nanti; `null` berarti belum ada
-    // titik peta, bukan titik (0,0) di laut.
     coordinates:
       row.latitude !== null && row.longitude !== null
         ? { latitude: row.latitude, longitude: row.longitude }
         : null,
     phone: row.phone,
     acceptsBpjs: row.acceptsBpjs,
-    // Relasi profesional ↔ centre (afiliasi) belum dibangun; array kosong
-    // adalah keadaan yang sah dan kartunya tidak merender blok itu.
     professionalSlugs: [],
     professionalCount: 0,
     createdAt: row.createdAt.toISOString(),

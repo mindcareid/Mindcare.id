@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 
-// Inter = body, Playfair Display = heading. Lihat design.md pasal 4.
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -16,8 +15,6 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
-// TODO(diaze): title & description masih perlu persetujuan atasan.
-// Ikon juga masih favicon ExeCorner — menunggu file logo MindCare.id resmi.
 const SITE_NAME = "MindCare.id";
 const SITE_DESCRIPTION =
   "Mental-health professionals, care centres, solutions and insights in Indonesia.";

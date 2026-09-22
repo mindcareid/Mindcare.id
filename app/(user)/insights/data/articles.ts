@@ -1,30 +1,3 @@
-// PERINGATAN: SELURUH ISI SEMBILAN ARTIKEL DI FILE INI FIKTIF.
-//
-// Judul, ringkasan, dan seluruh isi `body` di bawah adalah karangan yang dibuat
-// sebagai bahan uji tampilan. Nama penulis dan penelaahnya mengacu ke profil
-// profesional yang juga karangan — lihat
-// `app/(user)/professionals/data/professionals.ts`.
-//
-// Ini teks kesehatan mental yang tampil seolah sudah ditelaah tenaga medis, jenis
-// konten yang paling mudah dipercaya orang yang sedang mencari pertolongan. Karena
-// itu isi di bawah ditulis dengan tiga pantangan yang HARUS dipertahankan selama
-// datanya masih karangan: tidak ada angka statistik, tidak ada rujukan penelitian,
-// dan tidak ada nama obat maupun dosis. Ketiganya akan jadi fakta palsu yang tidak
-// bisa dilacak sumbernya.
-//
-// SELURUH ISI FILE INI HARUS DIGANTI TULISAN ASLI YANG DITELAAH PROFESIONAL
-// SUNGGUHAN SEBELUM HALAMAN INI PERNAH TAYANG KE PUBLIK. Lihat `prd.md` bagian 11.
-//
-// Field `body` ditambahkan 21 Agustus 2026 memakai blok terstruktur
-// (`ArticleBlock`), bukan HTML atau Markdown. Alasannya ada di `design.md` bagian
-// 17. `readTimeMinutes` kini nilai turunan, bukan angka pilihan: rumusnya
-// `ceil(jumlah kata / 180)`, dihitung dari `text` milik heading/paragraph/quote
-// plus seluruh `items` milik list, dan TIDAK menghitung `attribution`. Dijaga
-// `scripts/check-data-invariants.mjs`, jadi jangan diubah manual — ubah `body`-nya
-// dan biarkan angkanya menyesuaikan. Sembilan angka lama (4–9 menit) ditulis
-// tangan waktu `body` belum ada dan semuanya keliru; sekarang 2–4 menit karena
-// badan artikel contoh ini memang lebih pendek daripada artikel sungguhan.
-
 import type {
   Article,
   ArticlePerson,

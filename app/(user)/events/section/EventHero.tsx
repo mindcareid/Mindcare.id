@@ -16,7 +16,6 @@ import {
 
 type EventHeroProps = {
   event: MindcareEvent;
-  /** "Sekarang" ditetapkan sekali di server dan diturunkan, bukan dibaca di sini. */
   now: string;
 };
 
@@ -79,13 +78,6 @@ export default function EventHero({ event, now }: EventHeroProps) {
               </Tag>
             ))}
           </div>
-
-          {/* Tiga keadaan, dan ketiganya beda tombol — bukan satu tombol yang
-              di-disable. Acara yang sudah lewat tidak punya tombol sama sekali:
-              tombol mati tetap mengundang klik dan tetap terbaca oleh pembaca
-              layar sebagai tombol. Tujuan semua tautan `/#contact`, BUKAN
-              `/contact` — rute itu tidak ada di repo ini, dan sub-rute
-              `register/` milik Executive Corner sudah dihapus. */}
           <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
             {availability.state === "ended" ? (
               <p className="text-base font-semibold text-muted-foreground">

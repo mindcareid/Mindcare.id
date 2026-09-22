@@ -12,17 +12,6 @@ const priceFormatter = new Intl.NumberFormat("id-ID", {
 
 type ProfessionalsGridProps = {
   professionals: Professional[];
-  /**
-   * Acuan waktu tunggal dari halaman, ISO string. Wajib — pola yang sama dengan
-   * `CareCentresGrid`.
-   *
-   * Ditambahkan 24 Agustus 2026 karena badge verifikasi berhenti jadi boolean
-   * beku dan mulai bergantung pada tanggal berlaku dokumen. Jangan diganti
-   * `new Date()` di dalam sini: komponen ini dirender di empat halaman, dan kalau
-   * kartu memakai acuan waktu sendiri sementara hero memakai punya `page.tsx`,
-   * keduanya bisa berbeda pendapat soal orang yang sama pada hari yang sama —
-   * kelas bug yang persis sama dengan "kartu bilang WIB, hero bilang GMT+7".
-   */
   now: string;
   resetAction?: React.ReactNode;
 };

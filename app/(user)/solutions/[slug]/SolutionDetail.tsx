@@ -14,7 +14,6 @@ type SolutionDetailProps = {
   solution: Solution;
   lead: Professional | null;
   related: Solution[];
-  /** Acuan waktu tunggal dari `page.tsx`, ISO string. Dipakai badge verifikasi. */
   now: string;
 };
 

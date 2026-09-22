@@ -79,7 +79,9 @@ export async function PATCH(
     }
     if (centre.listingStatus !== "PENDING") {
       return NextResponse.json(
-        { message: `Application already ${centre.listingStatus.toLowerCase()}` },
+        {
+          message: `Application already ${centre.listingStatus.toLowerCase()}`,
+        },
         { status: 400 },
       );
     }
@@ -114,9 +116,7 @@ export async function PATCH(
         data:
           action === "APPROVE"
             ? { status: "ACTIVE" }
-            : // activeUserId dilepas supaya "satu pengajuan aktif" tidak
-              // memblokir pengajuan centre berikutnya setelah ditolak.
-              { status: "DECLINED", activeUserId: null },
+            : { status: "DECLINED", activeUserId: null },
       });
 
       try {
@@ -142,9 +142,7 @@ export async function PATCH(
     return NextResponse.json({
       success: true,
       message:
-        action === "APPROVE"
-          ? "Application approved"
-          : "Application rejected",
+        action === "APPROVE" ? "Application approved" : "Application rejected",
     });
   } catch (error) {
     if (

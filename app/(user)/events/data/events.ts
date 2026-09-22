@@ -1,33 +1,3 @@
-// PERINGATAN: SELURUH ISI SEMBILAN EVENT DI FILE INI FIKTIF.
-//
-// Judul, uraian, susunan acara, tanggal, kota, harga, dan jumlah pendaftarnya
-// semuanya karangan. Tidak ada satu pun acara di bawah ini yang benar-benar
-// akan berlangsung. Wajib diganti data asli sebelum pernah tayang publik —
-// acara karangan lebih berbahaya daripada program karangan, karena orang bisa
-// datang ke tempat dan tanggal yang tertulis di sini.
-//
-// Isi di bawah ditulis dengan tiga pantangan yang HARUS dipertahankan selama
-// datanya masih karangan — sama seperti di `insights/data/articles.ts` dan
-// `solutions/data/solutions.ts`: tidak ada angka statistik, tidak ada rujukan
-// penelitian, dan tidak ada nama obat maupun dosis.
-//
-// Catatan nilai turunan (jangan diubah sepihak, ada harness yang menjaganya —
-// `scripts/check-data-invariants.mjs`):
-//
-// 1. `registeredCount` tidak boleh melewati `quota`. `quota: null` berarti tanpa
-//    batas kursi, bukan "belum diisi".
-// 2. `agenda` adalah rincian dari `startDate`–`endDate`, bukan data lain. Jam
-//    baris pertama WAJIB sama dengan jam mulai dan jam baris terakhir WAJIB sama
-//    dengan jam selesai, dan antar baris tidak boleh ada lubang. Kalau tidak
-//    dijaga, hero bisa bilang acaranya sampai 15:00 sambil susunan acaranya
-//    berhenti 14:00.
-// 3. `agenda.time` sengaja string bebas ("09:00 – 09:30"), bukan timestamp:
-//    rundown internal tidak perlu dihitung, dan memaksanya jadi ISO berarti
-//    mengarang zona waktu per baris. Zona waktu acara ada di `timeZone`.
-// 4. `host.slug` berkind `professional` wajib ada di
-//    `professionals/data/professionals.ts`. Salah tulis satu huruf = kartu
-//    penyelenggara diam-diam kosong.
-
 import type {
   EventCategory,
   EventFacets,
@@ -557,17 +527,6 @@ export async function getUpcomingEvents(
     .slice(0, limit);
 }
 
-// Acara lain untuk blok "More events" di halaman detail.
-//
-// Yang sekategori didahulukan, lalu sisanya diisi acara terdekat. Berbeda dari
-// `getRelatedArticles` — yang cabang "sekategori"-nya selama ini mati karena tiap
-// artikel bertopik unik — cabang di sini benar-benar terpakai: kategori webinar
-// dipakai tiga event dan workshop maupun support group dua-dua.
-//
-// Yang sudah lewat SELALU dikeluarkan, termasuk saat halaman yang sedang dibuka
-// adalah acara yang sudah lewat. Menawarkan acara yang tanggalnya sudah berlalu
-// sebagai "acara lain" tidak ada gunanya bagi orang yang mencari sesuatu untuk
-// diikuti.
 export async function getRelatedEvents(
   slug: string,
   now: string,

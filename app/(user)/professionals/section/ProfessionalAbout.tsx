@@ -9,13 +9,7 @@ type ProfessionalAboutProps = {
 export default function ProfessionalAbout({
   professional,
 }: ProfessionalAboutProps) {
-  // Seksi disembunyikan saat datanya kosong, bukan dirender sebagai kerangka
-  // kosong (16 September 2026, saat data pindah ke database).
-  //
-  // "Therapy approaches" belum punya sumbernya: form pengajuan Jalur A tidak
-  // menanyakannya, jadi untuk sementara ini SELALU kosong dan header kosong di
-  // setiap profil adalah janji yang tidak bisa ditepati halaman ini. Begitu ada
-  // tabelnya, blok ini menyala sendiri tanpa perubahan lain.
+  
   const hasAreas = professional.areasOfSupport.length > 0;
   const hasApproaches = professional.approaches.length > 0;
 

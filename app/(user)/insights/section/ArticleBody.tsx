@@ -69,8 +69,7 @@ export default function ArticleBody({ blocks, className }: ArticleBodyProps) {
             );
 
           default: {
-            // Kalau nanti ada jenis blok baru di `ArticleBlock`, baris ini yang
-            // menggagalkan `tsc` sampai jenis itu ikut dirender di atas.
+            
             const exhaustive: never = block;
             void exhaustive;
             return null;
