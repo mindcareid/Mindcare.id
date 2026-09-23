@@ -38,7 +38,7 @@ export default function QuillEditor({
 
   return (
     <div
-      className={`quill-wrapper rounded-lg border transition-colors ${
+      className={`rounded-lg border transition-colors ${
         disabled
           ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
           : hasError

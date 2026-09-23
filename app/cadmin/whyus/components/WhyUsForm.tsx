@@ -248,7 +248,7 @@ export default function WhyUsForm({ id, defaultValues }: WhyUsFormProps) {
               name="isActive"
               checked={form.isActive}
               onChange={handleChange}
-              className="form-checkbox h-5 w-5 text-blue-600"
+              className="h-5 w-5 rounded border-gray-300 accent-blue-600"
             />
             <span className="ml-2 text-gray-700">Active</span>
           </label>

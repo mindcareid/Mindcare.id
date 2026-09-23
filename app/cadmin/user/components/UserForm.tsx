@@ -77,7 +77,7 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
     formData.append("upload_preset", "member"); // 👈 Pastikan preset ini ada di Cloudinary
 
     const res = await fetch(
-      "https://api.cloudinary.com/v1_1/dc87bbdnl/image/upload",
+      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
       {
         method: "POST",
         body: formData,
