@@ -10,7 +10,7 @@ type Props = {
   isFetching?: boolean;
 };
 
-export default function EventsGrid({ events, loading, isFetching }: Props) {
+export default function EventsGrid({ events, loading }: Props) {
   if (loading) {
     return (
       <section className="py-12 px-4 md:px-8 lg:px-16">

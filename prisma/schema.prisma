@@ -118,6 +118,19 @@ enum NotificationType {
   GENERAL
 }
 
+enum EventPublisherType {
+  PLATFORM
+  PROFESSIONAL
+  CARE_CENTRE
+  SOLUTION
+}
+
+enum EventFormat {
+  ONLINE
+  IN_PERSON
+  HYBRID
+}
+
 enum EventStatus {
   DRAFT
   PUBLISHED
@@ -288,6 +301,7 @@ model User {
   careCentreMemberships CareCentreUser[]
   orders                Order[]
   notifications         Notification[]
+  createdEvents Event[] @relation("EventCreatedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -334,7 +348,6 @@ model Company {
 
   users     CompanyUser[]
   solutions Solution[]
-  events    Event[]
 
   media Media[]
 
@@ -404,6 +417,7 @@ model CareCentre {
   services     CareCentreService[]
   users        CareCentreUser[]
   media        Media[]
+  events       Event[]
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
@@ -501,6 +515,7 @@ model Solution {
   audiences  SolutionAudienceMap[]
 
   media Media[]
+  events Event[]
 
   @@index([companyId])
   @@index([type, listingStatus])
@@ -709,6 +724,7 @@ model Event {
   description String @db.LongText
 
   location String? @db.VarChar(500)
+  format EventFormat @default(IN_PERSON)
 
   startDate DateTime
   endDate   DateTime
@@ -726,15 +742,39 @@ model Event {
 
   coverImage  String? @db.VarChar(500)
   publicId    String? @db.VarChar(255)
-  isPublished Boolean @default(false)
+  publisherType EventPublisherType @default(PLATFORM)
+
+    /*
+   * Event publisher
+   *
+   * PLATFORM
+   *   semua publisherId = null
+   *
+   * PROFESSIONAL
+   *   professionalId != null
+   *
+   * CARE_CENTRE
+   *   careCentreId != null
+   *
+   * SOLUTION
+   *   solutionId != null
+   */
+
+  professionalId Int?
+  careCentreId Int?
+  solutionId Int?
+  solution Solution? @relation(fields: [solutionId], references: [id], onDelete: Restrict)
+  careCentre CareCentre? @relation(fields: [careCentreId], references: [id], onDelete: Restrict)
+  professional Professional? @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+
 
   status EventStatus @default(DRAFT)
 
-  companyId Int
-  company   Company @relation(fields: [companyId], references: [id])
-
   categoryId Int
-  category   EventCategory @relation(fields: [categoryId], references: [id])
+  category   EventCategory @relation(fields: [categoryId],references: [id],onDelete: Restrict)
+
+  createdById Int?
+  createdBy   User? @relation("EventCreatedBy",fields: [createdById],references: [id],onDelete: SetNull)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -743,13 +783,63 @@ model Event {
   orders         Order[]
   attendeeFields EventAttendeeField[]
   industries     EventIndustry[]
+  agenda         EventAgendaItem[]
+  focusAreas     EventFocusAreaMap[]
 
-  @@index([companyId, status, startDate])
+  @@index([professionalId, status, startDate])
+  @@index([careCentreId, status, startDate])
+  @@index([solutionId, status, startDate])
   @@index([categoryId, status])
   @@index([status, startDate])
   @@index([deletedAt])
+  @@index([createdById])
 }
 
+model EventFocusArea {
+  id Int @id @default(autoincrement())
+
+  slug String @unique @db.VarChar(100)
+  name String @db.VarChar(150)
+
+  isActive Boolean @default(true)
+
+  events EventFocusAreaMap[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EventFocusAreaMap {
+  eventId Int
+  event Event @relation(fields: [eventId],references: [id],onDelete: Cascade)
+
+  focusAreaId Int
+  focusArea EventFocusArea @relation(fields: [focusAreaId],references: [id],onDelete: Restrict)
+
+  @@id([eventId, focusAreaId])
+  @@index([focusAreaId])
+}
+
+model EventAgendaItem {
+  id Int @id @default(autoincrement())
+
+  eventId Int
+  event   Event @relation(fields: [eventId],references: [id],onDelete: Cascade)
+
+  title       String @db.VarChar(255)
+  description String? @db.Text
+
+  startTime DateTime
+  endTime   DateTime
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId, startTime])
+  @@index([eventId, sortOrder])
+}
 
 model EventCategory {
   id Int @id @default(autoincrement())
@@ -983,6 +1073,7 @@ model Professional {
   services ProfessionalService[]
   areas    ProfessionalAreaOfSupport[]
   media    Media[]
+  events   Event[]
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())

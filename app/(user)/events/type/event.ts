@@ -1,51 +1,60 @@
-export type EventFormat = "Online" | "In Person";
-export type EventHostKind = "professional" | "centre";
+import type { EventFormat as PrismaEventFormat } from "@prisma/client";
+
+export type EventFormat = PrismaEventFormat;
 
 export interface EventCategory {
-  id: string;
+  id: number;
   slug: string;
   name: string;
 }
 
 export interface EventFocusArea {
-  id: string;
+  id: number;
   slug: string;
   name: string;
 }
 
 export interface EventHost {
-  kind: EventHostKind;
-  slug: string;
+  type: "PLATFORM" | "PROFESSIONAL" | "CARE_CENTRE" | "SOLUTION";
   name: string;
-  logoUrl: string | null;
 }
 
 export interface EventAgendaItem {
-  id: string;
-  time: string;
+  id: number;
   title: string;
+  description: string | null;
+  startTime: Date;
+  endTime: Date;
+  sortOrder: number;
 }
 
-export interface MindcareEvent {
-  id: string;
+export interface EventCardItem {
+  id: number;
   slug: string;
   title: string;
-  summary: string;
-  about: string[];
-  agenda: EventAgendaItem[];
+  description: string;
+
   coverImage: string | null;
   location: string | null;
+
   timeZone: string;
-  startDate: string;
-  endDate: string;
+  startDate: Date;
+  endDate: Date;
   format: EventFormat;
+
   price: number;
+  currency: string;
   quota: number | null;
-  registeredCount: number;
+
+  remaining: number | null;
+  soldOut: boolean;
+
   category: EventCategory;
   focusAreas: EventFocusArea[];
+
   host: EventHost;
-  createdAt: string;
+
+  createdAt: Date;
 }
 
 export interface EventFacets {

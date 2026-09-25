@@ -1,19 +1,30 @@
 import Link from "next/link";
-import { ArrowRight, Building2, GraduationCap, MapPin } from "lucide-react";
+
+import {
+  ArrowRight,
+  Building2,
+  ExternalLink,
+  GraduationCap,
+  MapPin,
+} from "lucide-react";
+
 import SectionHeader from "@/app/components/reusable/SectionHeader";
+
 import Tag from "@/app/components/reusable/Tag";
+
 import VerifiedBadge from "@/app/components/reusable/VerifiedBadge";
+
 import {
   VERIFICATION_POLICY_PATH,
   verificationLabelOf,
 } from "../../data/verification";
-import type { CareCentre } from "../../care-centres/type/careCentre";
-import type { Professional } from "../../professionals/type/professional";
-import type { EventHost } from "../type/event";
 
-function initialsOf(name: string) {
+import type { EventDetail } from "../data/events";
+
+function initialsOf(name: string): string {
   return name
     .split(/\s+/)
+    .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]!.toUpperCase())
     .join("");
@@ -26,34 +37,24 @@ const avatarClass =
   "flex size-16 shrink-0 items-center justify-center rounded-full bg-brand-lavender-200 font-heading text-xl font-semibold text-secondary";
 
 type EventHostCardProps = {
-  host: EventHost;
-  /** Terisi kalau `host.kind === "professional"` dan slugnya benar-benar ada. */
-  professional: Professional | null;
-  /** Terisi kalau `host.kind === "centre"` dan slugnya benar-benar ada. */
-  centre: CareCentre | null;
-  /** Acuan waktu tunggal dari `page.tsx`, ISO string. Dipakai badge verifikasi. */
+  event: EventDetail;
   now: string;
 };
 
-// Judulnya "Hosted by", bukan "Speaker" atau "Facilitator": `host` di kontrak
-// event bisa berupa orang ATAU tempat, dan lima dari sembilan event mock
-// diselenggarakan klinik. Menyebutnya "Speaker" akan salah untuk yang klinik.
-//
-// Perhatikan komponen ini merender DUA subjek yang berbeda, jadi labelnya juga
-// dua: penyelenggara orang dapat "Licence checked", penyelenggara klinik dapat
-// "Licence & permit checked". Sebelum 24 Agustus 2026 dua-duanya berbunyi
-// "Verified" — satu file, satu kata, dua klaim yang tidak sama.
 export default function EventHostCard({
-  host,
-  professional,
-  centre,
+  event,
   now,
 }: EventHostCardProps) {
+  const professional = event.professional;
+  const careCentre = event.careCentre;
+  const solution = event.solution;
+
   const professionalLabel = professional
     ? verificationLabelOf(professional.verification, now, "person")
     : null;
-  const centreLabel = centre
-    ? verificationLabelOf(centre.verification, now, "facility")
+
+  const careCentreLabel = careCentre
+    ? verificationLabelOf(careCentre.verification, now, "facility")
     : null;
 
   return (
@@ -63,7 +64,9 @@ export default function EventHostCard({
       {professional ? (
         <div className={cardClass}>
           <span className={avatarClass}>
-            <span aria-hidden="true">{initialsOf(professional.fullName)}</span>
+            <span aria-hidden="true">
+              {initialsOf(professional.fullName)}
+            </span>
           </span>
 
           <div className="min-w-0">
@@ -71,6 +74,7 @@ export default function EventHostCard({
               <p className="font-heading text-lg font-semibold text-foreground">
                 {professional.fullName}
               </p>
+
               {professionalLabel && (
                 <VerifiedBadge
                   label={professionalLabel}
@@ -79,26 +83,32 @@ export default function EventHostCard({
               )}
             </div>
 
-            <p className="mt-1 text-sm text-muted-foreground">
-              {professional.credentials}
-            </p>
-
-            <p className="mt-3 max-w-prose text-base leading-relaxed text-muted-foreground">
-              {professional.headline}
-            </p>
+            {professional.headline && (
+              <p className="mt-2 max-w-prose text-base leading-relaxed text-muted-foreground">
+                {professional.headline}
+              </p>
+            )}
 
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] font-medium text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <GraduationCap
-                  className="size-3.5 shrink-0"
-                  aria-hidden="true"
-                />
-                {`${professional.yearsOfExperience} yrs experience`}
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
-                {professional.location.city}
-              </span>
+              {professional.yearsOfExperience !== null && (
+                <span className="inline-flex items-center gap-1.5">
+                  <GraduationCap
+                    className="size-3.5 shrink-0"
+                    aria-hidden="true"
+                  />
+                  {professional.yearsOfExperience} yrs experience
+                </span>
+              )}
+
+              {professional.locations.length > 0 && (
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin
+                    className="size-3.5 shrink-0"
+                    aria-hidden="true"
+                  />
+                  {professional.locations[0]?.city}
+                </span>
+              )}
             </div>
 
             <Link
@@ -106,6 +116,7 @@ export default function EventHostCard({
               className="group mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-brand-navy-800"
             >
               View profile
+
               <ArrowRight
                 className="size-4 transition-transform group-hover:translate-x-0.5"
                 aria-hidden="true"
@@ -113,7 +124,7 @@ export default function EventHostCard({
             </Link>
           </div>
         </div>
-      ) : centre ? (
+      ) : careCentre ? (
         <div className={cardClass}>
           <span className={avatarClass}>
             <Building2 className="size-7" aria-hidden="true" />
@@ -122,62 +133,105 @@ export default function EventHostCard({
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-heading text-lg font-semibold text-foreground">
-                {centre.name}
+                {careCentre.name}
               </p>
-              {centreLabel && (
+
+              {careCentreLabel && (
                 <VerifiedBadge
-                  label={centreLabel}
+                  label={careCentreLabel}
                   href={VERIFICATION_POLICY_PATH}
                 />
               )}
             </div>
 
-            <p className="mt-1 text-sm text-muted-foreground">{centre.kind}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {careCentre.kind}
+            </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] font-medium text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
-                <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
-                {`${centre.address.city}, ${centre.address.province}`}
+                <MapPin
+                  className="size-3.5 shrink-0"
+                  aria-hidden="true"
+                />
+                {careCentre.city}, {careCentre.province}
               </span>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              {centre.services.slice(0, 3).map((service) => (
-                <Tag key={service.id} tone="mint">
-                  {service.name}
-                </Tag>
-              ))}
-            </div>
+            {careCentre.services.length > 0 && (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                {careCentre.services.slice(0, 3).map((service) => (
+                  <Tag key={service.id} tone="mint">
+                    {service.name}
+                  </Tag>
+                ))}
+              </div>
+            )}
 
-            {/* SENGAJA tanpa tautan "View care centre" dan tanpa nomor telepon.
-                Nomor teleponnya masih karangan, jadi memasangnya di sini berarti
-                mengundang orang menelepon nomor yang bukan milik siapa-siapa.
+            <Link
+              href={`/care-centres/${careCentre.slug}`}
+              className="group mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-brand-navy-800"
+            >
+              View care centre
 
-                Catatan 24 Agustus 2026: alasan aslinya ada DUA, dan yang satu
-                sudah kedaluwarsa — rute `/care-centres/<slug>` dulu belum ada
-                (tugas #28) sehingga tautannya akan 404. Rute itu sekarang sudah
-                jadi, jadi yang menahan tautannya tinggal keputusan tata letak,
-                bukan halaman yang belum dibangun. Menambahkannya perlu
-                persetujuan diaze lebih dulu karena ia mengubah tampilan halaman
-                yang sudah ditinjau. Lihat design.md bagian 19. */}
+              <ArrowRight
+                className="size-4 transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
+        </div>
+      ) : solution ? (
+        <div className={cardClass}>
+          <span className={avatarClass}>
+            <ExternalLink className="size-7" aria-hidden="true" />
+          </span>
+
+          <div className="min-w-0">
+            <p className="font-heading text-lg font-semibold text-foreground">
+              {solution.name}
+            </p>
+
+            {solution.tagline && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                {solution.tagline}
+              </p>
+            )}
+
+            {solution.description && (
+              <p className="mt-3 max-w-prose text-base leading-relaxed text-muted-foreground">
+                {solution.description}
+              </p>
+            )}
+
+            <Link
+              href={`/solutions/${solution.slug}`}
+              className="group mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-brand-navy-800"
+            >
+              View solution
+
+              <ArrowRight
+                className="size-4 transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </Link>
           </div>
         </div>
       ) : (
-        // Slug penyelenggara tidak ketemu di data mana pun. Harness menjaga ini
-        // (invarian untuk kind professional maupun centre), jadi kalau kartu ini
-        // yang tampil, berarti harnessnya yang perlu diperiksa — bukan halaman
-        // yang perlu diperbaiki. Namanya tetap ditampilkan supaya halaman tidak
-        // kehilangan informasi siapa penyelenggaranya.
         <div className={cardClass}>
           <span className={avatarClass}>
-            <span aria-hidden="true">{initialsOf(host.name)}</span>
+            <span aria-hidden="true">
+              {initialsOf(event.host.name)}
+            </span>
           </span>
+
           <div className="min-w-0">
             <p className="font-heading text-lg font-semibold text-foreground">
-              {host.name}
+              {event.host.name}
             </p>
+
             <p className="mt-1 text-sm text-muted-foreground">
-              {host.kind === "professional" ? "Professional" : "Care centre"}
+              MindCare
             </p>
           </div>
         </div>
