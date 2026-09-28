@@ -44,7 +44,6 @@ export default function EventDetail({
 
           <EventHostCard
             event={event}
-            now={now}
           />
 
           <div className="flex max-w-prose gap-3 rounded-xl border border-border bg-brand-mint-100 p-5">

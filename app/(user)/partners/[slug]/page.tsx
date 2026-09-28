@@ -24,7 +24,7 @@ export default async function Page({
   return (
     <PartnerDetail
       company={partner}
-      events={partner.events}
+      events={[]}
     />
   );
 }

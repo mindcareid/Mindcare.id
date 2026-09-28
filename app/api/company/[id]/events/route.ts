@@ -25,7 +25,6 @@ export async function GET(
   try {
     const events = await prisma.event.findMany({
       where: {
-        companyId,
         deletedAt: null,
       },
       include: {
@@ -141,7 +140,6 @@ export async function POST(
         coverImage: coverImage ?? null,
         publicId: publicId ?? null,
         isPublished: isPublished ?? false,
-        companyId,
         categoryId,
         industries: industryIds?.length
           ? {

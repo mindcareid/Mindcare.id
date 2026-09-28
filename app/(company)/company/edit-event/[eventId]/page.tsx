@@ -34,7 +34,6 @@ export default async function EditEventPage({ params }: Props) {
     prisma.event.findFirst({
       where: {
         id: eventId,
-        companyId: member.companyId,
         deletedAt: null,
       },
       select: {

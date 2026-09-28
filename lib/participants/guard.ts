@@ -34,14 +34,14 @@ export async function requireCompanyEventAccess(
   const event = await prisma.event.findFirst({
     where: {
       id: eventId,
-      companyId: member.companyId,
+      // companyId: member.companyId,
       deletedAt: null,
     },
     select: { id: true },
   });
 
   if (!event) {
-    return { ok: false, status: 404, message: "Event nt Found" };
+    return { ok: false, status: 404, message: "Event not Found" };
   }
 
   return { ok: true, companyId: member.companyId, userId };

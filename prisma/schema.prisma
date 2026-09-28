@@ -742,6 +742,7 @@ model Event {
 
   coverImage  String? @db.VarChar(500)
   publicId    String? @db.VarChar(255)
+  isPublished Boolean @default(false) 
   publisherType EventPublisherType @default(PLATFORM)
 
     /*

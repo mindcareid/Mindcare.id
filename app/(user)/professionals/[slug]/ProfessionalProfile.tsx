@@ -4,7 +4,7 @@ import type { CareCentre } from "../../care-centres/type/careCentre";
 import InsightsGrid from "../../insights/section/InsightsGrid";
 import type { Article } from "../../insights/type/article";
 import EventsCardGrid from "../../events/section/EventsCardGrid";
-import type { MindcareEvent } from "../../events/type/event";
+import type { EventListItem } from "../../events/data/events";
 import ProfessionalAbout from "../section/ProfessionalAbout";
 import ProfessionalCentre from "../section/ProfessionalCentre";
 import ProfessionalEducation from "../section/ProfessionalEducation";
@@ -21,7 +21,7 @@ type ProfessionalProfileProps = {
    */
   centre: CareCentre | null;
   articles: Article[];
-  events: MindcareEvent[];
+  events: EventListItem[];
   related: Professional[];
   now: string;
 };

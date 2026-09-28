@@ -35,11 +35,12 @@ export async function getOrderByUser(
       userId,
     },
     include: {
-       event: {
+       /* event: {
         include: {
           company: true,
         },
-      },
+      }, */
+      event: true,
             _count: {
         select: {
           tickets: true,

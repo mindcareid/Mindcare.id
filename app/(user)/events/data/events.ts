@@ -87,6 +87,7 @@ type EventDetailPayload = Prisma.EventGetPayload<{
 export type EventHost = {
   name: string;
   type: "PLATFORM" | "PROFESSIONAL" | "CARE_CENTRE" | "SOLUTION";
+  slug?: string;  
 };
 
 export type EventFocusArea = {
@@ -155,6 +156,7 @@ function resolveEventHost(
   if (event.professional) {
     return {
       name: event.professional.fullName,
+      slug: event.professional.slug,
       type: "PROFESSIONAL",
     };
   }
@@ -162,6 +164,7 @@ function resolveEventHost(
   if (event.careCentre) {
     return {
       name: event.careCentre.name,
+      slug: event.careCentre.slug,
       type: "CARE_CENTRE",
     };
   }
@@ -169,12 +172,14 @@ function resolveEventHost(
   if (event.solution) {
     return {
       name: event.solution.name,
+      slug: event.solution.slug,
       type: "SOLUTION",
     };
   }
 
   return {
     name: "MindCare",
+    slug: "mindcare",
     type: "PLATFORM",
   };
 }

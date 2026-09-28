@@ -43,16 +43,6 @@ export const eventListSelect = {
     },
   },
 
-  company: {
-    select: {
-      name: true,
-      slug: true,
-      logo: true,
-      location: true,
-      createdAt: true,
-    },
-  },
-
   industries: {
     select: {
       industry: {

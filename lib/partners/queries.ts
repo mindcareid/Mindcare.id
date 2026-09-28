@@ -43,17 +43,6 @@ export async function getPartnerBySlug(slug: string) {
             phone:true,
             email:true,
             isActive:true,
-
-            events:{
-                where:{
-                    deletedAt:null,
-                    isPublished:true
-                },
-                orderBy:{
-                    startDate:"asc"
-                },
-                select:eventCardSelect
-            }
         }
     });
 }

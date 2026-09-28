@@ -1,45 +1,82 @@
 import SectionHeader from "@/app/components/reusable/SectionHeader";
-import type { MindcareEvent } from "../type/event";
-import { formatEventTimeRange } from "../data/eventTime";
+
+import type { EventDetail } from "../data/events";
+
+import {
+  formatEventTimeRange,
+} from "../data/eventTime";
 
 type EventAgendaProps = {
-  event: MindcareEvent;
+  event: EventDetail;
 };
 
-export default function EventAgenda({ event }: EventAgendaProps) {
-  if (event.agenda.length === 0) return null;
+function formatAgendaTime(
+  startTime: Date,
+  endTime: Date,
+  timeZone: string,
+): string {
+  const formatter = new Intl.DateTimeFormat(
+    "en-US",
+    {
+      timeZone,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    },
+  );
+
+  const start = formatter.format(startTime);
+  const end = formatter.format(endTime);
+
+  return `${start} – ${end}`;
+}
+
+export default function EventAgenda({
+  event,
+}: EventAgendaProps) {
+  if (event.agenda.length === 0) {
+    return null;
+  }
 
   return (
-    <div>
-      {/* Keterangannya memakai rentang waktu acara yang sama dengan hero, dan
-          jam di tiap baris di bawah HARUS berada di dalam rentang itu: baris
-          pertama mulai persis di jam mulai, baris terakhir selesai persis di jam
-          selesai, tanpa lubang di antaranya. Dijaga harness (invarian 25) karena
-          keduanya `string` yang sah walau tidak cocok — `tsc` tidak akan pernah
-          menangkap susunan acara yang berhenti sejam lebih awal. */}
+    <section aria-labelledby="event-agenda-title">
       <SectionHeader
         title="Agenda"
         description={formatEventTimeRange(event)}
         underline
       />
 
-      <ol className="mt-6 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-card">
+      <ol
+        id="event-agenda-title"
+        className="mt-6 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-card"
+      >
         {event.agenda.map((item) => (
-          <li key={item.id} className="flex flex-col gap-1 p-5 sm:flex-row sm:gap-6">
-            {/* `time` string bebas ("09:00 – 09:30"), bukan timestamp — rundown
-                internal tidak perlu dihitung apa pun, dan memaksanya jadi ISO
-                berarti mengarang zona waktu per baris. Zona waktu acara sudah
-                disebut sekali di keterangan section. `tabular-nums` supaya
-                kolom jamnya tidak bergoyang antar baris. */}
+          <li
+            key={item.id}
+            className="flex flex-col gap-1 p-5 sm:flex-row sm:gap-6"
+          >
             <p className="shrink-0 font-medium tabular-nums text-secondary sm:w-40">
-              {item.time}
+              {formatAgendaTime(
+                item.startTime,
+                item.endTime,
+                event.timeZone,
+              )}
             </p>
-            <p className="max-w-prose text-base leading-relaxed text-foreground">
-              {item.title}
-            </p>
+
+            <div className="max-w-prose">
+              <p className="text-base leading-relaxed text-foreground">
+                {item.title}
+              </p>
+
+              {item.description && (
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  {item.description}
+                </p>
+              )}
+            </div>
           </li>
         ))}
       </ol>
-    </div>
+    </section>
   );
 }

@@ -11,7 +11,8 @@ import SectionHeader from "@/app/components/reusable/SectionHeader";
 import { Blob, SquiggleOrnament } from "@/app/components/reusable/Ornaments";
 import EventsCardGrid from "./section/EventsCardGrid";
 import { hasEnded } from "./data/eventTime";
-import type { EventFacets, MindcareEvent } from "./type/event";
+import type { EventFacets } from "./type/event";
+import type { EventListItem } from "./data/events";
 import SearchBar from "../../components/reusable/SearchBar";
 
 const ALL = "all";
@@ -30,7 +31,7 @@ const whenHeadings: Record<string, string> = {
 };
 
 type EventsProps = {
-  events: MindcareEvent[];
+  events: EventListItem[];
   facets: EventFacets;
   now: string;
 };

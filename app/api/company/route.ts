@@ -180,10 +180,10 @@ export async function GET() {
     return NextResponse.json({ message: "Company not found" }, { status: 404 });
   }
 
-  const companyId = companyUser.companyId;
+  /*const companyId = companyUser.companyId;
   const now = new Date();
 
-  const [totalEvents, upcomingEvents, ongoingEvents, pastEvents] =
+   const [totalEvents, upcomingEvents, ongoingEvents, pastEvents] =
     await Promise.all([
       prisma.event.count({
         where: { companyId, deletedAt: null, isPublished: true },
@@ -213,12 +213,12 @@ export async function GET() {
           endDate: { lt: now },
         },
       }),
-    ]);
+    ]); */
 
   return NextResponse.json({
     success: true,
     data: companyUser.company,
     role: companyUser.role,
-    stats: { totalEvents, upcomingEvents, ongoingEvents, pastEvents },
+    //stats: { totalEvents, upcomingEvents, ongoingEvents, pastEvents },
   });
 }

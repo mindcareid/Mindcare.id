@@ -8,7 +8,8 @@ const HOME_SECTION_LIMIT = 3;
 export const revalidate = 300;
 
 export default async function UserPage() {
-  const now = new Date().toISOString();
+  const now = new Date();
+  const nowIso = now.toISOString();
 
   const [professionals, centres, solutions, events, articles] =
     await Promise.all([
@@ -26,7 +27,7 @@ export default async function UserPage() {
       solutions={solutions.slice(0, HOME_SECTION_LIMIT)}
       events={events}
       articles={articles.slice(0, HOME_SECTION_LIMIT)}
-      now={now}
+      now={nowIso}
     />
   );
 }

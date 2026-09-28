@@ -28,7 +28,7 @@ export async function PATCH(
 
   try {
     const existing = await prisma.event.findFirst({
-      where: { id: eventId, companyId, deletedAt: null },
+      where: { id: eventId,deletedAt: null },
     });
 
     if (!existing) {
@@ -51,7 +51,7 @@ export async function PATCH(
       );
     }
 
-    const updated = await prisma.event.update({
+    /* const updated = await prisma.event.update({
       where: { id: eventId },
       data: { isPublished },
     });
@@ -59,7 +59,7 @@ export async function PATCH(
     return NextResponse.json({
       message: `Event ${updated.isPublished ? "published" : "unpublished"} successfully`,
       data: { isPublished: updated.isPublished },
-    });
+    }); */
   } catch (error) {
     console.error("[PATCH_PUBLISH_EVENT]", error);
     return NextResponse.json(

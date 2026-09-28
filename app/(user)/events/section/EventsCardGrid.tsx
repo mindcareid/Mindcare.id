@@ -1,28 +1,50 @@
 import { CalendarDays, Clock, MapPin } from "lucide-react";
+
 import EntityCard, {
   type EntityCardTag,
 } from "@/app/components/reusable/EntityCard";
+
 import EmptyState from "@/app/components/reusable/EmptyState";
+
 import type { MetaItem } from "@/app/components/reusable/MetaRow";
+
 import { cn } from "@/lib/utils";
-import type { MindcareEvent } from "../type/event";
+
+import type { EventListItem } from "../data/events";
+
 import {
-  availabilityOf,
   formatEventDate,
   formatEventStartTime,
 } from "../data/eventTime";
 
-function metaOf(event: MindcareEvent): MetaItem[] {
+function metaOf(
+  event: EventListItem,
+): MetaItem[] {
   return [
-    { icon: CalendarDays, text: formatEventDate(event) },
-    { icon: Clock, text: formatEventStartTime(event) },
-    { icon: MapPin, text: event.location ?? "Online" },
+    {
+      icon: CalendarDays,
+      text: formatEventDate(event),
+    },
+    {
+      icon: Clock,
+      text: formatEventStartTime(event),
+    },
+    {
+      icon: MapPin,
+      text: event.location ?? "Online",
+    },
   ];
 }
 
-function tagsOf(event: MindcareEvent): EntityCardTag[] {
+function tagsOf(
+  event: EventListItem,
+): EntityCardTag[] {
   return [
-    { label: event.category.name, tone: "mint" },
+    {
+      label: event.category.name,
+      tone: "mint",
+    },
+
     ...event.focusAreas.map((area) => ({
       label: area.name,
       tone: "lavender" as const,
@@ -30,12 +52,26 @@ function tagsOf(event: MindcareEvent): EntityCardTag[] {
   ];
 }
 
-function footnoteOf(event: MindcareEvent, now: string) {
-  return availabilityOf(event, now).label;
+function footnoteOf(
+  event: EventListItem,
+): string {
+  if (event.soldOut) {
+    return "Sold out";
+  }
+
+  if (event.remaining !== null) {
+    return `${event.remaining} ${
+      event.remaining === 1
+        ? "seat"
+        : "seats"
+    } left`;
+  }
+
+  return "Unlimited seats";
 }
 
 type EventsCardGridProps = {
-  events: MindcareEvent[];
+  events: EventListItem[];
   now: string;
   emptyAction?: React.ReactNode;
   className?: string;
@@ -51,7 +87,7 @@ export default function EventsCardGrid({
     return (
       <EmptyState
         title="No events match your filters"
-        description="Try another category or set When to All dates some events may already have passed."
+        description="Try another category or set When to All dates to see events that may already have passed."
         action={emptyAction}
         className={className}
       />
@@ -59,7 +95,12 @@ export default function EventsCardGrid({
   }
 
   return (
-    <div className={cn("grid gap-6 sm:grid-cols-2 lg:grid-cols-3", className)}>
+    <div
+      className={cn(
+        "grid gap-6 sm:grid-cols-2 lg:grid-cols-3",
+        className,
+      )}
+    >
       {events.map((event) => (
         <EntityCard
           key={event.id}
@@ -71,7 +112,7 @@ export default function EventsCardGrid({
           tags={tagsOf(event)}
           maxTags={3}
           meta={metaOf(event)}
-          footnote={footnoteOf(event, now)}
+          footnote={footnoteOf(event)}
           actionLabel="View Event"
           actionVariant="primary"
         />

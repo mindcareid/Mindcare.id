@@ -152,11 +152,11 @@ export default function Receipt({ order }: Props) {
           <div>
             <h2 className="font-bold text-xl mb-5">Seller Details</h2>
 
-            <Info label="Company" value={order.event?.company?.name} />
+            <Info label="Company" value="" />
 
             <Info
               label="Location"
-              value={order.event?.company?.location ?? "-"}
+              value="-"
             />
           </div>
         </section>

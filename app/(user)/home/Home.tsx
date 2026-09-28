@@ -11,14 +11,14 @@ import InsightsGrid from "../insights/section/InsightsGrid";
 import type { Professional } from "../professionals/type/professional";
 import type { CareCentre } from "../care-centres/type/careCentre";
 import type { Solution } from "../solutions/type/solution";
-import type { MindcareEvent } from "../events/type/event";
+import type { EventListItem } from "../events/data/events";
 import type { Article } from "../insights/type/article";
 
 type HomeProps = {
   professionals: Professional[];
   centres: CareCentre[];
   solutions: Solution[];
-  events: MindcareEvent[];
+  events: EventListItem[];
   articles: Article[];
   now: string;
 };

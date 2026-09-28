@@ -27,7 +27,7 @@ export async function GET(
 
   try {
     const event = await prisma.event.findFirst({
-      where: { id: eventId, companyId, deletedAt: null },
+      where: { id: eventId,deletedAt: null },
       include: { category: true, attendeeFields: true },
     });
 
@@ -63,7 +63,7 @@ export async function PATCH(
 
   try {
     const existing = await prisma.event.findFirst({
-      where: { id: eventId, companyId, deletedAt: null },
+      where: { id: eventId, deletedAt: null },
     });
 
     if (!existing) {
@@ -240,7 +240,7 @@ export async function DELETE(
 
   try {
     const existing = await prisma.event.findFirst({
-      where: { id: eventId, companyId, deletedAt: null },
+      where: { id: eventId, deletedAt: null },
     });
 
     if (!existing) {

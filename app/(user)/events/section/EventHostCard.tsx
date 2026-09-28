@@ -1,5 +1,5 @@
-import Link from "next/link";
 
+import Link from "next/link";
 import {
   ArrowRight,
   Building2,
@@ -9,15 +9,7 @@ import {
 } from "lucide-react";
 
 import SectionHeader from "@/app/components/reusable/SectionHeader";
-
-import Tag from "@/app/components/reusable/Tag";
-
-import VerifiedBadge from "@/app/components/reusable/VerifiedBadge";
-
-import {
-  VERIFICATION_POLICY_PATH,
-  verificationLabelOf,
-} from "../../data/verification";
+//import Tag from "@/app/components/reusable/Tag";
 
 import type { EventDetail } from "../data/events";
 
@@ -38,27 +30,15 @@ const avatarClass =
 
 type EventHostCardProps = {
   event: EventDetail;
-  now: string;
 };
 
-export default function EventHostCard({
-  event,
-  now,
-}: EventHostCardProps) {
+export default function EventHostCard({ event }: EventHostCardProps) {
   const professional = event.professional;
   const careCentre = event.careCentre;
   const solution = event.solution;
 
-  const professionalLabel = professional
-    ? verificationLabelOf(professional.verification, now, "person")
-    : null;
-
-  const careCentreLabel = careCentre
-    ? verificationLabelOf(careCentre.verification, now, "facility")
-    : null;
-
   return (
-    <div>
+    <section aria-labelledby="event-host-title">
       <SectionHeader title="Hosted by" underline />
 
       {professional ? (
@@ -70,18 +50,12 @@ export default function EventHostCard({
           </span>
 
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="font-heading text-lg font-semibold text-foreground">
-                {professional.fullName}
-              </p>
-
-              {professionalLabel && (
-                <VerifiedBadge
-                  label={professionalLabel}
-                  href={VERIFICATION_POLICY_PATH}
-                />
-              )}
-            </div>
+            <p
+              id="event-host-title"
+              className="font-heading text-lg font-semibold text-foreground"
+            >
+              {professional.fullName}
+            </p>
 
             {professional.headline && (
               <p className="mt-2 max-w-prose text-base leading-relaxed text-muted-foreground">
@@ -96,19 +70,24 @@ export default function EventHostCard({
                     className="size-3.5 shrink-0"
                     aria-hidden="true"
                   />
-                  {professional.yearsOfExperience} yrs experience
+                  {professional.yearsOfExperience}{" "}
+                  {professional.yearsOfExperience === 1
+                    ? "yr"
+                    : "yrs"}{" "}
+                  experience
                 </span>
               )}
 
-              {professional.locations.length > 0 && (
-                <span className="inline-flex items-center gap-1.5">
-                  <MapPin
-                    className="size-3.5 shrink-0"
-                    aria-hidden="true"
-                  />
-                  {professional.locations[0]?.city}
-                </span>
-              )}
+              {/* {professional.locations.length > 0 &&
+                professional.locations[0]?.city && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <MapPin
+                      className="size-3.5 shrink-0"
+                      aria-hidden="true"
+                    />
+                    {professional.locations[0].city}
+                  </span>
+                )} */}
             </div>
 
             <Link
@@ -116,7 +95,6 @@ export default function EventHostCard({
               className="group mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-brand-navy-800"
             >
               View profile
-
               <ArrowRight
                 className="size-4 transition-transform group-hover:translate-x-0.5"
                 aria-hidden="true"
@@ -131,18 +109,12 @@ export default function EventHostCard({
           </span>
 
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="font-heading text-lg font-semibold text-foreground">
-                {careCentre.name}
-              </p>
-
-              {careCentreLabel && (
-                <VerifiedBadge
-                  label={careCentreLabel}
-                  href={VERIFICATION_POLICY_PATH}
-                />
-              )}
-            </div>
+            <p
+              id="event-host-title"
+              className="font-heading text-lg font-semibold text-foreground"
+            >
+              {careCentre.name}
+            </p>
 
             <p className="mt-1 text-sm text-muted-foreground">
               {careCentre.kind}
@@ -158,7 +130,7 @@ export default function EventHostCard({
               </span>
             </div>
 
-            {careCentre.services.length > 0 && (
+           {/*  {careCentre.services.length > 0 && (
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 {careCentre.services.slice(0, 3).map((service) => (
                   <Tag key={service.id} tone="mint">
@@ -166,14 +138,13 @@ export default function EventHostCard({
                   </Tag>
                 ))}
               </div>
-            )}
+            )} */}
 
             <Link
               href={`/care-centres/${careCentre.slug}`}
               className="group mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-brand-navy-800"
             >
               View care centre
-
               <ArrowRight
                 className="size-4 transition-transform group-hover:translate-x-0.5"
                 aria-hidden="true"
@@ -188,7 +159,10 @@ export default function EventHostCard({
           </span>
 
           <div className="min-w-0">
-            <p className="font-heading text-lg font-semibold text-foreground">
+            <p
+              id="event-host-title"
+              className="font-heading text-lg font-semibold text-foreground"
+            >
               {solution.name}
             </p>
 
@@ -209,7 +183,6 @@ export default function EventHostCard({
               className="group mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-brand-navy-800"
             >
               View solution
-
               <ArrowRight
                 className="size-4 transition-transform group-hover:translate-x-0.5"
                 aria-hidden="true"
@@ -220,13 +193,14 @@ export default function EventHostCard({
       ) : (
         <div className={cardClass}>
           <span className={avatarClass}>
-            <span aria-hidden="true">
-              {initialsOf(event.host.name)}
-            </span>
+            <span aria-hidden="true">{initialsOf(event.host.name)}</span>
           </span>
 
           <div className="min-w-0">
-            <p className="font-heading text-lg font-semibold text-foreground">
+            <p
+              id="event-host-title"
+              className="font-heading text-lg font-semibold text-foreground"
+            >
               {event.host.name}
             </p>
 
@@ -236,6 +210,7 @@ export default function EventHostCard({
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }
+

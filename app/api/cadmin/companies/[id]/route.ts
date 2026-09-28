@@ -113,10 +113,10 @@ export async function PATCH(
           slug: `${company.slug}-rejected-${Date.now()}`,
         },
       }),
-      prisma.event.updateMany({
+      /* prisma.event.updateMany({
         where: { companyId, isPublished: true, deletedAt: null },
         data: { isPublished: false },
-      }),
+      }), */
     ]);
     revalidatePath("/partners");
 

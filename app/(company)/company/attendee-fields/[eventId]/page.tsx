@@ -21,7 +21,6 @@ export default async function AttendeeFieldsCompany({ params }: Props) {
   const event = await prisma.event.findFirst({
     where: {
       id: Number(params.eventId),
-      companyId: member.companyId,
       deletedAt: null,
     },
   });

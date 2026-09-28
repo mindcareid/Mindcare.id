@@ -19,7 +19,6 @@ export async function GET(req: Request) {
                 },
                 include: {
                     category: true,
-                    company: true,
                 },
             });
 
@@ -41,7 +40,6 @@ export async function GET(req: Request) {
             where: { deletedAt: null },
             include: {
                 category: true,
-                company: true,
             },
             orderBy: { createdAt: "desc" },
         });
@@ -76,8 +74,8 @@ export async function POST(req: Request) {
                 price: Number(body.price),
                 quota: body.quota ? Number(body.quota) : null,
                 categoryId: Number(body.categoryId),
-                companyId: Number(body.companyId),
-                isPublished: Boolean(body.isPublished),
+                // companyId: Number(body.companyId),
+                // isPublished: Boolean(body.isPublished),
                 coverImage: body.coverImage,
                 publicId: body.publicId,
             },
@@ -142,8 +140,8 @@ export async function PUT(req: Request) {
                 price: Number(body.price),
                 quota: body.quota ? Number(body.quota) : null,
                 categoryId: Number(body.categoryId),
-                companyId: Number(body.companyId),
-                isPublished: Boolean(body.isPublished),
+                // companyId: Number(body.companyId),
+                // isPublished: Boolean(body.isPublished),
                 coverImage: body.coverImage,
                 publicId: body.publicId,
             },

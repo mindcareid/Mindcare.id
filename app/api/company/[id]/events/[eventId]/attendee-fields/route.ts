@@ -49,7 +49,6 @@ export async function POST(
   const event = await prisma.event.findFirst({
     where: {
       id: eventId,
-      companyId,
       deletedAt: null,
     },
   });

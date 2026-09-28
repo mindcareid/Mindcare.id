@@ -41,14 +41,14 @@ export default async function ListEventCompany({
 
   const [events, total] = await Promise.all([
     prisma.event.findMany({
-      where: { companyId: member.companyId, deletedAt: null },
+      where: { deletedAt: null },
       include: { category: true },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PER_PAGE,
       take: PER_PAGE,
     }),
     prisma.event.count({
-      where: { companyId: member.companyId, deletedAt: null },
+      where: {  deletedAt: null },
     }),
   ]);
 

@@ -52,15 +52,10 @@ export async function getEventBySlug(slug: string) {
       slug,
       deletedAt: null,
       isPublished: true,
-      company: {
-        deletedAt: null,
-        isActive: true,
-      },
     },
 
     select: {
       ...eventListSelect,
-      companyId: true,
     },
   });
 
@@ -71,7 +66,6 @@ export async function getEventBySlug(slug: string) {
   const [totalCompanyEvents, soldCount] = await Promise.all([
     prisma.event.count({
       where: {
-        companyId: event.companyId,
         deletedAt: null,
         isPublished: true,
       },

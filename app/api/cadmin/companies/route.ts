@@ -44,9 +44,6 @@ export async function GET(req: NextRequest) {
           deletedAt: null,
           ...(isActive !== undefined && { isActive }),
         },
-        include: {
-          events: true,
-        },
       });
 
       if (!company) {
@@ -68,9 +65,6 @@ export async function GET(req: NextRequest) {
           slug,
           deletedAt: null,
           ...(isActive !== undefined && { isActive }),
-        },
-        include: {
-          events: true,
         },
       });
 
@@ -312,10 +306,6 @@ export async function DELETE(req: NextRequest) {
       prisma.companyUser.updateMany({
         where: { companyId, status: "ACTIVE" },
         data: { status: "DECLINED" },
-      }),
-      prisma.event.updateMany({
-        where: { companyId, isPublished: true, deletedAt: null },
-        data: { isPublished: false },
       }),
     ]);
 

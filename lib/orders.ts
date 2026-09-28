@@ -14,11 +14,7 @@ export interface OrderWithEvent extends Order {
 export type OrderEvent = Prisma.OrderGetPayload<{
   include: {
     user: true;
-    event: {
-      include: {
-        company: true;
-      };
-    };
+    event:true;
     tickets: true;
     paymentLogs: true;
     _count: {

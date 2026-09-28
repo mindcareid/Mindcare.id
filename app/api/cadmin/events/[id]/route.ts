@@ -25,7 +25,7 @@ export async function GET(
 
   const event = await prisma.event.findFirst({
     where: { id: Number(id), deletedAt: null },
-    include: { category: true, company: true },
+    include: { category: true},
   });
 
   if (!event) {
@@ -69,7 +69,7 @@ export async function PUT(
       price: Number(body.price),
       quota: body.quota ? Number(body.quota) : null,
       categoryId: Number(body.categoryId),
-      companyId: Number(body.companyId),
+      // companyId: Number(body.companyId),
       isPublished: Boolean(body.isPublished),
       coverImage: body.coverImage,
       publicId: body.publicId,

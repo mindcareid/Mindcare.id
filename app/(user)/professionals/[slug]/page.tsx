@@ -68,7 +68,7 @@ export default async function ProfessionalPage({
   const events = allEvents
     .filter(
       (event) =>
-        event.host.kind === "professional" &&
+        event.host.type  === "PROFESSIONAL" &&
         event.host.slug === professional.slug &&
         !hasEnded(event, now),
     )
