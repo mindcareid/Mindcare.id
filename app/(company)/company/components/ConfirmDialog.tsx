@@ -1,4 +1,3 @@
-// components/ConfirmDialog.tsx
 "use client";
 
 import { FiAlertTriangle } from "react-icons/fi";

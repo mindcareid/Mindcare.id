@@ -21,43 +21,11 @@ import { cn } from "@/lib/utils";
 import { getHelpTopicsByGroup } from "./data/helpTopics";
 import type { HelpTopic, HelpTopicIcon } from "./type/helpTopic";
 
-// Halaman /help versi MindCare. Ditulis ulang 26 Agustus 2026 menggantikan
-// halaman Executive Corner yang ada di sini sebelumnya.
-//
-// TIGA HAL YANG MENENTUKAN BENTUK HALAMAN INI:
-//
-//   1. Kartu untuk dokumen yang belum ada TIDAK BISA DIKLIK. Ini keputusan
-//      diaze, dan alasannya penting: dari lima tautan "Legal & Safety" di
-//      footer, empat belum punya isi. Kalau kartunya bisa diklik, /help berubah
-//      dari satu tautan mati jadi empat tautan mati yang lebih mudah ditemukan.
-//      Yang paling tidak boleh menggantung adalah "Report a Concern" — orang
-//      yang mengkliknya kemungkinan besar sedang melaporkan sesuatu yang
-//      membahayakan. Presedennya sudah ada: kartu klinik penyelenggara di
-//      halaman event juga sengaja tidak bisa diklik selama rutenya belum ada.
-//   2. Statusnya datang dari data, bukan dari mata. `status: "draft"` di
-//      `data/helpTopics.ts` yang menentukan kartunya mati, dan harness
-//      `check-data-invariants.mjs` memeriksa ke disk apakah halaman untuk entri
-//      `published` benar-benar ada. Jadi tautan mati gagal di verifikasi, bukan
-//      ketemu waktu ada yang mengklik.
-//   3. Tidak ada warna per kartu. Halaman lama punya `colorMap` enam warna
-//      (empat di antaranya tidak dipakai) dari palet Tailwind mentah —
-//      emerald/blue/amber/red/purple/teal — plus komentar "Grid 4 kolom, sama
-//      persis seperti Gojek". Dua-duanya dibuang: warnanya melanggar larangan
-//      palet mentah di `design.md`, dan meniru tata letak layanan lain bukan
-//      alasan desain.
-//
-// Semuanya server component. Tidak ada `revalidate` karena tidak ada satu pun
-// nilai di halaman ini yang bergantung pada "sekarang".
-
 export const metadata: Metadata = {
   title: "Help Centre",
   description:
     "Where to start on Mindcare, and the documents that govern how the directory works.",
 };
-
-// Ikon disimpan sebagai NAMA di data (lihat catatan di `type/helpTopic.ts`),
-// dipetakan ke komponennya di sini. Union `HelpTopicIcon` yang memaksa peta ini
-// lengkap — menambah nama baru tanpa menambah barisnya akan gagal di `tsc`.
 const ICONS: Record<HelpTopicIcon, LucideIcon> = {
   people: Users,
   hospital: Hospital,
@@ -123,10 +91,6 @@ function TopicBody({ topic }: { topic: HelpTopic }) {
 }
 
 function TopicCard({ topic }: { topic: HelpTopic }) {
-  // Kartu draft dirender sebagai <div>, bukan <a> tanpa href atau <a> dengan
-  // pointer-events-none. Alasannya aksesibilitas: keduanya masih diumumkan
-  // sebagai tautan oleh screen reader, dan yang kedua masih bisa dicapai lewat
-  // Tab. Kartu yang tidak menuju ke mana pun sebaiknya memang bukan tautan.
   if (topic.status === "draft") {
     return (
       <div className={cn(CARD_BASE, "border-dashed border-border bg-muted/40")}>

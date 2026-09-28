@@ -1,25 +1,3 @@
-// PERINGATAN: LIMA BELAS PROFIL DI FILE INI FIKTIF.
-//
-// Nama, gelar, riwayat pendidikan, tahun pengalaman, daftar layanan, dan seluruh
-// harga di bawah adalah karangan. Tidak ada satu pun orang sungguhan di sini.
-// Nama universitasnya memang institusi nyata, tapi tidak ada hubungan apa pun
-// antara institusi itu dengan profil-profil karangan ini.
-//
-// Profil profesional kesehatan mental adalah jenis data yang paling mudah
-// dianggap fakta oleh orang yang sedang mencari bantuan. SELURUH ISI FILE INI
-// HARUS DIGANTI DATA ASLI SEBELUM HALAMAN INI PERNAH TAYANG KE PUBLIK.
-// Lihat `prd.md` bagian 11.
-//
-// Field untuk halaman detail (`headline`, `bio`, `approaches`, `education`,
-// `services`, `bookingUrl`) ditambahkan 20 Agustus 2026. Alasan tiap field ada di
-// `design.md` bagian 16. Nomor STR/SIPP sengaja tidak ada — diaze
-// mengecualikannya.
-//
-// `prof-10` sampai `prof-15` ditambahkan 24 Agustus 2026 supaya ada kota yang
-// berisi lebih dari satu orang — tanpa itu relasi centre ↔ profesional selalu
-// satu-satu. Alasan lengkap dan cara mengembalikannya ada di `design.md`
-// bagian 20.
-
 import type {
   AreaOfSupport,
   Professional,
@@ -1030,8 +1008,6 @@ export async function getProfessionals(): Promise<Professional[]> {
 export async function getProfessionalBySlug(
   slug: string,
 ): Promise<Professional | null> {
-  // `listingStatus` ikut di mana, bukan disaring setelah ambil: pengajuan
-  // yang belum lolos tidak boleh punya halaman publik sama sekali.
   const row = await prisma.professional.findFirst({
     where: { slug, listingStatus: "LISTED", deletedAt: null },
     select: PUBLIC_PROFESSIONAL_SELECT,
@@ -1040,13 +1016,6 @@ export async function getProfessionalBySlug(
   return row ? mapProfessional(row) : null;
 }
 
-/**
- * Profesional lain untuk ditawarkan di bawah halaman detail.
- *
- * Urutan pencariannya: kota yang sama lebih dulu, lalu profesi yang sama, lalu
- * siapa pun — supaya blok ini tidak pernah kosong dan halaman detail tidak
- * berakhir sebagai jalan buntu. Profesional yang sedang dibuka selalu dikeluarkan.
- */
 export async function getRelatedProfessionals(
   slug: string,
   limit = 3,

@@ -19,14 +19,9 @@ function initialsOf(name: string) {
 
 type SolutionLeadProps = {
   professional: Professional;
-  /** Acuan waktu tunggal dari `page.tsx`, ISO string. Dipakai badge verifikasi. */
   now: string;
 };
 
-// Judulnya "Led by", bukan "Facilitator" atau "Instructor": satu orang yang
-// memimpin rangkaian, sementara pelaksananya bisa lebih dari satu. Kontraknya
-// memang cuma menyimpan SATU slug (`leadProfessionalSlug`), jadi menyebut
-// "Facilitators" akan menjanjikan daftar yang tidak ada datanya.
 export default function SolutionLead({ professional, now }: SolutionLeadProps) {
   const verifiedLabel = verificationLabelOf(
     professional.verification,
@@ -48,9 +43,6 @@ export default function SolutionLead({ professional, now }: SolutionLeadProps) {
             <p className="font-heading text-lg font-semibold text-foreground">
               {professional.fullName}
             </p>
-            {/* Tanpa tanggal — aturan yang sama dengan `ProfessionalCentre`:
-                tanggal pemeriksaan hanya muncul di halaman yang orangnya jadi
-                subjek. Di sini subjeknya programnya. */}
             {verifiedLabel && (
               <VerifiedBadge
                 label={verifiedLabel}

@@ -34,11 +34,6 @@ function initialsOf(name: string) {
 
 type ProfessionalHeroProps = {
   professional: Professional;
-  /**
-   * Acuan waktu tunggal dari `page.tsx`, ISO string. Wajib, karena badge
-   * verifikasi berlaku sampai tanggal tertentu — lihat
-   * `app/(user)/data/verification.ts`.
-   */
   now: string;
 };
 

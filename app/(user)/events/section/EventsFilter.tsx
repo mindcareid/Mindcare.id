@@ -79,9 +79,7 @@ function EventsFilter({
     date: dateFilter,
   });
 
-  /**
-   * Open Filter
-   */
+  
   const handleOpen = useCallback(() => {
     setDraft({
       category: selectedCategory,
@@ -97,9 +95,6 @@ function EventsFilter({
     setOpen(false);
   }, []);
 
-  /**
-   * Apply
-   */
   const handleApply = useCallback(() => {
     applyFilters({
       category: draft.category,
@@ -111,9 +106,7 @@ function EventsFilter({
     setOpen(false);
   }, [draft, applyFilters]);
 
-  /**
-   * Reset
-   */
+
   const handleReset = useCallback(() => {
     setDraft({
       category: "all",
@@ -123,9 +116,6 @@ function EventsFilter({
     });
   }, []);
 
-  /**
-   * Pending
-   */
   const pendingCount = useMemo(() => {
     return [
       draft.category !== selectedCategory,
@@ -138,9 +128,7 @@ function EventsFilter({
     ].filter(Boolean).length;
   }, [draft, selectedCategory, selectedIndustry, priceFilter, dateFilter]);
 
-  /**
-   * Active Filter Count
-   */
+
   const activeFilterCount = useMemo(() => {
     return [
       searchQuery !== "",
@@ -161,9 +149,7 @@ function EventsFilter({
     dateFilter,
   ]);
 
-  /**
-   * Badges
-   */
+
   const badges = useMemo<FilterBadge[]>(() => {
     const list: FilterBadge[] = [];
 
@@ -222,9 +208,6 @@ function EventsFilter({
     industries,
   ]);
 
-  /**
-   * Remove Badge
-   */
   const removeBadge = useCallback(
     (key: string) => {
       switch (key) {

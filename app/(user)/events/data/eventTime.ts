@@ -80,7 +80,6 @@ function formattersFor(timeZone: string): EventFormatters {
       hour12: false,
       timeZone,
     }),
-
     zone: new Intl.DateTimeFormat("id-ID", {
       timeZoneName: "short",
       timeZone,

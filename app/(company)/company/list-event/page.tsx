@@ -97,17 +97,8 @@ export default async function ListEventCompany({
           {events.map((event) => (
             <div
               key={event.id}
-              // Kartu jadi flex-col dengan flex-1 di konten supaya footer
-              // aksi selalu nempel di bawah walau tinggi judul/lokasi beda-beda
-              // antar card dalam satu baris grid — tidak lagi "loncat-loncat".
               className="group flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
             >
-              {/*
-                aspect-[16/10] dipakai alih-alih h-40 tetap: rasio gambar jadi
-                konsisten proporsional baik saat card lebar (1 kolom di mobile)
-                maupun sempit (2-3 kolom di tablet/desktop), tidak gepeng atau
-                terlalu tinggi di salah satu breakpoint.
-              */}
               <div className="relative w-full aspect-16/10 overflow-hidden bg-gray-100">
                 {event.coverImage ? (
                   <Image
@@ -178,13 +169,6 @@ export default async function ListEventCompany({
                     <span className="truncate">{event.location}</span>
                   </div>
                 )}
-
-                {/*
-                  Icon-only di semua breakpoint (bukan hidden sm:inline).
-                  Ini yang memperbaiki masalah tablet: teks tombol tidak lagi
-                  muncul justru saat card mengecil di breakpoint sm/2-kolom.
-                  Tooltip via `title` tetap ada untuk aksesibilitas nama aksi.
-                */}
                 <div className="grid grid-cols-3 gap-2 mt-auto pt-3 border-t border-gray-100">
                   <Link
                     href={`/company/edit-event/${event.id}`}

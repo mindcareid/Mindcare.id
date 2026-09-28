@@ -117,9 +117,7 @@ export async function POST(req: Request) {
             userId,
             role: "OWNER",
             status: "PENDING",
-            // Penegak satu-pengajuan-aktif di tingkat DB (lihat skema).
-            // Kalau dua POST paralem lolos pre-check, insert kedua kena
-            // unique violation di sini — dipetakan ke 400 di catch.
+            
             activeUserId: userId,
           },
         },
@@ -133,8 +131,6 @@ export async function POST(req: Request) {
       data: { slug: centre.slug },
     });
   } catch (error) {
-    // Unique violation pada CareCentreUser.activeUserId: pengajuan aktif
-    // sudah ada (race dengan POST paralel yang lolos pre-check).
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"

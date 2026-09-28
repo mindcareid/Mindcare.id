@@ -47,7 +47,6 @@ export default function ProfessionalsFilter({
       key: "areas" as const,
       label: "Area of support",
       icon: HeartHandshake,
-      // value memakai slug, bukan nama tampilan — lihat catatan di type/professional.ts
       options: facets.areasOfSupport.map((area) => ({
         value: area.slug,
         label: area.name,

@@ -20,13 +20,7 @@ export async function generateStaticParams() {
   return professionals.map((professional) => ({ slug: professional.slug }));
 }
 
-// Halaman ini menyembunyikan acara yang sudah lewat (`hasEnded`), jadi hasilnya
-// bergantung pada "sekarang". Dengan `generateStaticParams` di atas, kelima belas
-// halaman dirender saat build — tanpa baris ini daftar "Upcoming events" di profil
-// akan terus menampilkan acara yang sudah berlalu sampai deploy berikutnya.
-//
-// Satu jam, mengikuti `/events` dan `/events/[slug]`: acara berakhir sekali,
-// tidak berulang-ulang seperti jam buka klinik.
+
 export const revalidate = 3600;
 
 export async function generateMetadata({
@@ -53,11 +47,6 @@ export default async function ProfessionalPage({
     getArticles(),
     getEvents(),
     getRelatedProfessionals(professional.slug),
-    // Relasinya dibaca dari sisi centre (`professionalSlugs`), bukan dari sebuah
-    // field di `Professional`. Alasannya di `design.md` bagian 20: satu arah
-    // saja, supaya tidak ada dua tempat yang bisa saling bertentangan tentang
-    // siapa praktik di mana. `null` berarti orangnya belum terikat centre mana
-    // pun, dan bagiannya disembunyikan seluruhnya di `ProfessionalProfile`.
     getCentreOfProfessional(professional.slug),
   ]);
 

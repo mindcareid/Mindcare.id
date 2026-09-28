@@ -8,10 +8,6 @@ import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 import type { ButtonVariant } from "@/app/components/reusable/buttonStyles";
 import type { Solution, SolutionTheme } from "../type/solution";
 
-// Pemetaan yang sama dengan `SolutionsGrid`: warna per kategori keputusan
-// atasan, jadi `theme` disimpan di data dan pemetaan theme -> variant tombol
-// tinggal di komponen. Kalau nanti nada `Tag` bernuansa navy ada, kategori di
-// hero ini bisa ikut memakainya.
 const actionVariantByTheme: Record<SolutionTheme, ButtonVariant> = {
   navy: "primary",
   purple: "secondary",

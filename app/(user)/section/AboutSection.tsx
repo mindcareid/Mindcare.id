@@ -37,7 +37,6 @@ export default function AboutSection() {
   const [photoOpen, setPhotoOpen] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-  // Parallax hanya aktif di desktop — di mobile tidak terasa dan hanya membuang resource
   const imgY = useTransform(scrollYProgress, [0, 1], [20, -20]);
 
   return (
@@ -58,8 +57,6 @@ export default function AboutSection() {
           >
             {/* Image frame */}
             <motion.div
-              // Parallax hanya jalan di lg ke atas lewat CSS — tidak bisa disable di framer
-              // tapi efeknya subtle jadi tidak masalah di mobile
               style={{ y: imgY }}
               className="relative cursor-pointer group"
               onClick={() => setPhotoOpen(true)}

@@ -47,8 +47,6 @@ export default function VerificationPolicyPage() {
 
       <Container>
         <div className="max-w-none">
-          {/* Peringatan paling atas, bukan paling bawah. Pembaca yang cuma membaca
-              satu blok di halaman ini harus membaca blok INI. */}
           <div className="flex gap-4 rounded-xl border border-border bg-brand-lavender-100 p-5">
             <AlertTriangle
               className="size-5 shrink-0 text-secondary"
@@ -144,15 +142,6 @@ export default function VerificationPolicyPage() {
 
           <section className="mt-14">
             <SectionHeader title="How a facility is checked" underline />
-            {/* Akreditasi sengaja dikeluarkan dari dasar badge, dan ini bukan
-                soal gaya menulis. Akreditasi adalah PENILAIAN MUTU oleh lembaga
-                lain. Kalau ia ikut jadi dasar badge, badge-nya diam-diam memuat
-                klaim mutu — padahal dua paragraf di atas halaman ini baru saja
-                berjanji tidak menilai mutu. Perlakuannya dibuat sama dengan
-                keanggotaan asosiasi di jalur orang: boleh diserahkan, dicatat,
-                tapi bukan yang diklaim badge. Ketemu 24 Agustus 2026 waktu
-                mengaudit halaman ini terhadap keputusan 2; kalimat sebelumnya
-                menyebut akreditasi sederet dengan izin operasional. */}
             <Prose className="max-w-none">
               An operating permit for the facility, and a facility registration
               number that can be matched against the health ministry&apos;s
@@ -236,14 +225,6 @@ export default function VerificationPolicyPage() {
               emergency services or go to the nearest hospital.
             </Prose>
           </section>
-
-          {/* Tidak ada tautan "Back to Help" di sini, dan itu disengaja.
-              `/help` masih halaman sisa Executive Corner yang HIDUP (bukan
-              dikomentari seperti privacy-policy): gaya abu-abu mentah, dan
-              seluruh kartu topiknya menunjuk ke `/help/<topic>` yang 404.
-              Menautkan ke situ dari halaman yang isinya soal tidak
-              mengklaim-lebih justru menjatuhkan pembaca ke tautan mati.
-              Pasang tautannya setelah `/help` dibereskan. */}
           <div className="mt-14 border-t border-border pt-6">
             <p className="text-sm text-muted-foreground">
               Last reviewed: {lastReviewed}. This page is versioned with the
@@ -257,9 +238,5 @@ export default function VerificationPolicyPage() {
   );
 }
 
-// Penjaga kecil supaya alamat halaman ini dan konstanta yang dipakai badge tidak
-// pernah menyimpang. Kalau `VERIFICATION_POLICY_PATH` diubah tanpa memindahkan
-// foldernya, build gagal di sini — bukan diam-diam jadi tautan 404 yang cuma
-// ketemu kalau ada yang mengkliknya.
 const _pathGuard: "/help/verification-policy" = VERIFICATION_POLICY_PATH;
 void _pathGuard;

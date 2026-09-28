@@ -68,7 +68,7 @@ export default function CategoriesForm({ id, defaultValues }: CategoriesFormProp
     formData2.append("upload_preset", "categories");
 
     const res = await fetch(
-      "https://api.cloudinary.com/v1_1/dc87bbdnl/auto/upload",
+      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`,
       {
         method: "POST",
         body: formData2,
@@ -183,7 +183,7 @@ export default function CategoriesForm({ id, defaultValues }: CategoriesFormProp
               name="isActive"
               checked={form.isActive}
               onChange={handleChange}
-              className="form-checkbox h-5 w-5 text-blue-600"
+              className="h-5 w-5 rounded border-gray-300 accent-blue-600"
             />
             <span className="ml-2 text-gray-700">Active</span>
           </label>

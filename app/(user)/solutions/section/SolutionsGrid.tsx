@@ -34,9 +34,7 @@ function metaOf(solution: Solution): MetaItem[] {
 
 function tagsOf(solution: Solution): EntityCardTag[] {
   return [
-    // Nada mint dipakai untuk kategori supaya terbaca beda dari focus area.
-    // Nada yang cocok dengan warna tombol per kategori (navy) belum ada di
-    // `Tag` — lihat catatan di design.md pasal 11.
+  
     { label: solution.category.name, tone: "mint" },
     ...solution.focusAreas.map((area) => ({
       label: area.name,

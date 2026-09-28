@@ -32,7 +32,7 @@ export function ListingSection({
   );
 }
 
-/** Satu baris label + nilai. */
+
 export function DetailRow({
   label,
   value,
@@ -50,7 +50,7 @@ export function DetailRow({
   );
 }
 
-/** Grid label + nilai — 1 kolom di ponsel, 2 di tablet, 3 di desktop. */
+
 export function DetailGrid({ children }: { children: ReactNode }) {
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -59,10 +59,6 @@ export function DetailGrid({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * Tumpukan label + nilai untuk kolom sempit (rail samping) — grid 3 kolom
- * tidak muat di sana.
- */
 export function DetailStack({ children }: { children: ReactNode }) {
   return <dl className="divide-y divide-border">{children}</dl>;
 }

@@ -11,7 +11,7 @@ export default function ProfileHeader({ user }: { user: any }) {
     // @ts-ignore
     const widget = window.cloudinary.createUploadWidget(
       {
-        cloudName: "dnl3cqeaa",
+        cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
         uploadPreset: "Design_V2",
         multiple: false,
         cropping: true,

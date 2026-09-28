@@ -35,15 +35,6 @@ const sortOptions: SortOption[] = [
 type ProfessionalsProps = {
   professionals: Professional[];
   facets: ProfessionalFacets;
-  /**
-   * Acuan waktu tunggal dari `page.tsx`, ISO string.
-   *
-   * Ditambahkan 24 Agustus 2026, pola yang sama dengan `CareCentres.tsx`. Wajib
-   * datang dari server: kalau komponen ini memanggil `Date.now()` sendiri, render
-   * server dan hidrasi klien bisa berbeda dan React akan mengeluh soal hidrasi —
-   * dan yang lebih buruk, kartu di halaman ini bisa berbeda pendapat dengan hero
-   * di halaman detail soal orang yang sama.
-   */
   now: string;
 };
 
