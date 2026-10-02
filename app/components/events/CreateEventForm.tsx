@@ -192,8 +192,7 @@ export default function CreateEventForm({
         <CloudinaryUpload
           value={form.coverImage || null}
           publicId={form.publicId || null}
-          uploadPreset="events"
-          folder="events"
+          entityType="events"
           label="Click here to upload event image"
           aspectRatio="cover"
           onChange={(url, pubId) =>

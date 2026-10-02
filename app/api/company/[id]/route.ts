@@ -1,5 +1,5 @@
 import { authOptions } from "@/lib/auth";
-import cloudinary from "@/lib/cloudinary";
+import { cloudinary } from "@/lib/cloudinary/config";
 import prisma from "@/lib/prisma";
 import { UpdateCompanyScehma } from "@/lib/validations/auth";
 import { getServerSession } from "next-auth";

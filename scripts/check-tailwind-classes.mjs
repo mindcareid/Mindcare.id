@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -36,7 +37,7 @@ function templateParts(raw) {
   while ((match = expression.exec(raw)) !== null) {
     parts.push(raw.slice(cursor, match.index));
     const withoutComparisons = match[1].replace(
-      /[=!]==?\s*(?:"[^"]*"|'[^']*'|`[^`]*`)/g,
+      /(?:[=!]==?|\?\?)\s*(?:"[^"]*"|'[^']*'|`[^`]*`)/g,
       "",
     );
     for (const quoted of withoutComparisons.matchAll(
@@ -65,7 +66,7 @@ for (const file of files) {
     const literals = match[0].startsWith("cn(")
       ? [
           ...region
-            .replace(/[=!]==?\s*(?:"[^"]*"|`[^`]*`)/g, "")
+            .replace(/(?:[=!]==?|\?\?)\s*(?:"[^"]*"|`[^`]*`)/g, "")
             .matchAll(/"([^"]*)"|`([^`]*)`/g),
         ].map((m) => m[1] ?? m[2])
       : match[2] !== undefined
@@ -114,6 +115,21 @@ function resolveStylesheet(id, base) {
 
 const missingImports = [];
 
+/**
+ * Plugin JS dimuat lewat `@plugin` di `app/globals.css` (mis.
+ * `@tailwindcss/typography`). Tanpa `loadModule`, `compile()` melempar
+ * "No `loadModule` function provided to `compile`" dan audit ini berhenti
+ * sebelum satu kelas pun diperiksa — laporan hijau yang sebenarnya tidak ada.
+ */
+const requireFromRoot = createRequire(join(root, "package.json"));
+
+function resolveModulePath(id, base) {
+  if (id.startsWith(".") || id.startsWith("/")) {
+    return resolve(base, id);
+  }
+  return requireFromRoot.resolve(id, { paths: [base, root] });
+}
+
 const compiler = await compile(cssEntry, {
   base: root,
   loadStylesheet: async (id, base) => {
@@ -124,6 +140,13 @@ const compiler = await compile(cssEntry, {
       missingImports.push(`${id} (dicari di ${path.replace(`${root}/`, "")})`);
       return { base, content: "" };
     }
+  },
+  loadModule: async (id, base) => {
+    const path = resolveModulePath(id, base);
+    const loaded = requireFromRoot(path);
+    // Plugin Tailwind ditulis sebagai CJS (`module.exports = plugin(...)`);
+    // bentuk ESM datang lewat `.default`.
+    return { path, base: dirname(path), module: loaded?.default ?? loaded };
   },
 });
 

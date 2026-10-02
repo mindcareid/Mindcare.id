@@ -305,8 +305,7 @@ export default function EditEventForm({
           value={form.coverImage || null}
           publicId={form.publicId || null}
           oldPublicId={oldPublicId}
-          uploadPreset="events"
-          folder="events"
+          entityType="events"
           label="Upload cover event"
           aspectRatio="cover"
           onChange={(url, pubId) => {

@@ -11,25 +11,14 @@ import {
 } from "@/lib/validations/auth";
 import TermsCompany from "../component/TermsCompany";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
+import { ensureCloudinaryWidget } from "@/lib/cloudinary/widget";
+import { CLOUDINARY_UPLOAD_PRESET } from "@/lib/cloudinary/preset";
+import type {
+  CloudinaryUploadError,
+  CloudinaryUploadResult,
+} from "@/lib/cloudinary/types/cloudinary";
 type ApiError = {
   message?: string;
-};
-
-type CloudinaryWidget = {
-  createUploadWidget: (
-    options: Record<string, unknown>,
-    callback: (error: unknown, result: CloudinaryResult) => void,
-  ) => {
-    open: () => void;
-  };
-};
-
-type CloudinaryResult = {
-  event: string;
-  info: {
-    secure_url: string;
-    public_id: string;
-  };
 };
 
 export default function CreateCompanyPage() {
@@ -54,17 +43,30 @@ export default function CreateCompanyPage() {
   type FieldErrors = Partial<Record<keyof CreateCompanyFormData, string>>;
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
-  const openWidgetCompany = () => {
+  const openWidgetCompany = async () => {
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = "companies";
+    if (!cloudName) {
+      toast.error("Upload is not configured", {
+        description: "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is missing.",
+      });
+      return;
+    }
 
-    const cloudinary = (window as unknown as { cloudinary: CloudinaryWidget })
-      .cloudinary;
+    let cloudinary;
+    try {
+      cloudinary = await ensureCloudinaryWidget();
+    } catch (err) {
+      toast.error("Upload could not be opened", {
+        description:
+          err instanceof Error ? err.message : "Please try again later.",
+      });
+      return;
+    }
 
     const widget = cloudinary.createUploadWidget(
       {
         cloudName,
-        uploadPreset,
+        uploadPreset: CLOUDINARY_UPLOAD_PRESET,
         multiple: false,
         cropping: true,
         croppingCoordinatesMode: "custom",
@@ -73,8 +75,16 @@ export default function CreateCompanyPage() {
         showCompletedButton: false,
         singleUploadAutoClose: true,
       },
-      (error, result) => {
-        if (!error && result?.event === "success") {
+      (error: CloudinaryUploadError | null, result: CloudinaryUploadResult) => {
+        if (error) {
+          if (error.status !== "abort" && error.status !== "cancel") {
+            toast.error("Upload failed", {
+              description: error.message ?? "Please try again.",
+            });
+          }
+          return;
+        }
+        if (result.event === "success") {
           setLogo(result.info.secure_url);
           setPublicId(result.info.public_id);
           toast.success("Logo uploaded!");

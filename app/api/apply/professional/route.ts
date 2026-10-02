@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { ApplyProfessionalSchema } from "@/lib/validations/apply";
+import {
+  ApplyProfessionalSchema,
+  photoAssetIssues,
+} from "@/lib/validations/apply";
 import { generateUniqueSlug } from "@/lib/slug";
 import z from "zod";
 
@@ -32,6 +35,14 @@ export async function POST(req: Request) {
       );
     }
     const data = parsed.data;
+
+    const photoIssues = photoAssetIssues(data.photoUrl, data.publicId);
+    if (Object.keys(photoIssues).length > 0) {
+      return NextResponse.json(
+        { message: "Validation failed", errors: photoIssues },
+        { status: 422 },
+      );
+    }
 
     const existing = await prisma.professional.findUnique({
       where: { userId },
@@ -84,6 +95,8 @@ export async function POST(req: Request) {
         profession: PROFESSION_TO_ENUM[data.profession],
         headline: data.headline,
         bio: data.bio,
+        photoUrl: data.photoUrl ?? null,
+        publicId: data.publicId ?? null,
         baseCity: data.baseCity,
         baseProvince: data.baseProvince,
         languages: data.languages,

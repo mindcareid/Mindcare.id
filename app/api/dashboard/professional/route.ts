@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { EditProfessionalSchema } from "@/lib/validations/apply";
+import { cloudinary } from "@/lib/cloudinary/config";
+import {
+  EditProfessionalSchema,
+  photoAssetIssues,
+} from "@/lib/validations/apply";
 import z from "zod";
 
 export const dynamic = "force-dynamic";
@@ -76,12 +80,35 @@ export async function PATCH(req: NextRequest) {
       ...data.services.map((service) => service.priceIdr),
     );
 
+    const photoTouched = "photoUrl" in data || "publicId" in data;
+    if (photoTouched) {
+      const photoIssues = photoAssetIssues(data.photoUrl, data.publicId);
+      if (Object.keys(photoIssues).length > 0) {
+        return NextResponse.json(
+          { message: "Validation failed", errors: photoIssues },
+          { status: 422 },
+        );
+      }
+    }
+
+    const nextPhotoUrl = photoTouched ? (data.photoUrl ?? null) : undefined;
+    const nextPublicId = photoTouched ? (data.publicId ?? null) : undefined;
+    const replacedPublicId =
+      photoTouched &&
+      nextPublicId !== undefined &&
+      current.publicId &&
+      current.publicId !== nextPublicId
+        ? current.publicId
+        : null;
+
     await prisma.professional.update({
       where: { id: current.id },
       data: {
-        // Presentasi — selalu boleh berubah.
         headline: data.headline,
         bio: data.bio,
+        ...(photoTouched
+          ? { photoUrl: nextPhotoUrl, publicId: nextPublicId }
+          : {}),
         baseCity: data.baseCity,
         baseProvince: data.baseProvince,
         languages: data.languages,
@@ -120,6 +147,15 @@ export async function PATCH(req: NextRequest) {
       },
       select: { id: true },
     });
+    if (replacedPublicId) {
+      try {
+        await cloudinary.uploader.destroy(replacedPublicId, {
+          resource_type: "image",
+        });
+      } catch (err) {
+        console.error("[PROFESSIONAL_PHOTO_DESTROY_OLD]", err);
+      }
+    }
 
     return NextResponse.json({
       success: true,

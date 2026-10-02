@@ -4,6 +4,9 @@ import Image from "next/image";
 import { useRef } from "react";
 import { FiUpload, FiX } from "react-icons/fi";
 import { toast } from "sonner";
+import { ensureCloudinaryWidget } from "@/lib/cloudinary/widget";
+import type { UploadSignatureResponse } from "@/lib/cloudinary/types/upload";
+import type { UploadFolderImage } from "@/lib/cloudinary/types/upload";
 
 type Props = {
   value: string | null;
@@ -11,10 +14,9 @@ type Props = {
   onChange: (url: string, publicId: string) => void;
   onRemove: () => void;
   disabled?: boolean;
-  cloudName?: string;
-  uploadPreset: string;
   oldPublicId?: string | null;
-  folder?: string;
+  /** Entity target; folder ditentukan server lewat signed upload. */
+  entityType: UploadFolderImage;
   label?: string;
   aspectRatio?: "cover" | "square" | "logo";
 };
@@ -31,12 +33,10 @@ export default function CloudinaryUpload({
   onChange,
   onRemove,
   disabled = false,
-  cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  uploadPreset,
-  folder = "Events",
+  oldPublicId,
+  entityType,
   label = "Upload image",
   aspectRatio = "cover",
-  oldPublicId,
 }: Props) {
   const pendingOldPublicId = useRef<string | null>(null);
 
@@ -49,39 +49,70 @@ export default function CloudinaryUpload({
     });
   };
 
-  const openWidget = () => {
+  const openWidget = async () => {
     if (disabled) return;
-    pendingOldPublicId.current = oldPublicId ?? null;
-    // @ts-ignore
-    const widget = window.cloudinary.createUploadWidget(
-      {
-        cloudName,
-        uploadPreset,
-        folder,
-        multiple: false,
-        cropping: true,
-        croppingCoordinatesMode: "custom",
-        showSkipCropButton: true,
-        showCompletedButton: false,
-        singleUploadAutoClose: true,
-      },
-      async (
-        error: unknown,
-        result: {
-          event: string;
-          info: { secure_url: string; public_id: string };
+
+    try {
+      const res = await fetch("/api/cloudinary/signature", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entityType }),
+      });
+
+      if (!res.ok) {
+        const problem = await res.json().catch(() => null);
+        toast.error("Failed to prepare upload", {
+          description:
+            problem?.message ??
+            `The server replied with status ${res.status}. Try again or sign in again.`,
+        });
+        return;
+      }
+
+      const { data }: { data: UploadSignatureResponse } = await res.json();
+      const cloudinary = await ensureCloudinaryWidget();
+
+      pendingOldPublicId.current = oldPublicId ?? null;
+      const widget = cloudinary.createUploadWidget(
+        {
+          cloudName: data.cloudName,
+          apiKey: data.apiKey,
+          uploadSignature: data.signature,
+          uploadSignatureTimestamp: data.timestamp,
+          folder: data.folder,
+          multiple: false,
+          cropping: true,
+          croppingCoordinatesMode: "custom",
+          showSkipCropButton: true,
+          showCompletedButton: false,
+          singleUploadAutoClose: true,
         },
-      ) => {
-        if (!error && result.event === "success") {
-          if (pendingOldPublicId.current) {
-            await destroyOldImage(pendingOldPublicId.current);
+        async (error, result) => {
+          if (error) {
+            if (error.status !== "abort" && error.status !== "cancel") {
+              toast.error("Upload failed", {
+                description: error.message ?? "Please try again.",
+              });
+            }
+            return;
           }
-          onChange(result.info.secure_url, result.info.public_id);
-          toast.success("Succesfully Uploaded image!");
-        }
-      },
-    );
-    widget.open();
+          if (result.event === "success") {
+            if (pendingOldPublicId.current) {
+              await destroyOldImage(pendingOldPublicId.current);
+            }
+            onChange(result.info.secure_url, result.info.public_id);
+            toast.success("Successfully uploaded image!");
+          }
+        },
+      );
+      widget.open();
+    } catch (err) {
+      console.error("[CLOUDINARY_WIDGET_UPLOAD]", err);
+      toast.error("Upload could not be opened", {
+        description:
+          err instanceof Error ? err.message : "Please try again later.",
+      });
+    }
   };
 
   const heightClass = ASPECT[aspectRatio] ?? "h-48";

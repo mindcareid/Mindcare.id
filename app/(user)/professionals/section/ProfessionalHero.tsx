@@ -5,6 +5,7 @@ import {
   MapPin,
   MessageCircle,
 } from "lucide-react";
+import Image from "next/image";
 import MetaRow from "@/app/components/reusable/MetaRow";
 import PageHero from "@/app/components/reusable/PageHero";
 import StatusDot from "@/app/components/reusable/StatusDot";
@@ -54,12 +55,22 @@ export default function ProfessionalHero({
       subtitle={professional.headline}
       media={
         <div className="relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-xl border border-border bg-brand-lavender-100 lg:max-w-md">
-          <span
-            aria-hidden="true"
-            className="flex size-full items-center justify-center bg-linear-to-br from-brand-lavender-200 to-brand-mint-200 font-heading text-6xl font-semibold text-primary/60"
-          >
-            {initialsOf(professional.fullName)}
-          </span>
+          {professional.photoUrl ? (
+            <Image
+              src={professional.photoUrl}
+              alt={professional.fullName}
+              fill
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-cover"
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="flex size-full items-center justify-center bg-linear-to-br from-brand-lavender-200 to-brand-mint-200 font-heading text-6xl font-semibold text-primary/60"
+            >
+              {initialsOf(professional.fullName)}
+            </span>
+          )}
         </div>
       }
     >

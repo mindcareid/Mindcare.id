@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { uploadToCloudinary } from "@/lib/cloudinary/upload";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css";
@@ -63,36 +64,19 @@ export default function CategoriesForm({ id, defaultValues }: CategoriesFormProp
     const files = e.target.files?.[0];
     if (!files) return;
 
-    const formData2: FormData = new FormData();
-    formData2.append("file", files);
-    formData2.append("upload_preset", "categories");
-
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`,
-      {
-        method: "POST",
-        body: formData2,
-      }
-    );
-
-    const data = await res.json();
-
-    if (data.secure_url && data.public_id) {
-
-      // 🔥 DELETE OLD IMAGE
-      if (form.publicId) {
-        await fetch("/api/cloudinary/delete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ publicId: form.publicId }),
-        });
-      }
+    try {
+      // Hanya upload; gambar lama TIDAK dihapus di sini agar tidak rusak bila
+      // user membatalkan form sebelum submit (DB baru di-update saat submit).
+      const data = await uploadToCloudinary(files, "categories");
 
       setForm((prev) => ({
         ...prev,
         photo: data.secure_url,
         publicId: data.public_id,
       }));
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert(err instanceof Error ? err.message : "Image upload failed");
     }
   };
 

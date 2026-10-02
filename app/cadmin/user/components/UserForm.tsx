@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { uploadToCloudinary } from "@/lib/cloudinary/upload";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css";
@@ -72,21 +73,9 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "member"); // 👈 Pastikan preset ini ada di Cloudinary
+    try {
+      const data = await uploadToCloudinary(file, "users");
 
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-      {
-        method: "POST",
-        body: formData,
-      },
-    );
-
-    const data = await res.json();
-
-    if (data.secure_url && data.public_id) {
       setForm((prev) => ({
         ...prev,
         image: {
@@ -94,6 +83,9 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
           public_id: data.public_id,
         },
       }));
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert(err instanceof Error ? err.message : "Image upload failed");
     }
   };
 

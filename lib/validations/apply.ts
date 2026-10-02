@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  isCloudinaryAssetUrl,
+  isPublicIdInEntityFolder,
+} from "@/lib/cloudinary/asset";
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function validUntilSchema(label: string) {
@@ -79,6 +83,57 @@ export const professionalServiceSchema = z.object({
 const termsSchema = z
   .boolean()
   .refine((v) => v === true, "Please confirm before submitting");
+const photoUrlSchema = z.preprocess(
+  (val) => {
+    if (typeof val !== "string") return val;
+    const trimmed = val.trim();
+    return trimmed === "" ? null : trimmed;
+  },
+  z
+    .string()
+    .max(500, "Photo URL is too long")
+    .refine(
+      (val) => isCloudinaryAssetUrl(val),
+      "Photo must be uploaded with the Upload photo button",
+    )
+    .nullable()
+    .optional(),
+);
+
+const publicIdSchema = z.preprocess((val) => {
+  if (typeof val !== "string") return val;
+  const trimmed = val.trim();
+  return trimmed === "" ? null : trimmed;
+}, z.string().max(255, "Photo reference is too long").nullable().optional());
+export function photoPairIssues(
+  photoUrl?: string | null,
+  publicId?: string | null,
+): { photoUrl?: string; publicId?: string } {
+  if (!photoUrl && !publicId) return {};
+  if (photoUrl && !publicId) {
+    return { publicId: "Upload the photo again — its reference is missing" };
+  }
+  if (!photoUrl && publicId) {
+    return { photoUrl: "Photo is missing; upload it again" };
+  }
+  return {};
+}
+export function photoAssetIssues(
+  photoUrl?: string | null,
+  publicId?: string | null,
+  entityType: "professionals" = "professionals",
+): { photoUrl?: string; publicId?: string } {
+  const pairIssues = photoPairIssues(photoUrl, publicId);
+  if (Object.keys(pairIssues).length > 0) return pairIssues;
+  if (!photoUrl || !publicId) return {};
+  if (!isCloudinaryAssetUrl(photoUrl)) {
+    return { photoUrl: "Photo must be uploaded with the Upload photo button" };
+  }
+  if (!isPublicIdInEntityFolder(publicId, entityType)) {
+    return { publicId: "Photo was uploaded to the wrong folder; try again" };
+  }
+  return {};
+}
 
 export const ApplyProfessionalSchema = z.object({
   fullName: z
@@ -98,6 +153,8 @@ export const ApplyProfessionalSchema = z.object({
     .string()
     .min(60, "Tell readers a bit about yourself (min 60 characters)")
     .max(3000, "Bio cannot exceed 3000 characters"),
+  photoUrl: photoUrlSchema,
+  publicId: publicIdSchema,
   baseCity: z
     .string()
     .min(2, "City is required")
@@ -121,11 +178,7 @@ export const ApplyProfessionalSchema = z.object({
     .min(0, "Years cannot be negative")
     .max(70, "Years looks too high — check the digits"),
   areaSlugs: z
-    .array(
-      // Batas 255 mengikuti lebar kolom slug tujuan — nilai lebih panjang
-      // tidak mungkin cocok dan cuma membebani query in: [...].
-      z.string().min(1).max(255),
-    )
+    .array(z.string().min(1).max(255))
     .min(1, "Pick at least one area of support")
     .max(10, "Maximum 10 areas"),
   services: z

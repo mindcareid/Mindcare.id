@@ -8,6 +8,12 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ensureCloudinaryWidget } from "@/lib/cloudinary/widget";
+import { CLOUDINARY_UPLOAD_PRESET } from "@/lib/cloudinary/preset";
+import type {
+  CloudinaryUploadError,
+  CloudinaryUploadResult,
+} from "@/lib/cloudinary/types/cloudinary";
 
 type ApiError = {
   message?: string;
@@ -58,12 +64,30 @@ export default function EditCompanyPage() {
     if (id) EditData();
   }, [id]);
 
-  const openWidgetCompany = () => {
-    // @ts-ignore
-    const widget = window.cloudinary.createUploadWidget(
+  const openWidgetCompany = async () => {
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    if (!cloudName) {
+      toast.error("Upload is not configured", {
+        description: "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is missing.",
+      });
+      return;
+    }
+
+    let cloudinary;
+    try {
+      cloudinary = await ensureCloudinaryWidget();
+    } catch (err) {
+      toast.error("Upload could not be opened", {
+        description:
+          err instanceof Error ? err.message : "Please try again later.",
+      });
+      return;
+    }
+
+    const widget = cloudinary.createUploadWidget(
       {
-        cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-        uploadPreset: "companies",
+        cloudName,
+        uploadPreset: CLOUDINARY_UPLOAD_PRESET,
         multiple: false,
         cropping: true,
         croppingCoordinatesMode: "custom",
@@ -72,8 +96,19 @@ export default function EditCompanyPage() {
         showCompletedButton: false,
         singleUploadAutoClose: true,
       },
-      async (error: ApiError, result: any) => {
-        if (!error && result.event === "success") {
+      async (
+        error: CloudinaryUploadError | null,
+        result: CloudinaryUploadResult,
+      ) => {
+        if (error) {
+          if (error.status !== "abort" && error.status !== "cancel") {
+            toast.error("Upload failed", {
+              description: error.message ?? "Please try again.",
+            });
+          }
+          return;
+        }
+        if (result.event === "success") {
           const photoUrl = result.info.secure_url;
           const publicId = result.info.public_id;
 

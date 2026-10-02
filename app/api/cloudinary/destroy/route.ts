@@ -1,5 +1,6 @@
 import { authOptions } from "@/lib/auth";
-import cloudinary from "@/lib/cloudinary";
+import { cloudinary } from "@/lib/cloudinary/config";
+import { canDestroyPublicId } from "@/lib/cloudinary/asset";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
@@ -20,6 +21,15 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { message: "Public Id Required" },
       { status: 400 },
+    );
+  }
+
+  // publicId datang dari klien. Tanpa batasan folder, pengguna berrole USER
+  // bisa menghancurkan aset admin (hero, articles, categories, dsb).
+  if (!canDestroyPublicId(publicId, session.user.role)) {
+    return NextResponse.json(
+      { message: "You cannot delete this asset" },
+      { status: 403 },
     );
   }
 

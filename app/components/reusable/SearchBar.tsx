@@ -44,8 +44,10 @@ export default function SearchBar({
         onChange={(event) => onValueChange(event.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        // outline-none aman di sini karena cincin fokus dipindah ke wadahnya
-        className="min-w-0 flex-1 bg-transparent py-2 text-base text-foreground outline-none placeholder:text-muted-foreground"
+        className={cn(
+          "min-w-0 flex-1 bg-transparent py-2 text-base text-foreground outline-none placeholder:text-muted-foreground",
+          "[&::-webkit-search-cancel-button]:appearance-none",
+        )}
       />
 
       {value !== "" && (
@@ -55,7 +57,7 @@ export default function SearchBar({
           aria-label="Clear search"
           className="rounded-sm p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-          <X className="size-4" aria-hidden="true" />
+          <X className="size-4 text-destructive" aria-hidden="true" />
         </button>
       )}
 

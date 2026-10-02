@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { uploadToCloudinary } from "@/lib/cloudinary/upload";
 
 type HeroFormProps = {
   id?: number;
@@ -74,30 +75,17 @@ export default function HeroForm({ id, defaultValues }: HeroFormProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "heroslider"); // preset untuk hero slider
-
     try {
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const data = await uploadToCloudinary(file, "hero");
 
-      const data = await res.json();
-      if (data.secure_url) {
-        setForm((prev) => ({
-          ...prev,
-          image: data.secure_url,
-          publicId: data.public_id,
-        }));
-      }
+      setForm((prev) => ({
+        ...prev,
+        image: data.secure_url,
+        publicId: data.public_id,
+      }));
     } catch (err) {
       console.error("Upload error:", err);
-      alert("Image upload failed");
+      alert(err instanceof Error ? err.message : "Image upload failed");
     }
   };
 

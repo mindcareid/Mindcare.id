@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useFieldArray, useForm, type Path } from "react-hook-form";
 import { toast } from "sonner";
@@ -15,6 +16,12 @@ import {
 } from "@/lib/validations/apply";
 import Button from "@/app/components/reusable/Button";
 import ApplicationNotice from "../component/ApplicationNotice";
+import {
+  CloudinaryUploadError,
+  CloudinaryUploadResult,
+} from "@/lib/cloudinary/types/cloudinary";
+import { ensureCloudinaryWidget } from "@/lib/cloudinary/widget";
+import { UploadSignatureResponse } from "@/lib/cloudinary/types/upload";
 import {
   ApplyField,
   ApplySection,
@@ -30,6 +37,10 @@ type FormValues = {
   profession: (typeof PROFESSION_OPTIONS)[number];
   headline: string;
   bio: string;
+  /** `secure_url` dari Cloudinary — jangan diisi manual (lihat skema). */
+  photo: string;
+  /** `public_id` pendamping `photo`; wajib sepasang. */
+  photoPublicId: string;
   baseCity: string;
   baseProvince: string;
   languagesText: string;
@@ -48,6 +59,8 @@ const defaultValues: FormValues = {
   profession: "Psikolog",
   headline: "",
   bio: "",
+  photo: "",
+  photoPublicId: "",
   baseCity: "",
   baseProvince: "",
   languagesText: "",
@@ -66,6 +79,18 @@ type ExistingApplication = {
   listingStatus: string;
 };
 
+/**
+ * Nama field di skema tidak selalu sama dengan nama di form: `languages`
+ * diisi dari satu kolom teks, dan `photoUrl`/`publicId` keduanya menunjuk
+ * ke kontrol upload yang sama. Tanpa pemetaan ini, pesan error foto tidak
+ * muncul di mana pun karena `errors.photoUrl` tidak ada di `FormValues`.
+ */
+const APPLY_ERROR_TARGETS: Record<string, string> = {
+  languages: "languagesText",
+  photoUrl: "photo",
+  publicId: "photo",
+};
+
 export default function ProfessionalForm({ areas }: { areas: AreaOption[] }) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -78,6 +103,7 @@ export default function ProfessionalForm({ areas }: { areas: AreaOption[] }) {
     handleSubmit,
     setError,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     defaultValues,
@@ -89,6 +115,76 @@ export default function ProfessionalForm({ areas }: { areas: AreaOption[] }) {
     append: appendService,
     remove: removeService,
   } = useFieldArray({ control, name: "services" });
+
+  const [uploading, setUploading] = useState(false);
+
+  const openWidget = async () => {
+    setUploading(true);
+    try {
+      const res = await fetch("/api/cloudinary/signature", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entityType: "professionals" }),
+      });
+
+      if (!res.ok) {
+        const problem = await res.json().catch(() => null);
+        toast.error("Failed to prepare upload", {
+          description:
+            problem?.message ??
+            `The server replied with status ${res.status}. Try again or sign in again.`,
+        });
+        return;
+      }
+
+      const { data }: { data: UploadSignatureResponse } = await res.json();
+      const cloudinary = await ensureCloudinaryWidget();
+
+      const widget = cloudinary.createUploadWidget(
+        {
+          cloudName: data.cloudName,
+          apiKey: data.apiKey,
+          uploadSignature: data.signature,
+          uploadSignatureTimestamp: data.timestamp,
+          folder: data.folder,
+          multiple: false,
+          cropping: true,
+          croppingAspectRatio: 1,
+          showCompletedButton: false,
+          singleUploadAutoClose: true,
+        },
+        (
+          error: CloudinaryUploadError | null,
+          result: CloudinaryUploadResult,
+        ) => {
+          if (error) {
+            if (error.status !== "abort" && error.status !== "cancel") {
+              toast.error("Upload failed", {
+                description: error.message ?? "Please try again.",
+              });
+            }
+            return;
+          }
+          if (result.event === "success") {
+            setValue("photo", result.info.secure_url, { shouldValidate: true });
+            setValue("photoPublicId", result.info.public_id, {
+              shouldValidate: true,
+            });
+            toast.success("Photo uploaded!");
+          }
+        },
+      );
+      widget.open();
+    } catch (err) {
+      console.error("[PROFESSIONAL_UPLOAD]", err);
+      toast.error("Upload could not be opened", {
+        description:
+          err instanceof Error ? err.message : "Please try again later.",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (status === "loading") return;
@@ -118,6 +214,7 @@ export default function ProfessionalForm({ areas }: { areas: AreaOption[] }) {
   }, [status, session, router]);
 
   const acceptTerms = watch("acceptTerms");
+  const photo = watch("photo");
 
   const onSubmit = async (values: FormValues) => {
     const payload = {
@@ -126,6 +223,8 @@ export default function ProfessionalForm({ areas }: { areas: AreaOption[] }) {
       profession: values.profession,
       headline: values.headline,
       bio: values.bio,
+      photoUrl: values.photo === "" ? null : values.photo,
+      publicId: values.photoPublicId === "" ? null : values.photoPublicId,
       baseCity: values.baseCity,
       baseProvince: values.baseProvince,
       languages: values.languagesText
@@ -145,7 +244,7 @@ export default function ProfessionalForm({ areas }: { areas: AreaOption[] }) {
     if (!parsed.success) {
       for (const issue of parsed.error.issues) {
         const path = issue.path.join(".");
-        const target = path === "languages" ? "languagesText" : path;
+        const target = APPLY_ERROR_TARGETS[path] ?? path;
         setError(target as Path<FormValues>, { message: issue.message });
       }
       toast.error("Please check the highlighted fields", {
@@ -203,6 +302,37 @@ export default function ProfessionalForm({ areas }: { areas: AreaOption[] }) {
           title="About you"
           description="How you will be introduced in the directory."
         >
+          <ApplyField
+            label="Photo"
+            htmlFor="photo"
+            error={errors.photo?.message}
+            hint="Optional. Shown on your directory card; leave it empty to show your initials instead."
+          >
+            <div className="flex flex-wrap items-center gap-4">
+              <Button
+                id="photo"
+                type="button"
+                variant="outline"
+                onClick={openWidget}
+                isLoading={uploading}
+              >
+                {photo ? "Change photo" : "Upload photo"}
+              </Button>
+              {photo ? (
+                <Image
+                  src={photo}
+                  alt="Selected profile photo"
+                  width={96}
+                  height={96}
+                  className="h-24 w-24 rounded-full border border-border object-cover"
+                />
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Square (1:1) photo works best.
+                </p>
+              )}
+            </div>
+          </ApplyField>
           <ApplyField
             label="Full name"
             htmlFor="fullName"

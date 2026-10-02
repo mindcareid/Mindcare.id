@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { uploadToCloudinary } from "@/lib/cloudinary/upload";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css";
@@ -75,26 +76,18 @@ export default function WhyUsForm({ id, defaultValues }: WhyUsFormProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "psikologon");
+    try {
+      const data = await uploadToCloudinary(file, "whyus");
 
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-    const data = await res.json();
-
-    if (data.secure_url && data.public_id) {
       setForm((prev) => ({
         ...prev,
         ...(hover
           ? { hoverImage: data.secure_url, hoverPublicId: data.public_id }
           : { image: data.secure_url, publicId: data.public_id }),
       }));
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert(err instanceof Error ? err.message : "Image upload failed");
     }
   };
 

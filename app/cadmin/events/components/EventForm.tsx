@@ -7,6 +7,7 @@ import Image from "next/image";
 import Cropper, { Area } from "react-easy-crop";
 import { autoSlug } from "@/lib/utils/autoSlug";
 import { getCroppedImage } from "@/lib/cropImage";
+import { uploadToCloudinary } from "@/lib/cloudinary/upload";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css";
@@ -183,36 +184,21 @@ export default function EventForm({
                 croppedAreaPixels
             );
 
-            const formData = new FormData();
-            formData.append("file", croppedBlob);
-            formData.append("upload_preset", "events");
+            // Hanya upload; gambar lama TIDAK dihapus di sini agar tidak rusak
+            // bila user membatalkan form sebelum submit.
+            const data = await uploadToCloudinary(croppedBlob, "events");
 
-            const res = await fetch(
-                `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-                { method: "POST", body: formData }
-            );
-
-            const data = await res.json();
-
-            if (data.secure_url && data.public_id) {
-                // 🔥 DELETE OLD IMAGE
-                if (form.publicId) {
-                    await fetch("/api/cloudinary/delete", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ publicId: form.publicId }),
-                    });
-                }
-
-                setForm((prev) => ({
-                    ...prev,
-                    coverImage: data.secure_url,
-                    publicId: data.public_id,
-                }));
-            }
+            setForm((prev) => ({
+                ...prev,
+                coverImage: data.secure_url,
+                publicId: data.public_id,
+            }));
 
             setShowCropper(false);
             setImageSrc(null);
+        } catch (err) {
+            console.error("Upload error:", err);
+            alert(err instanceof Error ? err.message : "Image upload failed");
         } finally {
             setUploadingImage(false);
         }

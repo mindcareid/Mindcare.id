@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import slugify from "slugify";
 import Cropper, { Area } from "react-easy-crop";
 import { getCroppedImage } from "@/lib/cropImage";
+import { CLOUDINARY_UPLOAD_PRESET } from "@/lib/cloudinary/preset";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css";
@@ -107,7 +108,7 @@ export default function CompanyForm({ id, defaultValues }: CompanyFormProps) {
 
     const formData = new FormData();
     formData.append("file", croppedBlob);
-    formData.append("upload_preset", "companies");
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,

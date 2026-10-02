@@ -184,8 +184,7 @@ export default function ArticleForm({ id, defaultValues }: ArticleFormProps) {
         value={form.coverImage || null}
         publicId={form.coverPublicId || null}
         oldPublicId={form.coverPublicId || null}
-        uploadPreset="articles"
-        folder="articles"
+        entityType="article"
         label="Click here to upload event image"
         aspectRatio="cover"
         onChange={(url, public_id) =>

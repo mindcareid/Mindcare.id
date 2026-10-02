@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Cropper, { Area } from "react-easy-crop";
 import { getCroppedImage } from "@/lib/cropImage";
+import { uploadToCloudinary } from "@/lib/cloudinary/upload";
 
 /* ================= TYPES ================= */
 
@@ -111,32 +112,20 @@ export default function AboutSectionForm({
       croppedAreaPixels
     );
 
-    const formData = new FormData();
-    formData.append("file", croppedBlob);
-    formData.append("upload_preset", "about-sections");
-
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-      { method: "POST", body: formData }
-    );
-
-    const data: { secure_url?: string; public_id?: string } =
-      await res.json();
-
-    if (data.secure_url && data.public_id) {
-      if (form.imagePublicId) {
-        await fetch("/api/cloudinary/delete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ publicId: form.imagePublicId }),
-        });
-      }
+    try {
+      // Hanya upload; gambar lama TIDAK dihapus di sini agar tidak rusak bila
+      // user membatalkan form sebelum submit (DB baru di-update saat submit).
+      const data = await uploadToCloudinary(croppedBlob, "about-section");
 
       setForm((prev) => ({
         ...prev,
         imageUrl: data.secure_url,
         imagePublicId: data.public_id,
       }));
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert(err instanceof Error ? err.message : "Image upload failed");
+      return;
     }
 
     setShowCropper(false);

@@ -1,5 +1,5 @@
 import { authOptions } from "@/lib/auth";
-import cloudinary from "@/lib/cloudinary";
+import { cloudinary } from "@/lib/cloudinary/config";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
@@ -22,11 +22,17 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    // 🔥 Jangan destroy kalau sama
+    // Destroy avatar lama bersifat best-effort: kegagalan cleanup (mis. API key
+    // di-disable atau publicId lama tidak ditemukan) tidak boleh menggagalkan
+    // penggantian avatar, karena DB harus tetap ter-update ke foto baru.
     if (user.publicId && user.publicId !== publicId) {
-      const destroyResult = await cloudinary.uploader.destroy(user.publicId, {
-        resource_type: "image",
-      });
+      try {
+        await cloudinary.uploader.destroy(user.publicId, {
+          resource_type: "image",
+        });
+      } catch (err) {
+        console.error("[AVATAR_DESTROY_OLD]", err);
+      }
     }
 
     const updatedUser = await prisma.user.update({
