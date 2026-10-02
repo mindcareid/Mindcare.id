@@ -6,6 +6,7 @@ export const UPLOAD_FOLDER_ENTITIES = [
   "solutions",
   "events",
   "categories",
+  "companies",
   "hero",
   "about-section",
   "whyus",

@@ -59,6 +59,10 @@ export const FolderImage: Record<UploadFolderImage, FolderConfig> = {
     path: appDataPath("Categories"),
     allowedRoles: ADMIN_ONLY,
   },
+  companies: {
+    path: appDataPath("Companies"),
+    allowedRoles: ADMIN_ONLY,
+  },
   hero: {
     path: appDataPath("Hero"),
     allowedRoles: ADMIN_ONLY,

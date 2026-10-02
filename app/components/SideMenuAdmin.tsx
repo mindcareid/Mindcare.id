@@ -89,12 +89,12 @@ export default function SideMenuAdmin() {
           />
 
           {/* Articles */}
-          <MenuItem
+          {/* <MenuItem
             href="/cadmin/articles"
             icon={faNewspaper}
             label="Articles"
             active={isActive("/cadmin/articles")}
-          />
+          /> */}
 
           <MenuItem
             href="/cadmin/categories"
@@ -172,7 +172,7 @@ export default function SideMenuAdmin() {
           </li>
 
           {/* Content Sections */}
-          <MenuItem
+          {/* <MenuItem
             href="/cadmin/hero"
             icon={faImage}
             label="Hero Slider"
@@ -191,7 +191,7 @@ export default function SideMenuAdmin() {
             icon={faCircleInfo}
             label="About Section"
             active={isActive("/cadmin/aboutsection")}
-          />
+          /> */} 
           <MenuItem
             href="/cadmin/contactemail"
             icon={faEnvelope}

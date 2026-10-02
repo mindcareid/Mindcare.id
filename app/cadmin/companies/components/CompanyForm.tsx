@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
 import slugify from "slugify";
 import Cropper, { Area } from "react-easy-crop";
 import { getCroppedImage } from "@/lib/cropImage";
-import { CLOUDINARY_UPLOAD_PRESET } from "@/lib/cloudinary/preset";
+import { uploadToCloudinary } from "@/lib/cloudinary/upload";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css";
@@ -106,39 +106,24 @@ export default function CompanyForm({ id, defaultValues }: CompanyFormProps) {
       croppedAreaPixels
     );
 
-    const formData = new FormData();
-    formData.append("file", croppedBlob);
-    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    const data: {
-      secure_url?: string;
-      public_id?: string;
-    } = await res.json();
-
-    if (data.secure_url && data.public_id) {
-
-      // 🔥 DELETE OLD IMAGE
-      if (form.publicId) {
-        await fetch("/api/cloudinary/delete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ publicId: form.publicId }),
-        });
-      }
+    try {
+      // Folder ditentukan server (app_data/Companies) dan logo lama
+      // dibersihkan server secara best-effort. Tidak ada lagi POST unsigned
+      // langsung dari browser — folder upload tidak bisa ditimpa dari sini.
+      const uploaded = await uploadToCloudinary(
+        croppedBlob,
+        "companies",
+        form.publicId,
+      );
 
       setForm((prev) => ({
         ...prev,
-        logo: data.secure_url,
-        publicId: data.public_id,
+        logo: uploaded.secure_url,
+        publicId: uploaded.public_id,
       }));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to upload image");
+      return;
     }
 
     setShowCropper(false);
