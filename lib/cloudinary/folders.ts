@@ -41,7 +41,7 @@ export const FolderImage: Record<UploadFolderImage, FolderConfig> = {
 
   "care-centre": {
     path: appDataPath("CareCentre"),
-    allowedRoles: [UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.INSTITUTION],
+    allowedRoles: ALL_AUTHENTICATED,
   },
   article: {
     path: appDataPath("Articles"),
@@ -49,18 +49,18 @@ export const FolderImage: Record<UploadFolderImage, FolderConfig> = {
   },
   solutions: {
     path: appDataPath("Solutions"),
-    allowedRoles: ADMIN_ONLY,
+    allowedRoles: ALL_AUTHENTICATED,
   },
   events: {
     path: appDataPath("Events"),
     allowedRoles: ALL_AUTHENTICATED,
   },
-  categories: {
-    path: appDataPath("Categories"),
-    allowedRoles: ADMIN_ONLY,
-  },
   companies: {
     path: appDataPath("Companies"),
+    allowedRoles: ADMIN_ONLY,
+  },
+  categories: {
+    path: appDataPath("Categories"),
     allowedRoles: ADMIN_ONLY,
   },
   hero: {

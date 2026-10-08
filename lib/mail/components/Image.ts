@@ -4,13 +4,9 @@ type ImageProps = {
   width?: number;
 };
 
-export function Image({
-  src,
-  alt,
-  width = 220,
-}: ImageProps) {
+export function Image({ src, alt, width = 220 }: ImageProps) {
   return `
-    <img
+    <Image
       src="${src}"
       alt="${alt}"
       width="${width}"
