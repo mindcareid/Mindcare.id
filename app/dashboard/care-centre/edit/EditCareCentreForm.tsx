@@ -12,6 +12,7 @@ import {
   CENTRE_TIME_ZONE_OPTIONS,
 } from "@/lib/validations/apply";
 import Button from "@/app/components/reusable/Button";
+import ImageUploadField from "@/app/components/reusable/ImageUploadField";
 import {
   ApplyField,
   ApplySection,
@@ -50,6 +51,8 @@ type FormValues = {
   postalCode: string;
   phone: string;
   website: string;
+  photo: string;
+  photoPublicId: string;
   acceptsBpjs: boolean;
   timeZone: (typeof CENTRE_TIME_ZONE_OPTIONS)[number];
   openingNote: string;
@@ -78,6 +81,8 @@ export default function EditCareCentreForm({
     register,
     handleSubmit,
     setError,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: initialValues,
@@ -89,6 +94,8 @@ export default function EditCareCentreForm({
       ...values,
       description: values.description || undefined,
       website: values.website || "",
+      photoUrl: values.photo,
+      publicId: values.photoPublicId,
       openingNote: values.openingNote || undefined,
       openingHours: values.openingHours.map((hour) => ({
         day: hour.day,
@@ -178,6 +185,24 @@ export default function EditCareCentreForm({
               className={applyInputClassName(Boolean(errors.website))}
             />
           </ApplyField>
+
+          <ImageUploadField
+            label="Centre photo or logo"
+            hint="Square image. Cropped and compressed automatically — JPG/PNG up to 10 MB."
+            entityType="care-centre"
+            aspect={1}
+            shape="wide"
+            maxWidth={512}
+            maxHeight={512}
+            value={{
+              url: watch("photo") || null,
+              publicId: watch("photoPublicId") || null,
+            }}
+            onChange={({ url, publicId }) => {
+              setValue("photo", url ?? "", { shouldValidate: true });
+              setValue("photoPublicId", publicId ?? "", { shouldValidate: true });
+            }}
+          />
 
           <ApplyField
             label="Time zone"

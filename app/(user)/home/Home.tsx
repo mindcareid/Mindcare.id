@@ -98,11 +98,11 @@ export default function Home({
             Are you a practitioner, centre, or solutions provider?
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground">
-            Psychologists, psychiatrists, care centres and solutions provider
+            Psychologists, psychiatrists, care centres, and solutions providers
             can apply to be listed. Every application is reviewed before a
             listing goes live.
           </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
             <Link
               href="/apply/professional"
               className={buttonStyles({ variant: "secondary", size: "lg" })}
@@ -114,6 +114,12 @@ export default function Home({
               className={buttonStyles({ variant: "outline", size: "lg" })}
             >
               Register a care centre
+            </Link>
+            <Link
+              href="/apply/solution"
+              className={buttonStyles({ variant: "outline", size: "lg" })}
+            >
+              List a solution
             </Link>
           </div>
         </div>

@@ -40,7 +40,7 @@ type EventFormContext =
   | "admin"
   | "professional"
   | "care-centre"
-  | "solution";
+  | "PLATFORM";
 
 type EventFormMode = "create" | "edit";
 
@@ -71,7 +71,7 @@ type EventFormInitialData = {
 
   professionalId: number | null;
   careCentreId: number | null;
-  solutionId: number | null;
+  PLATFORMId: number | null;
 
   categoryId: number;
 
@@ -124,7 +124,7 @@ const EMPTY_FORM: EventFormInitialData = {
 
   professionalId: null,
   careCentreId: null,
-  solutionId: null,
+  PLATFORMId: null,
 
   categoryId: 0,
 
@@ -155,8 +155,8 @@ function getDefaultPublisherType(
     case "care-centre":
       return EventPublisherType.CARE_CENTRE;
 
-    case "solution":
-      return EventPublisherType.SOLUTION;
+    case "PLATFORM":
+      return EventPublisherType.PLATFORM;
 
     default:
       return EventPublisherType.PLATFORM;
@@ -212,15 +212,15 @@ export default function EventForm({
             ? form.professionalId
             : form.publisherType === EventPublisherType.CARE_CENTRE
               ? form.careCentreId
-              : form.publisherType === EventPublisherType.SOLUTION
-                ? form.solutionId
+              : form.publisherType === EventPublisherType.PLATFORM
+                ? form.PLATFORMId
                 : null),
     );
   }, [
     form.publisherType,
     form.professionalId,
     form.careCentreId,
-    form.solutionId,
+    form.PLATFORMId,
     isAdmin,
     organizers,
   ]);
@@ -243,7 +243,7 @@ export default function EventForm({
       publisherType,
       professionalId: null,
       careCentreId: null,
-      solutionId: null,
+      PLATFORMId: null,
     }));
   }
 
@@ -393,10 +393,10 @@ export default function EventForm({
       }
 
       if (
-        form.publisherType === EventPublisherType.SOLUTION &&
-        !form.solutionId
+        form.publisherType === EventPublisherType.PLATFORM &&
+        !form.PLATFORMId
       ) {
-        return "Please select a solution.";
+        return "Please select a PLATFORM.";
       }
     }
 
@@ -444,7 +444,7 @@ export default function EventForm({
 
         professionalId: form.professionalId,
         careCentreId: form.careCentreId,
-        solutionId: form.solutionId,
+        PLATFORMId: form.PLATFORMId,
 
         categoryId: form.categoryId,
 
@@ -545,8 +545,8 @@ export default function EventForm({
                 "Care Centre"}
 
               {form.publisherType ===
-                EventPublisherType.SOLUTION &&
-                "Solution"}
+                EventPublisherType.PLATFORM &&
+                "PLATFORM"}
 
               {form.publisherType ===
                 EventPublisherType.PLATFORM &&
@@ -591,8 +591,8 @@ export default function EventForm({
                   Care Centre
                 </option>
 
-                <option value={EventPublisherType.SOLUTION}>
-                  Solution
+                <option value={EventPublisherType.PLATFORM}>
+                  PLATFORM
                 </option>
               </select>
             </div>
@@ -616,7 +616,7 @@ export default function EventForm({
                       : form.publisherType ===
                           EventPublisherType.CARE_CENTRE
                         ? (form.careCentreId ?? "")
-                        : (form.solutionId ?? "")
+                        : (form.PLATFORMId ?? "")
                   }
                   onChange={(event) => {
                     const value = event.target.value
@@ -639,9 +639,9 @@ export default function EventForm({
 
                     if (
                       form.publisherType ===
-                      EventPublisherType.SOLUTION
+                      EventPublisherType.PLATFORM
                     ) {
-                      updateField("solutionId", value);
+                      updateField("PLATFORMId", value);
                     }
                   }}
                   className="h-11 rounded-lg border bg-background px-3 text-sm"

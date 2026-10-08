@@ -11,7 +11,7 @@ export async function GET() {
     }
     const userId = Number(session.user.id);
 
-    const [professional, membership] = await Promise.all([
+    const [professional, membership, solutions] = await Promise.all([
       prisma.professional.findUnique({
         where: { userId },
         select: { slug: true, fullName: true, listingStatus: true },
@@ -26,6 +26,11 @@ export async function GET() {
           },
         },
       }),
+      prisma.solution.findMany({
+        where: { ownerUserId: userId, deletedAt: null },
+        orderBy: { createdAt: "desc" },
+        select: { slug: true, name: true, listingStatus: true },
+      }),
     ]);
 
     return NextResponse.json({
@@ -34,6 +39,8 @@ export async function GET() {
         professional,
         careCentre: membership?.centre ?? null,
         careCentreMembershipStatus: membership?.status ?? null,
+        solutions,
+        solutionCount: solutions.length,
       },
     });
   } catch (error) {

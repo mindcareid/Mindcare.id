@@ -39,9 +39,11 @@ export default function ApplySubmittedPage() {
             You can follow the status any time from your dashboard, under{" "}
             <span className="font-medium text-foreground">
               My Professional Listing
-            </span>{" "}
+            </span>
+            ,{" "}
+            <span className="font-medium text-foreground">My Care Centre</span>,
             or{" "}
-            <span className="font-medium text-foreground">My Care Centre</span>.
+            <span className="font-medium text-foreground">My Solutions</span>.
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">

@@ -7,6 +7,11 @@ import type {
 } from "./verification";
 import type { Professional } from "../professionals/type/professional";
 import type { CareCentre } from "../care-centres/type/careCentre";
+import type {
+  Solution,
+  SolutionCategory,
+  SolutionTheme,
+} from "../solutions/type/solution";
 
 export const PUBLIC_PROFESSIONAL_SELECT = {
   id: true,
@@ -79,6 +84,32 @@ export type PublicCareCentreRow = Prisma.CareCentreGetPayload<{
   select: typeof PUBLIC_CARE_CENTRE_SELECT;
 }>;
 
+export const PUBLIC_SOLUTION_SELECT = {
+  id: true,
+  slug: true,
+  name: true,
+  organizationName: true,
+  tagline: true,
+  description: true,
+  logo: true,
+  coverImage: true,
+  website: true,
+  contactEmail: true,
+  contactPhone: true,
+  createdAt: true,
+  category: { select: { id: true, slug: true, name: true, theme: true } },
+  audiences: {
+    select: { audience: { select: { id: true, slug: true, name: true } } },
+  },
+  focusAreas: {
+    select: { area: { select: { id: true, slug: true, name: true } } },
+  },
+} satisfies Prisma.SolutionSelect;
+
+export type PublicSolutionRow = Prisma.SolutionGetPayload<{
+  select: typeof PUBLIC_SOLUTION_SELECT;
+}>;
+
 const PROFESSION_LABELS: Record<string, Professional["profession"]> = {
   PSIKOLOG: "Psikolog",
   PSIKIATER: "Psikiater",
@@ -149,6 +180,10 @@ function toParagraphs(text: string | null): string[] {
 }
 
 function toLanguageList(value: unknown): string[] {
+  return toStringList(value);
+}
+
+function toStringList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is string => typeof item === "string");
 }
@@ -243,5 +278,48 @@ export function mapCareCentre(row: PublicCareCentreRow): CareCentre {
     professionalSlugs: [],
     professionalCount: 0,
     createdAt: row.createdAt.toISOString(),
+  };
+}
+
+function toSolutionTheme(value: string): SolutionTheme {
+  return ["navy", "purple", "emerald"].includes(value as SolutionTheme) ? (value as SolutionTheme) : "navy";
+}
+
+export function mapSolution(row: PublicSolutionRow): Solution {
+  const category: SolutionCategory = {
+    id: String(row.category.id),
+    slug: row.category.slug,
+    name: row.category.name,
+    theme: toSolutionTheme(row.category.theme),
+  };
+
+  return {
+    id: String(row.id),
+    slug: row.slug,
+    title: row.name,
+    summary: row.tagline ?? "",
+    coverImageUrl: row.coverImage,
+    category,
+    focusAreas: row.focusAreas.map((entry) => ({
+      id: String(entry.area.id),
+      slug: entry.area.slug,
+      name: entry.area.name,
+    })),
+    deliveryModes: ["Contact us"],
+    overview: toParagraphs(row.description),
+    whoItIsFor: [],
+    leadProfessionalSlug: null,
+    partners: [],
+    createdAt: row.createdAt.toISOString(),
+    organizationName: row.organizationName,
+    logoUrl: row.logo,
+    website: row.website,
+    contactEmail: row.contactEmail,
+    contactPhone: row.contactPhone,
+    audiences: row.audiences.map((entry) => ({
+      id: String(entry.audience.id),
+      slug: entry.audience.slug,
+      name: entry.audience.name,
+    })),
   };
 }

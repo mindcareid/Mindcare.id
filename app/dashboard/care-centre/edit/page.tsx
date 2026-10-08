@@ -75,14 +75,16 @@ export default async function EditCareCentrePage() {
           postalCode: centre.postalCode,
           phone: centre.phone,
           website: centre.website ?? "",
+          photo: centre.photoUrl ?? "",
+          photoPublicId: centre.publicId ?? "",
           acceptsBpjs: centre.acceptsBpjs,
-          // Database menyimpan string bebas; form hanya mengenal tiga zona.
-          // Nilai di luar daftar jatuh ke WIB — bukan dikarang, tapi pilihan
-          // yang terlihat dan bisa diubah pemiliknya.
           timeZone: (
             ["Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura"] as const
           ).includes(
-            centre.timeZone as "Asia/Jakarta" | "Asia/Makassar" | "Asia/Jayapura",
+            centre.timeZone as
+              | "Asia/Jakarta"
+              | "Asia/Makassar"
+              | "Asia/Jayapura",
           )
             ? (centre.timeZone as
                 | "Asia/Jakarta"

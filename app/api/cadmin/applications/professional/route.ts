@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
         profession: true,
         headline: true,
         bio: true,
+        photoUrl: true,
         baseCity: true,
         baseProvince: true,
         languages: true,

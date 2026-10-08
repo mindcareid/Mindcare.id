@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import DataTable, { TableStyles } from "react-data-table-component";
@@ -12,12 +13,7 @@ export type Article = {
   slug: string;
   coverImage?: string | null;
   type: "BLOG" | "NEWS";
-  category:
-    | "CORPORATE"
-    | "EXECUTIVE"
-    | "INSIGHT"
-    | "UPDATE"
-    | "EVENT";
+  category: "CORPORATE" | "EXECUTIVE" | "INSIGHT" | "UPDATE" | "EVENT";
   published: boolean;
   isActive: boolean;
   createdAt: string;
@@ -81,8 +77,7 @@ export default function ArticleList() {
       name: "Cover",
       cell: (row: Article) =>
         row.coverImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={row.coverImage}
             alt={row.title}
             className="h-10 w-16 object-cover rounded"
@@ -110,11 +105,7 @@ export default function ArticleList() {
     {
       name: "Status",
       cell: (row: Article) => (
-        <span
-          className={
-            row.isActive ? "text-green-600" : "text-red-600"
-          }
-        >
+        <span className={row.isActive ? "text-green-600" : "text-red-600"}>
           {row.isActive ? "Active" : "Inactive"}
         </span>
       ),

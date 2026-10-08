@@ -93,6 +93,8 @@ export async function POST(req: Request) {
         postalCode: data.postalCode,
         phone: data.phone,
         website: data.website || null,
+        photoUrl: data.photoUrl || null,
+        publicId: data.publicId || null,
         acceptsBpjs: data.acceptsBpjs,
         timeZone: data.timeZone,
         openingNote: data.openingNote || null,

@@ -5,8 +5,9 @@ import { toast } from "sonner";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Button from "@/app/components/reusable/Button";
+import Image from "next/image";
 
-type ApplicationKind = "professional" | "care-centre";
+type ApplicationKind = "professional" | "care-centre" | "solution";
 
 type ListingStatus = "PENDING" | "LISTED" | "REJECTED";
 
@@ -18,6 +19,7 @@ type ProfessionalApplication = {
   profession: string;
   headline: string;
   bio: string | null;
+  photoUrl: string | null;
   baseCity: string;
   baseProvince: string;
   languages: string[] | null;
@@ -32,7 +34,7 @@ type ProfessionalApplication = {
   licenceNumber: string | null;
   licenceValidUntil: string | null;
   createdAt: string;
-    user: { id: number; name: string; email: string; phoneNumber: string | null };
+  user: { id: number; name: string; email: string; phoneNumber: string | null };
   services: {
     id: number;
     name: string;
@@ -49,6 +51,7 @@ type CareCentreApplication = {
   name: string;
   kind: string;
   description: string | null;
+  photoUrl: string | null;
   street: string;
   city: string;
   province: string;
@@ -76,8 +79,50 @@ type CareCentreApplication = {
   users: {
     id: number;
     status: string;
-  user: { id: number; name: string; email: string; phoneNumber: string | null };
+    user: {
+      id: number;
+      name: string;
+      email: string;
+      phoneNumber: string | null;
+    };
   }[];
+};
+
+type SolutionApplication = {
+  id: number;
+  slug: string;
+  name: string;
+  organizationName: string;
+  tagline: string | null;
+  description: string | null;
+  deliveryFormat: string;
+  serviceArea: string | null;
+  features: string[] | null;
+  evidence: { label: string; url?: string | null }[] | null;
+  pricingModel: string;
+  priceFromIdr: number | null;
+  website: string | null;
+  brochureUrl: string | null;
+  videoUrl: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  logo: string | null;
+  coverImage: string | null;
+  listingStatus: ListingStatus;
+  verificationReview: string;
+  verificationCheckedOn: string | null;
+  verificationValidUntil: string | null;
+  verificationNote: string | null;
+  createdAt: string;
+  category: { slug: string; name: string };
+  audiences: { slug: string; name: string }[];
+  focusAreas: { slug: string; name: string }[];
+  owner: {
+    id: number;
+    name: string;
+    email: string;
+    phoneNumber: string | null;
+  } | null;
 };
 
 const WEEKDAY_LABELS = [
@@ -132,24 +177,31 @@ function ReviewDialog({
   processing,
 }: {
   kind: ApplicationKind;
-  application: ProfessionalApplication | CareCentreApplication;
+  application:
+    | ProfessionalApplication
+    | CareCentreApplication
+    | SolutionApplication;
   onClose: () => void;
-  onConfirm: (payload: { validUntil?: string; reason?: string }) => void;
+  onConfirm: (payload: {
+    action: "APPROVE" | "REJECT";
+    validUntil?: string;
+    reason?: string;
+  }) => void;
   processing: boolean;
 }) {
-  const isProfessional = "licenceValidUntil" in application;
-  const [validUntil, setValidUntil] = useState(
-    (isProfessional
-      ? application.licenceValidUntil
-      : application.permitValidUntil) ?? "",
-  );
+  // Solusi tidak punya izin/permit yang punya masa berlaku, jadi tanggalnya
+  // boleh dikosongkan. Profesional & centre wajib (izin selalu bertanggal).
+  const isSolution = kind === "solution";
+  const [validUntil, setValidUntil] = useState(defaultValidUntil(application));
   const [reason, setReason] = useState("");
   const [action, setAction] = useState<"APPROVE" | "REJECT">("APPROVE");
 
   const entityName =
     "fullName" in application ? application.fullName : application.name;
 
-  const validForApprove = action === "REJECT" || validUntil !== "";
+  let validForApprove = validUntil !== "";
+  if (action === "REJECT") validForApprove = true;
+  if (isSolution) validForApprove = true;
   const validForReject = action === "APPROVE" || reason.trim().length >= 10;
 
   return (
@@ -163,11 +215,7 @@ function ReviewDialog({
         <h2 className="font-heading text-xl font-semibold text-foreground">
           {action === "APPROVE" ? "Approve" : "Reject"} — {entityName}
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {kind === "professional"
-            ? "Professional application"
-            : "Care centre application"}
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{kindLabel(kind)}</p>
 
         <div className="mt-5 flex gap-2">
           {(["APPROVE", "REJECT"] as const).map((a) => (
@@ -195,7 +243,8 @@ function ReviewDialog({
               htmlFor="validUntil"
               className="block text-sm font-medium text-foreground"
             >
-              Licence valid until <span className="text-destructive">*</span>
+              {isSolution ? "Checked until (optional)" : "Licence valid until"}{" "}
+              {isSolution ? null : <span className="text-destructive">*</span>}
             </label>
             <input
               id="validUntil"
@@ -205,8 +254,9 @@ function ReviewDialog({
               className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <p className="text-xs text-muted-foreground">
-              The last day the licence is still valid. Default taken from the
-              claim — change it if the registry check says otherwise.
+              {isSolution
+                ? "Leave empty if the evidence has no expiry. Used to show how long this check is considered current."
+                : "The last day the licence is still valid. Default taken from the claim — change it if the registry check says otherwise."}
             </p>
           </div>
         ) : (
@@ -239,13 +289,13 @@ function ReviewDialog({
           <Button
             variant={action === "APPROVE" ? "accent" : "danger"}
             disabled={processing || !validForApprove || !validForReject}
-            onClick={() =>
-              onConfirm(
-                action === "APPROVE"
-                  ? { validUntil }
-                  : { reason: reason.trim() },
-              )
-            }
+            onClick={() => {
+              if (action === "APPROVE") {
+                onConfirm({ action: "APPROVE", validUntil });
+                return;
+              }
+              onConfirm({ action: "REJECT", reason: reason.trim() });
+            }}
           >
             {processing
               ? "Processing..."
@@ -258,17 +308,192 @@ function ReviewDialog({
     </div>
   );
 }
+function ApplicationImages({
+  application,
+}: {
+  application:
+    | ProfessionalApplication
+    | CareCentreApplication
+    | SolutionApplication;
+}) {
+  const items: { url: string; label: string }[] = [];
+
+  if ("organizationName" in application) {
+    if (application.logo) items.push({ url: application.logo, label: "Logo" });
+    if (application.coverImage) {
+      items.push({ url: application.coverImage, label: "Cover image" });
+    }
+  } else if (application.photoUrl) {
+    items.push({ url: application.photoUrl, label: "Photo" });
+  }
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="mb-5 flex flex-wrap gap-3">
+      {items.map((item) => (
+        <figure key={item.url} className="space-y-1">
+          <Image
+            src={item.url}
+            alt={item.label}
+            width={96}
+            height={96}
+            className="h-24 w-24 rounded-lg border border-border object-cover"
+          />
+          <figcaption className="text-xs text-muted-foreground">
+            {item.label}
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+  );
+}
+
+function SolutionDetail({ application }: { application: SolutionApplication }) {
+  const features = Array.isArray(application.features)
+    ? application.features
+    : [];
+  const evidence = Array.isArray(application.evidence)
+    ? application.evidence
+    : [];
+
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <DetailRow label="Organisation" value={application.organizationName} />
+        <DetailRow label="Category" value={application.category.name} />
+        <DetailRow label="Delivery" value={application.deliveryFormat} />
+        <DetailRow
+          label="Service area"
+          value={application.serviceArea ?? "—"}
+        />
+        <DetailRow label="Pricing" value={application.pricingModel} />
+        <DetailRow
+          label="Price from"
+          value={
+            application.priceFromIdr !== null
+              ? formatIdr(application.priceFromIdr)
+              : "—"
+          }
+        />
+        <DetailRow
+          label="Target users"
+          value={application.audiences.map((a) => a.name).join(", ") || "—"}
+        />
+        <DetailRow
+          label="Problems addressed"
+          value={application.focusAreas.map((a) => a.name).join(", ") || "—"}
+        />
+        <DetailRow label="Website" value={application.website ?? "—"} />
+        <DetailRow label="Brochure" value={application.brochureUrl ?? "—"} />
+        <DetailRow label="Video" value={application.videoUrl ?? "—"} />
+        <DetailRow
+          label="Contact email"
+          value={application.contactEmail ?? "—"}
+        />
+        <DetailRow
+          label="Contact phone"
+          value={application.contactPhone ?? "—"}
+        />
+      </div>
+
+      {application.tagline ? (
+        <div>
+          <p className="text-xs text-muted-foreground">One-line summary</p>
+          <p className="text-sm text-foreground">{application.tagline}</p>
+        </div>
+      ) : null}
+
+      {application.description ? (
+        <div>
+          <p className="text-xs text-muted-foreground">Description</p>
+          <p className="whitespace-pre-line text-sm text-muted-foreground">
+            {application.description}
+          </p>
+        </div>
+      ) : null}
+
+      {features.length > 0 ? (
+        <div>
+          <p className="mb-1 text-xs text-muted-foreground">Key features</p>
+          <ul className="list-inside list-disc space-y-0.5">
+            {features.map((feature) => (
+              <li key={feature} className="text-sm text-foreground">
+                {feature}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {evidence.length > 0 ? (
+        <div>
+          <p className="mb-1 text-xs text-muted-foreground">
+            Evidence claimed by the applicant
+          </p>
+          <ul className="space-y-0.5">
+            {evidence.map((item, index) => (
+              <li
+                key={`${item.label}-${index}`}
+                className="text-sm text-foreground"
+              >
+                {item.label}
+                {item.url ? (
+                  <>
+                    {" — "}
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="text-primary hover:underline"
+                    >
+                      link
+                    </a>
+                  </>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function kindLabel(kind: ApplicationKind): string {
+  if (kind === "professional") return "Professional application";
+  if (kind === "care-centre") return "Care centre application";
+  return "Solution application";
+}
+
+function defaultValidUntil(
+  application:
+    | ProfessionalApplication
+    | CareCentreApplication
+    | SolutionApplication,
+): string {
+  if ("licenceValidUntil" in application) {
+    return application.licenceValidUntil ?? "";
+  }
+  if ("permitValidUntil" in application) {
+    return application.permitValidUntil ?? "";
+  }
+  return "";
+}
 
 export default function ApplicationsPage() {
   const [kind, setKind] = useState<ApplicationKind>("professional");
   const [status, setStatus] = useState<ListingStatus>("PENDING");
-  const [professionals, setProfessionals] = useState<ProfessionalApplication[]>([]);
+  const [professionals, setProfessionals] = useState<ProfessionalApplication[]>(
+    [],
+  );
   const [centres, setCentres] = useState<CareCentreApplication[]>([]);
+  const [solutions, setSolutions] = useState<SolutionApplication[]>([]);
   const [fetchedKinds, setFetchedKinds] = useState<Set<string>>(new Set());
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [reviewTarget, setReviewTarget] = useState<
-    ProfessionalApplication | CareCentreApplication | null
+    ProfessionalApplication | CareCentreApplication | SolutionApplication | null
   >(null);
   const fetchKey = `${kind}:${status}`;
 
@@ -284,8 +509,10 @@ export default function ApplicationsPage() {
         if (cancelled) return;
         if (kind === "professional") {
           setProfessionals(json.data ?? []);
-        } else {
+        } else if (kind === "care-centre") {
           setCentres(json.data ?? []);
+        } else {
+          setSolutions(json.data ?? []);
         }
       } catch (err) {
         if (cancelled) return;
@@ -300,16 +527,23 @@ export default function ApplicationsPage() {
     };
   }, [fetchKey]);
 
-  const list = kind === "professional" ? professionals : centres;
+  let list:
+    | ProfessionalApplication[]
+    | CareCentreApplication[]
+    | SolutionApplication[] = solutions;
+  if (kind === "professional") list = professionals;
+  else if (kind === "care-centre") list = centres;
+
   const loading = !fetchedKinds.has(fetchKey);
   const count = list.length;
 
   const handleConfirm = async (payload: {
+    action: "APPROVE" | "REJECT";
     validUntil?: string;
     reason?: string;
   }) => {
     if (!reviewTarget) return;
-    const action = "validUntil" in payload ? "APPROVE" : "REJECT";
+    const { action, ...rest } = payload;
 
     setProcessingId(reviewTarget.id);
     try {
@@ -318,7 +552,7 @@ export default function ApplicationsPage() {
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action, ...payload }),
+          body: JSON.stringify({ action, ...rest }),
         },
       );
       const json = await res.json();
@@ -348,8 +582,8 @@ export default function ApplicationsPage() {
             Directory applications
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Review professional and care centre applications before they go
-            live.
+            Review professional, care centre, and solution applications before
+            they go live.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -357,6 +591,7 @@ export default function ApplicationsPage() {
             [
               ["professional", "Professional"],
               ["care-centre", "Care centre"],
+              ["solution", "Solution"],
             ] as const
           ).map(([value, label]) => (
             <button
@@ -411,15 +646,28 @@ export default function ApplicationsPage() {
         <div className="space-y-4">
           {list.map((application) => {
             const isProfessional = "fullName" in application;
+            const isSolution = "organizationName" in application;
             const entityName = isProfessional
               ? application.fullName
               : application.name;
-            const subLabel = isProfessional
-              ? `${application.credentials} · ${application.baseCity}`
-              : `${application.kind} · ${application.city}`;
-            const applicant = isProfessional
-              ? application.user
-              : (application.users[0]?.user ?? null);
+            let subLabel = "";
+            if ("fullName" in application) {
+              subLabel = `${application.credentials} · ${application.baseCity}`;
+            } else if ("organizationName" in application) {
+              subLabel = `${application.organizationName} · ${application.category.name}`;
+            } else {
+              subLabel = `${application.kind} · ${application.city}`;
+            }
+
+            let applicant: { name: string; email: string } | null = null;
+            if ("fullName" in application) {
+              applicant = application.user;
+            } else if ("organizationName" in application) {
+              applicant = application.owner;
+            } else {
+              applicant = application.users[0]?.user ?? null;
+            }
+
             const expanded = expandedId === application.id;
 
             return (
@@ -455,7 +703,9 @@ export default function ApplicationsPage() {
                       </p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         Submitted {formatDateOnly(application.createdAt)}
-                        {applicant ? ` · ${applicant.name} (${applicant.email})` : ""}
+                        {applicant
+                          ? ` · ${applicant.name} (${applicant.email})`
+                          : ""}
                       </p>
                     </div>
                   </button>
@@ -491,10 +741,17 @@ export default function ApplicationsPage() {
 
                 {expanded && (
                   <div className="border-t border-border p-5">
+                    <ApplicationImages application={application} />
                     {isProfessional ? (
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        <DetailRow label="Profession" value={application.profession} />
-                        <DetailRow label="Experience" value={`${application.yearsOfExperience} years`} />
+                        <DetailRow
+                          label="Profession"
+                          value={application.profession}
+                        />
+                        <DetailRow
+                          label="Experience"
+                          value={`${application.yearsOfExperience} years`}
+                        />
                         <DetailRow
                           label="Starting price"
                           value={
@@ -505,19 +762,28 @@ export default function ApplicationsPage() {
                         />
                         <DetailRow
                           label="Languages"
-                          value={(application.languages ?? []).join(", ") || "—"}
+                          value={
+                            (application.languages ?? []).join(", ") || "—"
+                          }
                         />
                         <DetailRow
                           label="Areas of support"
-                          value={application.areas.map((a) => a.name).join(", ") || "—"}
+                          value={
+                            application.areas.map((a) => a.name).join(", ") ||
+                            "—"
+                          }
                         />
                         <DetailRow
                           label="Licence"
                           value={`${application.licenceType ?? "—"} · ${application.licenceNumber ?? "—"} · until ${formatDateOnly(application.licenceValidUntil)}`}
                         />
                         <div className="sm:col-span-2 lg:col-span-3">
-                          <p className="text-xs text-muted-foreground">Headline</p>
-                          <p className="text-sm text-foreground">{application.headline}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Headline
+                          </p>
+                          <p className="text-sm text-foreground">
+                            {application.headline}
+                          </p>
                         </div>
                         {application.services.length > 0 && (
                           <div className="sm:col-span-2 lg:col-span-3">
@@ -526,7 +792,10 @@ export default function ApplicationsPage() {
                             </p>
                             <div className="space-y-1">
                               {application.services.map((service) => (
-                                <p key={service.id} className="text-sm text-foreground">
+                                <p
+                                  key={service.id}
+                                  className="text-sm text-foreground"
+                                >
                                   {service.name} · {service.mode} ·{" "}
                                   {service.durationMinutes} min ·{" "}
                                   {formatIdr(service.priceIdr)}
@@ -537,11 +806,17 @@ export default function ApplicationsPage() {
                         )}
                         {application.bio && (
                           <div className="sm:col-span-2 lg:col-span-3">
-                            <p className="text-xs text-muted-foreground">About</p>
-                            <p className="text-sm text-muted-foreground">{application.bio}</p>
+                            <p className="text-xs text-muted-foreground">
+                              About
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {application.bio}
+                            </p>
                           </div>
                         )}
                       </div>
+                    ) : isSolution ? (
+                      <SolutionDetail application={application} />
                     ) : (
                       <div className="space-y-5">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -557,12 +832,23 @@ export default function ApplicationsPage() {
                           />
                           <DetailRow
                             label="BPJS"
-                            value={application.acceptsBpjs ? "Accepted" : "Not accepted"}
+                            value={
+                              application.acceptsBpjs
+                                ? "Accepted"
+                                : "Not accepted"
+                            }
                           />
-                          <DetailRow label="Time zone" value={application.timeZone} />
+                          <DetailRow
+                            label="Time zone"
+                            value={application.timeZone}
+                          />
                           <DetailRow
                             label="Services"
-                            value={application.services.map((s) => s.name).join(", ") || "—"}
+                            value={
+                              application.services
+                                .map((s) => s.name)
+                                .join(", ") || "—"
+                            }
                           />
                           <DetailRow
                             label="Permit"
@@ -583,7 +869,10 @@ export default function ApplicationsPage() {
                           </p>
                           <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-4">
                             {application.openingHours.map((hour) => (
-                              <p key={hour.day} className="text-sm text-foreground">
+                              <p
+                                key={hour.day}
+                                className="text-sm text-foreground"
+                              >
                                 {WEEKDAY_LABELS[hour.day]}:{" "}
                                 {hour.opens && hour.closes
                                   ? `${hour.opens} – ${hour.closes}`
@@ -612,7 +901,8 @@ export default function ApplicationsPage() {
 
                     {application.listingStatus !== "PENDING" && (
                       <div className="mt-5 rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">
-                        Reviewed {formatDateOnly(application.verificationCheckedOn)}
+                        Reviewed{" "}
+                        {formatDateOnly(application.verificationCheckedOn)}
                         {" · valid until "}
                         {formatDateOnly(application.verificationValidUntil)}
                         {application.verificationNote

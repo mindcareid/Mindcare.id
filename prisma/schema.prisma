@@ -46,6 +46,7 @@ enum CompanyRole {
   FINANCE
   EDITOR
 }
+
 enum ListingStatus {
   PENDING
   LISTED
@@ -54,7 +55,6 @@ enum ListingStatus {
   PUBLISHED
   DRAFT
 }
-
 
 enum VerificationStatus {
   UNVERIFIED
@@ -122,7 +122,6 @@ enum EventPublisherType {
   PLATFORM
   PROFESSIONAL
   CARE_CENTRE
-  SOLUTION
 }
 
 enum EventFormat {
@@ -241,7 +240,7 @@ model CategoriesSub {
 model AdminAccess {
   id Int @id @default(autoincrement())
 
-  userId Int @unique
+  userId Int  @unique
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   role AdminRole @default(ADMIN)
@@ -299,9 +298,10 @@ model User {
   professional          Professional?
   adminAccess           AdminAccess?
   careCentreMemberships CareCentreUser[]
+  solutions             Solution[]
   orders                Order[]
   notifications         Notification[]
-  createdEvents Event[] @relation("EventCreatedBy")
+  createdEvents         Event[]          @relation("EventCreatedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -382,7 +382,7 @@ model CareCentre {
   name        String     @db.VarChar(255)
   kind        CentreKind
   photoUrl    String?    @db.VarChar(500)
-  publicId    String? @db.VarChar(255)
+  publicId    String?    @db.VarChar(255)
   description String?    @db.Text
 
   street     String  @db.VarChar(255)
@@ -393,14 +393,14 @@ model CareCentre {
   website    String? @db.VarChar(255)
   country    String? @db.VarChar(100)
 
-  acceptsBpjs Boolean @default(false)
-  timeZone    String  @default("Asia/Jakarta") @db.VarChar(50)
-  openingNote String? @db.VarChar(500)
-  latitude    Float?
-  longitude   Float?
+  acceptsBpjs          Boolean @default(false)
+  timeZone             String  @default("Asia/Jakarta") @db.VarChar(50)
+  openingNote          String? @db.VarChar(500)
+  latitude             Float?
+  longitude            Float?
   appointmentAvailable Boolean @default(false)
   onlineAvailable      Boolean @default(false)
-  isFeatured Boolean @default(false)
+  isFeatured           Boolean @default(false)
 
   listingStatus          ListingStatus       @default(PENDING)
   verificationReview     VerificationReview  @default(NONE)
@@ -409,9 +409,9 @@ model CareCentre {
   verificationSource     VerificationSource?
   verificationAdminId    Int?
   verificationNote       String?             @db.VarChar(500)
-  permitType       String?   @db.VarChar(100)
-  permitNumber     String?   @db.VarChar(100)
-  permitValidUntil DateTime?
+  permitType             String?             @db.VarChar(100)
+  permitNumber           String?             @db.VarChar(100)
+  permitValidUntil       DateTime?
 
   openingHours CareCentreOpeningHour[]
   services     CareCentreService[]
@@ -486,24 +486,38 @@ model Service {
 model Solution {
   id Int @id @default(autoincrement())
 
-  companyId Int
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  ownerUserId Int?  @unique
+  owner       User? @relation(fields: [ownerUserId], references: [id])
 
-  name String @db.VarChar(255)
-  slug String @unique @db.VarChar(255)
+  companyId Int?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
 
-  publicId String? @db.VarChar(255)
+  organizationName String @db.VarChar(255)
+  name             String @db.VarChar(255)
+  slug             String @unique @db.VarChar(255)
 
-  tagline     String? @db.VarChar(255)
-  description String? @db.LongText
+  tagline     String? @db.VarChar(500)
+  description String? @db.Text
 
-  type SolutionType
+  categoryId Int
+  category   SolutionCategory @relation(fields: [categoryId], references: [id])
 
-  coverImage String? @db.VarChar(500)
-  logo       String? @db.VarChar(500)
+  logo          String? @db.VarChar(500)
+  coverImage    String? @db.VarChar(500)
+  logoPublicId  String? @db.VarChar(255)
+  coverPublicId String? @db.VarChar(255)
 
-  listingStatus ListingStatus      @default(PENDING)
-  verification  VerificationStatus @default(UNVERIFIED)
+  website      String? @db.VarChar(500)
+  contactEmail String? @db.VarChar(255)
+  contactPhone String? @db.VarChar(50)
+
+  listingStatus          ListingStatus       @default(PENDING)
+  verificationReview     VerificationReview  @default(NONE)
+  verificationCheckedOn  DateTime?
+  verificationValidUntil DateTime?
+  verificationSource     VerificationSource?
+  verificationAdminId    Int?
+  verificationNote       String?             @db.VarChar(500)
 
   isFeatured Boolean @default(false)
 
@@ -511,14 +525,13 @@ model Solution {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  categories SolutionCategoryMap[]
   audiences  SolutionAudienceMap[]
+  focusAreas SolutionFocusArea[]
+  medias     Media[]
 
-  media Media[]
-  events Event[]
-
+  @@index([ownerUserId])
   @@index([companyId])
-  @@index([type, listingStatus])
+  @@index([categoryId, listingStatus])
   @@index([listingStatus, isFeatured])
   @@index([deletedAt])
 }
@@ -531,11 +544,12 @@ model SolutionCategory {
 
   description String? @db.Text
   icon        String? @db.VarChar(255)
+  theme String @default("navy") @db.VarChar(20)
 
   orderIndex Int     @default(0)
   isActive   Boolean @default(true)
 
-  solutions SolutionCategoryMap[]
+  solutions Solution[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -543,18 +557,16 @@ model SolutionCategory {
   @@index([isActive, orderIndex])
 }
 
-model SolutionCategoryMap {
+model SolutionFocusArea {
   solutionId Int
-  categoryId Int
+  areaId     Int
 
-  solution Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  solution Solution      @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  area     AreaOfSupport @relation(fields: [areaId], references: [id], onDelete: Cascade)
 
-  category SolutionCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  @@id([solutionId, categoryId])
-  @@index([categoryId])
+  @@id([solutionId, areaId])
+  @@index([areaId])
 }
-
 
 model SolutionAudience {
   id Int @id @default(autoincrement())
@@ -581,7 +593,6 @@ model SolutionAudienceMap {
   @@id([solutionId, audienceId])
   @@index([audienceId])
 }
-
 
 model Media {
   id Int @id @default(autoincrement())
@@ -616,7 +627,6 @@ model Media {
   @@index([professionalId, sortOrder])
 }
 
-
 model Notification {
   id Int @id @default(autoincrement())
 
@@ -640,7 +650,6 @@ model Notification {
   @@index([userId, createdAt])
   @@index([status])
 }
-
 
 model HeroSlider {
   id Int @id @default(autoincrement())
@@ -723,8 +732,8 @@ model Event {
 
   description String @db.LongText
 
-  location String? @db.VarChar(500)
-  format EventFormat @default(IN_PERSON)
+  location String?     @db.VarChar(500)
+  format   EventFormat @default(IN_PERSON)
 
   startDate DateTime
   endDate   DateTime
@@ -740,42 +749,23 @@ model Event {
 
   registrationType EventRegistrationType @default(INTERNAL)
 
-  coverImage  String? @db.VarChar(500)
-  publicId    String? @db.VarChar(255)
-  isPublished Boolean @default(false) 
+  coverImage    String?            @db.VarChar(500)
+  publicId      String?            @db.VarChar(255)
+  isPublished   Boolean            @default(false)
   publisherType EventPublisherType @default(PLATFORM)
 
-    /*
-   * Event publisher
-   *
-   * PLATFORM
-   *   semua publisherId = null
-   *
-   * PROFESSIONAL
-   *   professionalId != null
-   *
-   * CARE_CENTRE
-   *   careCentreId != null
-   *
-   * SOLUTION
-   *   solutionId != null
-   */
-
   professionalId Int?
-  careCentreId Int?
-  solutionId Int?
-  solution Solution? @relation(fields: [solutionId], references: [id], onDelete: Restrict)
-  careCentre CareCentre? @relation(fields: [careCentreId], references: [id], onDelete: Restrict)
-  professional Professional? @relation(fields: [professionalId], references: [id], onDelete: Restrict)
-
+  careCentreId   Int?
+  careCentre     CareCentre?   @relation(fields: [careCentreId], references: [id], onDelete: Restrict)
+  professional   Professional? @relation(fields: [professionalId], references: [id], onDelete: Restrict)
 
   status EventStatus @default(DRAFT)
 
   categoryId Int
-  category   EventCategory @relation(fields: [categoryId],references: [id],onDelete: Restrict)
+  category   EventCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
   createdById Int?
-  createdBy   User? @relation("EventCreatedBy",fields: [createdById],references: [id],onDelete: SetNull)
+  createdBy   User? @relation("EventCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -789,7 +779,6 @@ model Event {
 
   @@index([professionalId, status, startDate])
   @@index([careCentreId, status, startDate])
-  @@index([solutionId, status, startDate])
   @@index([categoryId, status])
   @@index([status, startDate])
   @@index([deletedAt])
@@ -812,10 +801,10 @@ model EventFocusArea {
 
 model EventFocusAreaMap {
   eventId Int
-  event Event @relation(fields: [eventId],references: [id],onDelete: Cascade)
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   focusAreaId Int
-  focusArea EventFocusArea @relation(fields: [focusAreaId],references: [id],onDelete: Restrict)
+  focusArea   EventFocusArea @relation(fields: [focusAreaId], references: [id], onDelete: Restrict)
 
   @@id([eventId, focusAreaId])
   @@index([focusAreaId])
@@ -825,9 +814,9 @@ model EventAgendaItem {
   id Int @id @default(autoincrement())
 
   eventId Int
-  event   Event @relation(fields: [eventId],references: [id],onDelete: Cascade)
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
-  title       String @db.VarChar(255)
+  title       String  @db.VarChar(255)
   description String? @db.Text
 
   startTime DateTime
@@ -856,7 +845,6 @@ model EventCategory {
   updatedAt DateTime @updatedAt
 }
 
-
 model Industry {
   id Int @id @default(autoincrement())
 
@@ -882,7 +870,6 @@ model EventIndustry {
   @@id([eventId, industryId])
   @@index([industryId])
 }
-
 
 model Article {
   id Int @id @default(autoincrement())
@@ -996,7 +983,6 @@ model Ticket {
   @@index([isCheckedIn, checkedAt])
 }
 
-
 model EventAttendeeField {
   id String @id @default(cuid())
 
@@ -1039,26 +1025,25 @@ model ContactMessage {
   @@index([status, createdAt])
 }
 
-
 model Professional {
   id     Int   @id @default(autoincrement())
   userId Int?  @unique
   user   User? @relation(fields: [userId], references: [id])
 
-  slug        String     @unique @db.VarChar(255)
-  fullName    String     @db.VarChar(255)
-  credentials String     @db.VarChar(255)
-  profession  Profession
-  headline    String     @db.VarChar(500)
-  bio         String?    @db.Text
-  photoUrl    String?    @db.VarChar(500)
-  publicId String? @db.VarChar(255)
-  baseCity     String @db.VarChar(100)
-  baseProvince String @db.VarChar(100)
-  languages Json?
+  slug         String     @unique @db.VarChar(255)
+  fullName     String     @db.VarChar(255)
+  credentials  String     @db.VarChar(255)
+  profession   Profession
+  headline     String     @db.VarChar(500)
+  bio          String?    @db.Text
+  photoUrl     String?    @db.VarChar(500)
+  publicId     String?    @db.VarChar(255)
+  baseCity     String     @db.VarChar(100)
+  baseProvince String     @db.VarChar(100)
+  languages    Json?
 
-  yearsOfExperience Int @default(0)
-  startingPriceIdr Int?
+  yearsOfExperience Int  @default(0)
+  startingPriceIdr  Int?
 
   listingStatus          ListingStatus       @default(PENDING)
   verificationReview     VerificationReview  @default(NONE)
@@ -1067,9 +1052,9 @@ model Professional {
   verificationSource     VerificationSource?
   verificationAdminId    Int?
   verificationNote       String?             @db.VarChar(500)
-  licenceType       String?   @db.VarChar(100)
-  licenceNumber     String?   @db.VarChar(100)
-  licenceValidUntil DateTime?
+  licenceType            String?             @db.VarChar(100)
+  licenceNumber          String?             @db.VarChar(100)
+  licenceValidUntil      DateTime?
 
   services ProfessionalService[]
   areas    ProfessionalAreaOfSupport[]
@@ -1084,6 +1069,7 @@ model Professional {
   @@index([profession])
   @@index([baseCity])
 }
+
 model ProfessionalService {
   id             Int          @id @default(autoincrement())
   professionalId Int
@@ -1106,6 +1092,7 @@ model AreaOfSupport {
   isActive Boolean @default(true)
 
   professionals ProfessionalAreaOfSupport[]
+  solutions     SolutionFocusArea[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

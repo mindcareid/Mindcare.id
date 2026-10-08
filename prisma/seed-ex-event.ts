@@ -674,7 +674,7 @@ Support group ini menyediakan ruang untuk berbagi pengalaman, memahami tantangan
         publisherType: "PLATFORM",
         professionalId: null,
         careCentreId: null,
-        solutionId: null,
+        // solutionId: null,
         categoryId,
         status: "PUBLISHED",
         deletedAt: null,

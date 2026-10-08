@@ -5,15 +5,20 @@ type ContainerProps = {
   children: ReactNode;
   as?: ElementType;
   className?: string;
+  id?: string;
 };
 
 export default function Container({
   children,
   as: Component = "div",
   className,
+  id,
 }: ContainerProps) {
   return (
-    <Component className={cn("mx-auto w-full max-w-7xl px-6", className)}>
+    <Component
+      id={id}
+      className={cn("mx-auto w-full max-w-7xl px-6", className)}
+    >
       {children}
     </Component>
   );

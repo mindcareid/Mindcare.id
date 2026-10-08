@@ -94,6 +94,12 @@ export async function PATCH(req: NextRequest) {
           description: data.description || null,
           phone: data.phone,
           website: data.website || null,
+          ...(data.photoUrl !== undefined
+            ? {
+                photoUrl: data.photoUrl || null,
+                publicId: data.publicId || null,
+              }
+            : {}),
           acceptsBpjs: data.acceptsBpjs,
           timeZone: data.timeZone,
           openingNote: data.openingNote || null,
@@ -149,7 +155,6 @@ export async function PATCH(req: NextRequest) {
       data: { requiresReview },
     });
   } catch (error) {
-    // Dua pengajuan aktif dari akun yang sama (balapan) tetap ditolak di sini.
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"

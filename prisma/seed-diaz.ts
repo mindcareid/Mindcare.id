@@ -55,6 +55,72 @@ const CentreServices: Array<[string, string]> = [
   ["Layanan Gawat Darurat", "layanan-gawat-darurat"],
 ];
 
+const SolutionCategories: Array<[name: string, slug: string, theme: string]> = [
+  [
+    "Employee Assistance Programme & Workplace Wellbeing",
+    "eap-workplace-wellbeing",
+    "navy",
+  ],
+  [
+    "Mental Health Apps, Platforms & Telehealth",
+    "apps-platforms-telehealth",
+    "purple",
+  ],
+  [
+    "Assessment, Screening & Measurement Tools",
+    "assessment-screening-tools",
+    "emerald",
+  ],
+  [
+    "Training, Education & Certification Programmes",
+    "training-education-certification",
+    "navy",
+  ],
+  [
+    "School & University Mental Health Programmes",
+    "schools-universities",
+    "purple",
+  ],
+  [
+    "Community, Peer Support & Prevention Programmes",
+    "community-peer-support",
+    "emerald",
+  ],
+  ["Mental Health Insurance & Benefits", "insurance-benefits", "navy"],
+  [
+    "Wellness, Mindfulness & Stress Management Services",
+    "wellness-mindfulness",
+    "purple",
+  ],
+  [
+    "Books, Publications & Educational Materials",
+    "books-publications",
+    "emerald",
+  ],
+  [
+    "Other Evidence-Based Mental Health Products & Services",
+    "other-evidence-based",
+    "navy",
+  ],
+];
+
+const SolutionAudiences: Array<[name: string, slug: string]> = [
+  ["For Individuals", "individuals"],
+  ["For Workplaces", "workplaces"],
+  ["For Communities", "communities"],
+];
+
+const EventCategories: Array<[name: string, slug: string]> = [
+  ["Webinar", "webinar"],
+  ["Workshop", "workshop"],
+  ["Training & Certification", "training-certification"],
+  ["Seminar", "seminar"],
+  ["Conference", "conference"],
+  ["Support Group", "support-group"],
+  ["Community Gathering", "community-gathering"],
+  ["Screening & Campaign", "screening-campaign"],
+];
+
 async function main() {
   console.log("Seeding industries...");
 
@@ -94,6 +160,42 @@ async function main() {
   }
 
   console.log("✓ Centre services seeded.");
+
+  console.log("Seeding solution categories...");
+
+  for (const [index, [name, slug, theme]] of SolutionCategories.entries()) {
+    await prisma.solutionCategory.upsert({
+      where: { slug },
+      update: { name, theme, orderIndex: index },
+      create: { name, slug, theme, orderIndex: index },
+    });
+  }
+
+  console.log("✓ Solution categories seeded.");
+
+  console.log("Seeding solution audiences...");
+
+  for (const [name, slug] of SolutionAudiences) {
+    await prisma.solutionAudience.upsert({
+      where: { slug },
+      update: { name },
+      create: { name, slug },
+    });
+  }
+
+  console.log("✓ Solution audiences seeded.");
+
+  console.log("Seeding event categories...");
+
+  for (const [name, slug] of EventCategories) {
+    await prisma.eventCategory.upsert({
+      where: { slug },
+      update: { name },
+      create: { name, slug },
+    });
+  }
+
+  console.log("✓ Event categories seeded.");
 }
 
 main()

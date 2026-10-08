@@ -19,6 +19,7 @@ import {
   DetailStackRow,
   ListingSection,
 } from "../components/listing/ListingSection";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "My care centre",
@@ -96,6 +97,15 @@ export default async function DashboardCareCentrePage() {
           My care centre
         </p>
         <div className="flex flex-wrap items-center gap-3">
+          {centre.photoUrl ? (
+            <Image
+              src={centre.photoUrl}
+              alt={centre.name}
+              width={56}
+              height={56}
+              className="h-14 w-14 rounded-lg border border-border object-cover"
+            />
+          ) : null}
           <h1 className="font-heading text-3xl font-semibold text-foreground">
             {centre.name}
           </h1>
@@ -244,10 +254,7 @@ export default async function DashboardCareCentrePage() {
             description="Kept private — never shown on public pages."
           >
             <DetailStack>
-              <DetailStackRow
-                label="Type"
-                value={centre.permitType ?? "—"}
-              />
+              <DetailStackRow label="Type" value={centre.permitType ?? "—"} />
               <DetailStackRow
                 label="Number"
                 value={centre.permitNumber ?? "—"}

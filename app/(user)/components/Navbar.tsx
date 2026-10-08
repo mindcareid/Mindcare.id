@@ -243,32 +243,11 @@ export default function Navbar() {
                       className="absolute right-0 mt-2 w-56 bg-white backdrop-blur-xl border border-white/10 rounded-xl shadow-xl overflow-hidden"
                     >
                       <Link
-                        href="/profile"
-                        className="flex items-center gap-2  px-4 py-3 text-neutral-900 font-semibold hover:text-blue-500 transition"
-                      >
-                        <UserRound /> Edit Profile
-                      </Link>
-                      <Link
                         href="/dashboard"
                         className="flex items-center gap-2  px-4 py-3 text-neutral-900 font-semibold hover:text-blue-500 transition"
                       >
                         <LayoutGrid /> Dashboard
                       </Link>
-                      {!hasCompany ? (
-                        <Link
-                          href="/company/create"
-                          className="flex items-center gap-2  px-4 py-3 text-neutral-900 font-semibold hover:text-blue-500 transition"
-                        >
-                          <Building2 /> Create Company
-                        </Link>
-                      ) : (
-                        <Link
-                          href={`/company/dashboard`}
-                          className="flex items-center gap-2  px-4 py-3 text-neutral-900 font-semibold hover:text-blue-500 transition"
-                        >
-                          <Building2 /> My Company
-                        </Link>
-                      )}
 
                       {isAdmin && (
                         <Link
@@ -465,30 +444,6 @@ export default function Navbar() {
                         Profile
                       </h3>
                     </div>
-                    <Link
-                      href="/profile"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2 px-4 py-3 text-neutral-900 font-semibold hover:text-blue-500 transition rounded-lg"
-                    >
-                      <UserRound /> Edit Profile
-                    </Link>
-                    {company ? (
-                      <Link
-                        href="/company/dashboard"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center gap-2 px-4 py-3 text-neutral-900 font-semibold hover:text-blue-500 transition rounded-lg"
-                      >
-                        <Building2 /> Company
-                      </Link>
-                    ) : (
-                      <Link
-                        href="/company/create"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center gap-2 px-4 py-3 text-neutral-900 font-semibold hover:text-blue-500 transition rounded-lg"
-                      >
-                        <Building2 /> Create Company
-                      </Link>
-                    )}
                     <button
                       onClick={() => signOut({ callbackUrl: "/" })}
                       className="flex items-center gap-2 text-left px-4 py-3 text-neutral-950 hover:text-red-500 font-semibold rounded-lg "
@@ -507,9 +462,6 @@ export default function Navbar() {
                       })}
                     >
                       <UserRound /> Login
-                      {/* <Button icon={UserRound} iconPosition="left">
-                        Register
-                      </Button> */}
                     </Link>
 
                     <Link

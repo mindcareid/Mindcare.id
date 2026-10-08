@@ -1,53 +1,30 @@
-import { CalendarCheck, Clock, MapPin, Video } from "lucide-react";
+import { MapPin } from "lucide-react";
 import EntityCard, {
   type EntityCardTag,
 } from "@/app/components/reusable/EntityCard";
 import EmptyState from "@/app/components/reusable/EmptyState";
-import type { ButtonVariant } from "@/app/components/reusable/buttonStyles";
 import type { MetaItem } from "@/app/components/reusable/MetaRow";
 import { cn } from "@/lib/utils";
-import type { Solution, SolutionTheme } from "../type/solution";
-
-const actionVariantByTheme: Record<SolutionTheme, ButtonVariant> = {
-  navy: "primary",
-  purple: "secondary",
-  emerald: "accent",
-};
+import type { Solution } from "../type/solution";
 
 function metaOf(solution: Solution): MetaItem[] {
-  const isOnline = solution.deliveryModes.includes("Online");
+  const items: MetaItem[] = [];
 
-  return [
-    {
-      icon: CalendarCheck,
-      text: `${solution.sessionCount} ${
-        solution.sessionCount === 1 ? "session" : "sessions"
-      }`,
-    },
-    { icon: Clock, text: `${solution.sessionMinutes} min` },
-    {
-      icon: isOnline ? Video : MapPin,
-      text: solution.deliveryModes.join(" & "),
-    },
-  ];
+  if (solution.organizationName) {
+    items.push({ icon: MapPin, text: solution.organizationName });
+  }
+
+  return items;
 }
 
 function tagsOf(solution: Solution): EntityCardTag[] {
   return [
-  
     { label: solution.category.name, tone: "mint" },
     ...solution.focusAreas.map((area) => ({
       label: area.name,
       tone: "lavender" as const,
     })),
   ];
-}
-
-function footnoteOf(solution: Solution): string | undefined {
-  if (solution.partners.length === 0) return undefined;
-  return `Delivered with ${solution.partners
-    .map((partner) => partner.name)
-    .join(" & ")}`;
 }
 
 type SolutionsGridProps = {
@@ -62,28 +39,29 @@ export default function SolutionsGrid({
   if (solutions.length === 0) {
     return (
       <EmptyState
-        title="No solutions yet"
-        description="Programmes are published once a partner and a lead clinician are confirmed."
-        className={className}
+        title="No solutions match your filters"
+        description="Try removing a filter or changing your search terms."
       />
     );
   }
 
   return (
-    <div className={cn("grid gap-6 sm:grid-cols-2 lg:grid-cols-3", className)}>
+    <div
+      className={cn(
+        "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3",
+        className,
+      )}
+    >
       {solutions.map((solution) => (
         <EntityCard
           key={solution.id}
           href={`/solutions/${solution.slug}`}
           title={solution.title}
-          subtitle={solution.summary}
+          subtitle={solution.organizationName}
           imageUrl={solution.coverImageUrl}
-          imageAlt={solution.title}
           tags={tagsOf(solution)}
           meta={metaOf(solution)}
-          footnote={footnoteOf(solution)}
-          actionLabel="View Solution"
-          actionVariant={actionVariantByTheme[solution.category.theme]}
+          actionLabel="View"
         />
       ))}
     </div>

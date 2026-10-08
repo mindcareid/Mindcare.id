@@ -10,6 +10,11 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = "force-dynamic";
+const PROFESSION_FROM_ENUM: Record<string, string> = {
+  PSIKOLOG: "Psikolog",
+  PSIKIATER: "Psikiater",
+  KONSELOR: "Konselor",
+};
 
 export default async function EditProfessionalPage() {
   const session = await getServerSession(authOptions);
@@ -53,7 +58,8 @@ export default async function EditProfessionalPage() {
         initialValues={{
           fullName: professional.fullName,
           credentials: professional.credentials,
-          profession: professional.profession,
+          profession:
+            PROFESSION_FROM_ENUM[professional.profession] ?? "Psikolog",
           headline: professional.headline,
           bio: professional.bio ?? "",
           baseCity: professional.baseCity,
@@ -74,6 +80,8 @@ export default async function EditProfessionalPage() {
           licenceNumber: professional.licenceNumber ?? "",
           licenceValidUntil:
             professional.licenceValidUntil?.toISOString().slice(0, 10) ?? "",
+          photoUrl: professional.photoUrl ?? "",
+          publicId: professional.publicId ?? "",
         }}
       />
     </div>

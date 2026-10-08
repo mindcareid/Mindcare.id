@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import DataTable, { TableStyles } from "react-data-table-component";
@@ -57,7 +58,6 @@ export default function EventList() {
     }
   };
 
-  /* ================= COLUMNS ================= */
 
   const columns = [
     {
@@ -69,8 +69,7 @@ export default function EventList() {
       name: "Image",
       cell: (row: Event) =>
         row.coverImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={row.coverImage}
             alt={row.coverImage}
             className="h-8 w-auto object-contain"

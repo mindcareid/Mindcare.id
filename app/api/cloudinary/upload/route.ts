@@ -64,11 +64,21 @@ export async function POST(req: Request) {
     const uploaded = await cloudinary.uploader.upload(dataUri, {
       folder,
       resource_type: resourceType,
+      transformation: [
+        {
+          width: 1600,
+          height: 1600,
+          crop: "limit",
+          fetch_format: "webp",
+          quality: "auto:good",
+        },
+      ],
     });
-
-    // Hapus aset lama bersifat best-effort: kegagalan cleanup (mis. publicId
-    // lama tidak ditemukan / key di-disable) tidak boleh menggagalkan upload.
-    if (typeof oldPublicId === "string" && oldPublicId && oldPublicId !== uploaded.public_id) {
+    if (
+      typeof oldPublicId === "string" &&
+      oldPublicId &&
+      oldPublicId !== uploaded.public_id
+    ) {
       try {
         await cloudinary.uploader.destroy(oldPublicId, {
           resource_type: resourceType,

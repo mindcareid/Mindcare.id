@@ -207,6 +207,25 @@ const optionalHttpsUrlSchema = z
   )
   .optional();
 
+const optionalImageUrl = z.string().trim().max(500).refine(v=>v===""||v.startsWith("https://")).optional()
+
+
+const optionalImageUrlSchema = z
+  .string()
+  .trim()
+  .max(500, "Image URL is too long")
+  .refine(
+    (val) => val === "" || val.startsWith("https://"),
+    "Image URL must start with https://",
+  )
+  .optional();
+
+const optionalPublicIdSchema = z
+  .string()
+  .trim()
+  .max(255, "public_id is too long")
+  .optional();
+
 export const ApplyCareCentreSchema = z.object({
   name: z
     .string()
@@ -257,6 +276,8 @@ export const ApplyCareCentreSchema = z.object({
     .min(3, "Permit number is required")
     .max(100, "Permit number cannot exceed 100 characters"),
   permitValidUntil: validUntilSchema("Permit"),
+  photoUrl: optionalImageUrlSchema,
+  publicId: optionalPublicIdSchema,
   acceptTerms: termsSchema,
 });
 
@@ -269,6 +290,8 @@ export type OpeningHourFormData = z.infer<typeof openingHourSchema>;
 export const EditProfessionalSchema = ApplyProfessionalSchema.omit({
   acceptTerms: true,
 });
+
+const optionalHttpsLink = (label: string) => z.string().trim().max(500).refine((v) => v === "" || v.startsWith("https://")).optional()
 
 export const EditCareCentreSchema = ApplyCareCentreSchema.omit({
   acceptTerms: true,
@@ -295,4 +318,62 @@ export const CARE_CENTRE_IDENTITY_FIELDS = [
   "permitType",
   "permitNumber",
   "permitValidUntil",
+] as const;
+
+export const ApplySolutionSchema = z.object({
+  organizationName: z
+    .string()
+    .min(2, "Organisation name is required")
+    .max(160, "Organisation name cannot exceed 160 characters"),
+  name: z
+    .string()
+    .min(3, "Solution name must be at least 3 characters")
+    .max(160, "Solution name cannot exceed 160 characters"),
+  tagline: z
+    .string()
+    .min(10, "Write a one-line summary (min 10 characters)")
+    .max(200, "Summary cannot exceed 200 characters"),
+  description: z
+    .string()
+    .min(60, "Tell visitors about the solution (min 60 characters)")
+    .max(4000, "Description cannot exceed 4000 characters"),
+  categorySlug: z.string().min(1, "Pick a category").max(255),
+  audienceSlugs: z
+    .array(z.string().min(1).max(255))
+    .min(1, "Pick at least one target user")
+    .max(3, "Maximum 3 target users"),
+  focusSlugs: z
+    .array(z.string().min(1).max(255))
+    .min(1, "Pick at least one problem this solution addresses")
+    .max(10, "Maximum 10 focus areas"),
+  website: optionalHttpsLink("Website URL"),
+  contactEmail: z
+    .string()
+    .trim()
+    .email("Enter a valid contact email")
+    .max(255, "Contact email is too long"),
+  contactPhone: z
+    .string()
+    .trim()
+    .max(25, "Contact phone is too long")
+    .regex(/^[+()\d\s-]*$/, "Phone can only contain digits and + ( ) -")
+    .optional(),
+  logo: optionalImageUrlSchema,
+  logoPublicId: optionalPublicIdSchema,
+  coverImage: optionalImageUrlSchema,
+  coverPublicId: optionalPublicIdSchema,
+  acceptTerms: termsSchema,
+});
+
+export const EditSolutionSchema = ApplySolutionSchema.omit({
+  acceptTerms: true,
+});
+
+export type ApplySolutionFormData = z.infer<typeof ApplySolutionSchema>;
+export type EditSolutionFormData = z.infer<typeof EditSolutionSchema>;
+
+export const SOLUTION_IDENTITY_FIELDS = [
+  "organizationName",
+  "name",
+  "categorySlug",
 ] as const;

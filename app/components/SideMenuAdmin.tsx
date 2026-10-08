@@ -23,6 +23,7 @@ import {
   faRightFromBracket,
   faEnvelope,
   faClipboardCheck,
+  faTags,
 } from "@fortawesome/free-solid-svg-icons";
 import clsx from "clsx";
 import { signOut } from "next-auth/react";
@@ -87,14 +88,6 @@ export default function SideMenuAdmin() {
             label="Go to Website"
             active={false}
           />
-
-          {/* Articles */}
-          {/* <MenuItem
-            href="/cadmin/articles"
-            icon={faNewspaper}
-            label="Articles"
-            active={isActive("/cadmin/articles")}
-          /> */}
 
           <MenuItem
             href="/cadmin/categories"
@@ -170,28 +163,6 @@ export default function SideMenuAdmin() {
               </ul>
             )}
           </li>
-
-          {/* Content Sections */}
-          {/* <MenuItem
-            href="/cadmin/hero"
-            icon={faImage}
-            label="Hero Slider"
-            active={isActive("/cadmin/hero")}
-          />
-
-          <MenuItem
-            href="/cadmin/whyus"
-            icon={faLightbulb}
-            label="Why Us"
-            active={isActive("/cadmin/whyus")}
-          />
-
-          <MenuItem
-            href="/cadmin/aboutsection"
-            icon={faCircleInfo}
-            label="About Section"
-            active={isActive("/cadmin/aboutsection")}
-          /> */} 
           <MenuItem
             href="/cadmin/contactemail"
             icon={faEnvelope}
@@ -209,6 +180,12 @@ export default function SideMenuAdmin() {
             icon={faClipboardCheck}
             label="Directory Applications"
             active={isActive("/cadmin/applications")}
+          />
+          <MenuItem
+            href="/cadmin/event-categories"
+            icon={faTags}
+            label="Event Categories"
+            active={isActive("/cadmin/event-categories")}
           />
         </ul>
         <li className="pt-4 mt-4 border-t">

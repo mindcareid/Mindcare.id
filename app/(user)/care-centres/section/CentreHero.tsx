@@ -11,6 +11,7 @@ import {
   verificationLabelOf,
 } from "../../data/verification";
 import type { CareCentre } from "../type/careCentre";
+import Image from "next/image";
 
 type CentreHeroProps = {
   centre: CareCentre;
@@ -31,6 +32,19 @@ export default function CentreHero({ centre, now }: CentreHeroProps) {
       eyebrow={centre.kind}
       title={centre.name}
       subtitle={`${centre.address.street}, ${centre.address.city}`}
+      media={
+        centre.photoUrl ? (
+          <div className="relative aspect-4/3 w-full overflow-hidden rounded-xl border border-border bg-muted shadow-card">
+            <Image
+              src={centre.photoUrl}
+              alt={centre.name}
+              fill
+              sizes="(min-width: 768px) 400px, 100vw"
+              className="object-cover"
+            />
+          </div>
+        ) : undefined
+      }
     >
       <div className="flex flex-col gap-5">
         {(verifiedLabel || open) && (

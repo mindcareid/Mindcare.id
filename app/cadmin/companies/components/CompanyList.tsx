@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import DataTable, { TableStyles } from "react-data-table-component";
@@ -61,8 +62,7 @@ export default function CompanyList() {
       name: "Logo",
       cell: (row: Company) =>
         row.logo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={row.logo}
             alt={row.name}
             className="h-8 w-auto object-contain"
@@ -132,13 +132,6 @@ export default function CompanyList() {
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold">Company Management</h2>
-
-          {/* <Link
-            href="/cadmin/companies/create"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-          >
-            + Add Company
-          </Link> */}
         </div>
 
         <div className="bg-white shadow-md rounded-lg p-4">

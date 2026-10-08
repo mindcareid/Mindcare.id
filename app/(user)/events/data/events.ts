@@ -2,11 +2,6 @@ import { EventStatus, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
-/*
- * ============================================================
- * TYPES
- * ============================================================
- */
 
 const eventListInclude = {
   category: true,
@@ -15,7 +10,6 @@ const eventListInclude = {
 
   careCentre: true,
 
-  solution: true,
 
   agenda: {
     orderBy: {
@@ -45,9 +39,7 @@ const eventDetailInclude = {
 
   professional: true,
 
-  careCentre: true,
-
-  solution: true,
+  careCentre: true,  
 
   agenda: {
     orderBy: {
@@ -114,43 +106,17 @@ export type EventDetail = Omit<EventDetailPayload, "focusAreas"> & {
   soldOut: boolean;
 };
 
-/*
- * ============================================================
- * COMMON WHERE
- * ============================================================
- *
- * Public event hanya:
- * - belum dihapus
- * - status PUBLISHED
- *
- * Jangan masukkan deletedAt di setiap query secara manual.
- */
 
 const publicEventWhere = {
   deletedAt: null,
   status: EventStatus.PUBLISHED,
 } satisfies Prisma.EventWhereInput;
 
-/*
- * ============================================================
- * HOST RESOLVER
- * ============================================================
- *
- * Satu event bisa diterbitkan oleh:
- *
- * 1. Professional
- * 2. Care Centre
- * 3. Solution
- * 4. Platform / MindCare
- *
- * Kita normalisasi menjadi satu object "host"
- * supaya UI tidak perlu memahami struktur database.
- */
 
 function resolveEventHost(
   event: Pick<
     EventListPayload,
-    "professional" | "careCentre" | "solution"
+    "professional" | "careCentre"
   >,
 ): EventHost {
   if (event.professional) {
@@ -169,14 +135,6 @@ function resolveEventHost(
     };
   }
 
-  if (event.solution) {
-    return {
-      name: event.solution.name,
-      slug: event.solution.slug,
-      type: "SOLUTION",
-    };
-  }
-
   return {
     name: "MindCare",
     slug: "mindcare",
@@ -184,29 +142,6 @@ function resolveEventHost(
   };
 }
 
-/*
- * ============================================================
- * FOCUS AREA RESOLVER
- * ============================================================
- *
- * Database:
- *
- * Event
- *   ↓
- * EventFocusAreaMap
- *   ↓
- * EventFocusArea
- *
- * Frontend cukup menerima:
- *
- * focusAreas: [
- *   {
- *     id,
- *     slug,
- *     name
- *   }
- * ]
- */
 
 function resolveFocusAreas(
   event: Pick<EventListPayload, "focusAreas">,
@@ -218,11 +153,7 @@ function resolveFocusAreas(
   }));
 }
 
-/*
- * ============================================================
- * SERIALIZE EVENT
- * ============================================================
- */
+
 
 function serializeEvent(
   event: EventListPayload,
@@ -276,11 +207,7 @@ function serializeEventDetail(
   };
 }
 
-/*
- * ============================================================
- * GET ALL EVENTS
- * ============================================================
- */
+
 
 export async function getEvents(): Promise<EventListItem[]> {
   const events = await prisma.event.findMany({
@@ -309,7 +236,6 @@ export async function getEvents(): Promise<EventListItem[]> {
     ],
   });
 
-  //return events.map(serializeEvent);
   return events.map((event) => {
     const registeredCount = event._count.orders;
 
@@ -330,11 +256,6 @@ export async function getEvents(): Promise<EventListItem[]> {
   });
 }
 
-/*
- * ============================================================
- * GET EVENT BY SLUG
- * ============================================================
- */
 
 export async function getEventBySlug(
   slug: string,
@@ -355,11 +276,6 @@ export async function getEventBySlug(
   return serializeEventDetail(event);
 }
 
-/*
- * ============================================================
- * GET UPCOMING EVENTS
- * ============================================================
- */
 
 export async function getUpcomingEvents(
   limit = 6,
@@ -393,19 +309,6 @@ export async function getUpcomingEvents(
   return events.map(serializeEvent);
 }
 
-/*
- * ============================================================
- * GET RELATED EVENTS
- * ============================================================
- *
- * Priority:
- *
- * 1. Same category
- * 2. Upcoming date
- *
- * Kita mengambil kandidat lebih banyak terlebih dahulu,
- * kemudian melakukan prioritization di application layer.
- */
 
 export async function getRelatedEvents(
   slug: string,

@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import Image from "next/image";
 import { formatCurrency } from "@/lib/utils/FormatCurrency";
 import { formatDate } from "@/lib/utils/FormatDate";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
@@ -72,6 +73,15 @@ export default async function DashboardProfessionalPage() {
           My professional listing
         </p>
         <div className="flex flex-wrap items-center gap-3">
+          {professional.photoUrl ? (
+            <Image
+              src={professional.photoUrl}
+              alt={professional.fullName}
+              width={56}
+              height={56}
+              className="h-14 w-14 rounded-lg border border-border object-cover"
+            />
+          ) : null}
           <h1 className="font-heading text-3xl font-semibold text-foreground">
             {professional.fullName}
           </h1>

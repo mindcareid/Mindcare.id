@@ -9,11 +9,11 @@ import {
   MdConfirmationNumber,
   MdWorkOutline,
   MdLocalHospital,
+  MdOutlineEmojiObjects,
+  MdCalendarMonth,
 } from "react-icons/md";
 import { useMyListings } from "./listing/useMyListings";
-//import { FiBookOpen } from "react-icons/fi";
 import { FaRegCreditCard } from "react-icons/fa6";
-//import { GrCertificate } from "react-icons/gr";
 import { TbWorld } from "react-icons/tb";
 import { MenuItems } from "@/types/auth";
 import { useSession, signOut } from "next-auth/react";
@@ -58,6 +58,24 @@ export default function Sidebar() {
             name: "My Care Centre",
             path: "/dashboard/care-centre",
             icon: MdLocalHospital,
+          },
+        ]
+      : []),
+    ...(hasListing.solution
+      ? [
+          {
+            name: "My Solutions",
+            path: "/dashboard/solution",
+            icon: MdOutlineEmojiObjects,
+          },
+        ]
+      : []),
+    ...(hasListing.canCreateEvents
+      ? [
+          {
+            name: "My Events",
+            path: "/dashboard/events",
+            icon: MdCalendarMonth,
           },
         ]
       : []),

@@ -1,7 +1,5 @@
 export type SolutionTheme = "navy" | "purple" | "emerald";
 
-export type DeliveryMode = "Online" | "In Person";
-
 export interface SolutionCategory {
   id: string;
   slug: string;
@@ -14,18 +12,17 @@ export interface SolutionFocusArea {
   slug: string;
   name: string;
 }
+export interface SolutionAudience {
+  id: string;
+  slug: string;
+  name: string;
+}
 
 export interface SolutionPartner {
   id: string;
   slug: string;
   name: string;
   logoUrl: string | null;
-}
-
-export interface SolutionSession {
-  id: string;
-  title: string;
-  summary: string;
 }
 
 export interface Solution {
@@ -36,14 +33,17 @@ export interface Solution {
   coverImageUrl: string | null;
   category: SolutionCategory;
   focusAreas: SolutionFocusArea[];
-  deliveryModes: DeliveryMode[];
-  sessionCount: number;
-  sessionMinutes: number;
-  priceIdr: number | null;
+  deliveryModes: string[];
   overview: string[];
   whoItIsFor: string[];
-  curriculum: SolutionSession[];
   leadProfessionalSlug: string | null;
   partners: SolutionPartner[];
   createdAt: string;
+
+  organizationName: string;
+  logoUrl: string | null;
+  website: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  audiences: SolutionAudience[];
 }

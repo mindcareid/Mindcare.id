@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getAdminUser } from "@/lib/adminGuard";
 
-/**
- * GET
- * - /api/event-categories
- * - /api/event-categories?id=1
- */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-
-    // GET by ID
     if (id) {
       const category = await prisma.eventCategory.findFirst({
         where: {
@@ -25,7 +19,7 @@ export async function GET(req: NextRequest) {
       if (!category) {
         return NextResponse.json(
           { message: "Event category not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -47,16 +41,17 @@ export async function GET(req: NextRequest) {
     console.error("GET event categories error:", error);
     return NextResponse.json(
       { message: "Failed to fetch event categories" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-/**
- * POST
- * - Create Event Category
- */
 export async function POST(req: NextRequest) {
+  const admin = await getAdminUser();
+  if (!admin) {
+    return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
+  }
+
   try {
     const body = await req.json();
     const { name, slug, isActive } = body;
@@ -64,11 +59,10 @@ export async function POST(req: NextRequest) {
     if (!name || !slug) {
       return NextResponse.json(
         { message: "Name and slug are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // check slug unique
     const existing = await prisma.eventCategory.findUnique({
       where: { slug },
     });
@@ -76,7 +70,7 @@ export async function POST(req: NextRequest) {
     if (existing) {
       return NextResponse.json(
         { message: "Slug already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -90,23 +84,23 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       { message: "Event category created", data: category },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("POST event category error:", error);
     return NextResponse.json(
       { message: "Failed to create event category" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-/**
- * PUT
- * - Update Event Category
- * - /api/event-categories?id=1
- */
 export async function PUT(req: NextRequest) {
+  const admin = await getAdminUser();
+  if (!admin) {
+    return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
@@ -114,7 +108,7 @@ export async function PUT(req: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { message: "Event category ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -130,8 +124,8 @@ export async function PUT(req: NextRequest) {
     if (!category) {
       return NextResponse.json(
         { message: "Event category not found" },
-        { status: 404 }
-        );
+        { status: 404 },
+      );
     }
 
     // slug unique check (exclude self)
@@ -146,7 +140,7 @@ export async function PUT(req: NextRequest) {
       if (slugUsed) {
         return NextResponse.json(
           { message: "Slug already in use" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -168,17 +162,17 @@ export async function PUT(req: NextRequest) {
     console.error("PUT event category error:", error);
     return NextResponse.json(
       { message: "Failed to update event category" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-/**
- * DELETE
- * - Hard delete (category biasanya master data)
- * - /api/event-categories?id=1
- */
 export async function DELETE(req: NextRequest) {
+  const admin = await getAdminUser();
+  if (!admin) {
+    return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
@@ -186,7 +180,7 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { message: "Event category ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -199,7 +193,7 @@ export async function DELETE(req: NextRequest) {
     if (!category) {
       return NextResponse.json(
         { message: "Event category not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -214,7 +208,7 @@ export async function DELETE(req: NextRequest) {
     console.error("DELETE event category error:", error);
     return NextResponse.json(
       { message: "Failed to delete event category" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
         name: true,
         kind: true,
         description: true,
+        photoUrl: true,
         street: true,
         city: true,
         province: true,

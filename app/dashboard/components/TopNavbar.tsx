@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiUser, FiLogOut } from "react-icons/fi";
-import { MdWorkOutline, MdLocalHospital } from "react-icons/md";
+import { MdWorkOutline, MdLocalHospital, MdOutlineEmojiObjects } from "react-icons/md";
 import Link from "next/link";
 import { useMyListings } from "./listing/useMyListings";
 
@@ -94,6 +94,19 @@ export default function MobileTopbar() {
                 >
                   <MdLocalHospital size={17} />
                   My Care Centre
+                </Link>
+              )}
+
+              {hasListing.solution && (
+                <Link
+                  href="/dashboard/solution"
+                  onClick={() => setUserOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3
+                             text-neutral-900 font-semibold hover:bg-white/5
+                             hover:text-blue-500 transition text-sm"
+                >
+                  <MdOutlineEmojiObjects size={17} />
+                  My Solutions
                 </Link>
               )}
 

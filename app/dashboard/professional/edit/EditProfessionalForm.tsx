@@ -11,6 +11,7 @@ import {
   PROFESSION_OPTIONS,
 } from "@/lib/validations/apply";
 import Button from "@/app/components/reusable/Button";
+import ImageUploadField from "@/app/components/reusable/ImageUploadField";
 import {
   ApplyField,
   ApplySection,
@@ -40,6 +41,8 @@ type FormValues = {
   licenceType: string;
   licenceNumber: string;
   licenceValidUntil: string;
+  photoUrl: string;
+  publicId: string;
 };
 
 export default function EditProfessionalForm({
@@ -62,6 +65,8 @@ export default function EditProfessionalForm({
     licenceType: string;
     licenceNumber: string;
     licenceValidUntil: string;
+    photoUrl: string;
+    publicId: string;
   };
 }) {
   const router = useRouter();
@@ -72,6 +77,8 @@ export default function EditProfessionalForm({
     control,
     handleSubmit,
     setError,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
@@ -126,7 +133,11 @@ export default function EditProfessionalForm({
       const res = await fetch("/api/dashboard/professional", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify({
+        ...parsed.data,
+        photoUrl: values.photoUrl,
+        publicId: values.publicId,
+      }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "Failed to save");
@@ -382,6 +393,29 @@ export default function EditProfessionalForm({
             Add session type
           </Button>
         ) : null}
+      </ApplySection>
+
+      <ApplySection
+        title="Photo"
+        description="Square image — cropped and compressed automatically."
+      >
+        <ImageUploadField
+          label="Profile photo"
+          hint="JPEG or PNG up to 10 MB. Saved as WebP, under 100 KB."
+          entityType="professionals"
+          aspect={1}
+          shape="square"
+          maxWidth={512}
+          maxHeight={512}
+          value={{
+            url: watch("photoUrl") || null,
+            publicId: watch("publicId") || null,
+          }}
+          onChange={({ url, publicId }) => {
+            setValue("photoUrl", url ?? "", { shouldValidate: true });
+            setValue("publicId", publicId ?? "", { shouldValidate: true });
+          }}
+        />
       </ApplySection>
 
       <ApplySection

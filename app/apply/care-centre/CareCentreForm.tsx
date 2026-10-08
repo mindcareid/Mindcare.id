@@ -14,6 +14,7 @@ import {
   type OpeningHourFormData,
 } from "@/lib/validations/apply";
 import Button from "@/app/components/reusable/Button";
+import ImageUploadField from "@/app/components/reusable/ImageUploadField";
 import ApplicationNotice from "../component/ApplicationNotice";
 import {
   ApplyField,
@@ -34,7 +35,10 @@ const WEEKDAYS: Array<{ day: OpeningHourFormData["day"]; label: string }> = [
   { day: 7, label: "Sunday" },
 ];
 
-const TIME_ZONE_LABELS: Record<(typeof CENTRE_TIME_ZONE_OPTIONS)[number], string> = {
+const TIME_ZONE_LABELS: Record<
+  (typeof CENTRE_TIME_ZONE_OPTIONS)[number],
+  string
+> = {
   "Asia/Jakarta": "WIB — Jakarta",
   "Asia/Makassar": "WITA — Makassar",
   "Asia/Jayapura": "WIT — Jayapura",
@@ -50,6 +54,9 @@ type FormValues = {
   postalCode: string;
   phone: string;
   website: string;
+  /** Foto/logo centre — diunggah lewat komponen crop bersama. */
+  photo: string;
+  photoPublicId: string;
   acceptsBpjs: boolean;
   timeZone: (typeof CENTRE_TIME_ZONE_OPTIONS)[number];
   openingNote: string;
@@ -71,6 +78,8 @@ const defaultValues: FormValues = {
   postalCode: "",
   phone: "",
   website: "",
+  photo: "",
+  photoPublicId: "",
   acceptsBpjs: false,
   timeZone: "Asia/Jakarta",
   openingNote: "",
@@ -92,7 +101,11 @@ type ExistingApplication = {
   listingStatus: string;
 };
 
-export default function CareCentreForm({ services }: { services: ServiceOption[] }) {
+export default function CareCentreForm({
+  services,
+}: {
+  services: ServiceOption[];
+}) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [statusLoaded, setStatusLoaded] = useState(false);
@@ -102,6 +115,7 @@ export default function CareCentreForm({ services }: { services: ServiceOption[]
     register,
     handleSubmit,
     setError,
+    setValue,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -143,6 +157,8 @@ export default function CareCentreForm({ services }: { services: ServiceOption[]
       ...values,
       description: values.description || undefined,
       website: values.website || "",
+      photoUrl: values.photo,
+      publicId: values.photoPublicId,
       openingNote: values.openingNote || undefined,
       openingHours: values.openingHours.map((hour) => ({
         day: hour.day,
@@ -277,6 +293,26 @@ export default function CareCentreForm({ services }: { services: ServiceOption[]
               className={applyInputClassName(Boolean(errors.website))}
             />
           </ApplyField>
+
+          <ImageUploadField
+            label="Centre photo or logo"
+            hint="Square image. Cropped and compressed automatically — JPG/PNG up to 10 MB."
+            entityType="care-centre"
+            aspect={1}
+            shape="wide"
+            maxWidth={512}
+            maxHeight={512}
+            value={{
+              url: watch("photo") || null,
+              publicId: watch("photoPublicId") || null,
+            }}
+            onChange={({ url, publicId }) => {
+              setValue("photo", url ?? "", { shouldValidate: true });
+              setValue("photoPublicId", publicId ?? "", {
+                shouldValidate: true,
+              });
+            }}
+          />
         </ApplySection>
 
         <ApplySection
@@ -401,10 +437,12 @@ export default function CareCentreForm({ services }: { services: ServiceOption[]
           ) : null}
           <div className="space-y-3">
             {WEEKDAYS.map(({ day, label }, index) => {
-              const hourError =
-                errors.openingHours?.[index] as
-                  | { opens?: { message?: string }; closes?: { message?: string } }
-                  | undefined;
+              const hourError = errors.openingHours?.[index] as
+                | {
+                    opens?: { message?: string };
+                    closes?: { message?: string };
+                  }
+                | undefined;
               return (
                 <div
                   key={day}
@@ -437,7 +475,9 @@ export default function CareCentreForm({ services }: { services: ServiceOption[]
                       type="time"
                       aria-label={`${label} closes`}
                       {...register(`openingHours.${index}.closes` as const)}
-                      className={applyInputClassName(Boolean(hourError?.closes))}
+                      className={applyInputClassName(
+                        Boolean(hourError?.closes),
+                      )}
                     />
                     {hourError?.closes?.message ? (
                       <p className="text-xs text-destructive">
@@ -552,7 +592,9 @@ export default function CareCentreForm({ services }: { services: ServiceOption[]
                 id="permitValidUntil"
                 type="date"
                 {...register("permitValidUntil")}
-                className={applyInputClassName(Boolean(errors.permitValidUntil))}
+                className={applyInputClassName(
+                  Boolean(errors.permitValidUntil),
+                )}
               />
             </ApplyField>
           </div>
