@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE `user` ADD COLUMN `jobName` VARCHAR(191) NULL,
-    ADD COLUMN `jobTitle` VARCHAR(191) NULL;

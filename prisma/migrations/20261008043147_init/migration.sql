@@ -1,31 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to alter the column `phoneNumber` on the `user` table. The data in that column could be lost. The data in that column will be cast from `VarChar(191)` to `VarChar(50)`.
-  - You are about to alter the column `phoneVerificationCode` on the `user` table. The data in that column could be lost. The data in that column will be cast from `VarChar(191)` to `VarChar(20)`.
-  - You are about to alter the column `username` on the `user` table. The data in that column could be lost. The data in that column will be cast from `VarChar(191)` to `VarChar(100)`.
-  - A unique constraint covering the columns `[resetPasswordToken]` on the table `User` will be added. If there are existing duplicate values, this will fail.
-
-*/
--- AlterTable
-ALTER TABLE `user` ADD COLUMN `deletedAt` DATETIME(3) NULL,
-    ADD COLUMN `linkedin` VARCHAR(255) NULL,
-    ADD COLUMN `resetPasswordExpires` DATETIME(3) NULL,
-    ADD COLUMN `resetPasswordToken` VARCHAR(255) NULL,
-    MODIFY `email` VARCHAR(255) NOT NULL,
-    MODIFY `emailVerificationToken` VARCHAR(255) NULL,
-    MODIFY `phoneNumber` VARCHAR(50) NULL,
-    MODIFY `phoneVerificationCode` VARCHAR(20) NULL,
-    MODIFY `username` VARCHAR(100) NOT NULL,
-    MODIFY `password` VARCHAR(255) NULL,
-    MODIFY `bio` TEXT NULL,
-    MODIFY `publicId` VARCHAR(255) NULL,
-    MODIFY `photo` VARCHAR(500) NULL,
-    MODIFY `instagram` VARCHAR(255) NULL,
-    MODIFY `facebook` VARCHAR(255) NULL,
-    MODIFY `jobName` VARCHAR(255) NULL,
-    MODIFY `jobTitle` VARCHAR(255) NULL;
-
 -- CreateTable
 CREATE TABLE `Categories` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
@@ -68,6 +40,50 @@ CREATE TABLE `AdminAccess` (
 
     UNIQUE INDEX `AdminAccess_userId_key`(`userId`),
     INDEX `AdminAccess_role_isActive_idx`(`role`, `isActive`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `User` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(255) NOT NULL,
+    `username` VARCHAR(100) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `password` VARCHAR(255) NULL,
+    `emailVerified` BOOLEAN NOT NULL DEFAULT false,
+    `emailVerifiedAt` DATETIME(3) NULL,
+    `emailVerificationToken` VARCHAR(255) NULL,
+    `emailVerificationExpires` DATETIME(3) NULL,
+    `emailResendCooldown` DATETIME(3) NULL,
+    `emailVerificationAttempts` INTEGER NOT NULL DEFAULT 0,
+    `resetPasswordToken` VARCHAR(255) NULL,
+    `resetPasswordExpires` DATETIME(3) NULL,
+    `phoneNumber` VARCHAR(50) NULL,
+    `phoneVerified` BOOLEAN NOT NULL DEFAULT false,
+    `phoneVerificationCode` VARCHAR(20) NULL,
+    `phoneVerificationExpires` DATETIME(3) NULL,
+    `bio` TEXT NULL,
+    `jobTitle` VARCHAR(255) NULL,
+    `jobName` VARCHAR(255) NULL,
+    `gender` ENUM('male', 'female', 'other') NULL,
+    `publicId` VARCHAR(255) NULL,
+    `photo` VARCHAR(500) NULL,
+    `instagram` VARCHAR(255) NULL,
+    `facebook` VARCHAR(255) NULL,
+    `linkedin` VARCHAR(255) NULL,
+    `role` ENUM('SUPERADMIN', 'ADMIN', 'USER', 'INSTITUTION') NOT NULL DEFAULT 'USER',
+    `isActive` BOOLEAN NOT NULL DEFAULT true,
+    `deletedAt` DATETIME(3) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `User_email_key`(`email`),
+    UNIQUE INDEX `User_username_key`(`username`),
+    UNIQUE INDEX `User_emailVerificationToken_key`(`emailVerificationToken`),
+    UNIQUE INDEX `User_resetPasswordToken_key`(`resetPasswordToken`),
+    UNIQUE INDEX `User_phoneNumber_key`(`phoneNumber`),
+    INDEX `User_role_isActive_idx`(`role`, `isActive`),
+    INDEX `User_deletedAt_idx`(`deletedAt`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -711,15 +727,3 @@ CREATE TABLE `ProfessionalAreaOfSupport` (
     INDEX `ProfessionalAreaOfSupport_areaId_idx`(`areaId`),
     PRIMARY KEY (`professionalId`, `areaId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateIndex
-CREATE UNIQUE INDEX `User_resetPasswordToken_key` ON `User`(`resetPasswordToken`);
-
--- CreateIndex
-CREATE INDEX `User_role_isActive_idx` ON `User`(`role`, `isActive`);
-
--- CreateIndex
-CREATE INDEX `User_deletedAt_idx` ON `User`(`deletedAt`);
-
--- RenameIndex
-ALTER TABLE `user` RENAME INDEX `User_phonenumber_key` TO `User_phoneNumber_key`;
