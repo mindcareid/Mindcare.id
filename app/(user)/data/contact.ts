@@ -1,5 +1,5 @@
 import { Contact } from "../type";
-import { Phone, MapPinned, Mail, MailCheck } from "lucide-react";
+import { Phone, MapPinned, MailCheck } from "lucide-react";
 export const ContactData: Contact[] = [
   {
     icon: MapPinned,
@@ -18,6 +18,6 @@ export const ContactData: Contact[] = [
     icon: MailCheck,
     title: "E-mail",
     label: "info@mindcare.id",
-    href: "mailto:info@executivecorner.id",
+    href: "mailto:info@mindcare.id",
   },
 ];

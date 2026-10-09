@@ -3,6 +3,7 @@ import Container from "@/app/components/reusable/Container";
 import PageHero from "@/app/components/reusable/PageHero";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 import HomeSection from "./section/HomeSection";
+import ContactSection from "./section/ContactSection";
 import ProfessionalsGrid from "../professionals/section/ProfessionalsGrid";
 import CareCentresGrid from "../care-centres/section/CareCentresGrid";
 import SolutionsGrid from "../solutions/section/SolutionsGrid";
@@ -124,6 +125,8 @@ export default function Home({
           </div>
         </div>
       </Container>
+
+      <ContactSection />
     </div>
   );
 }

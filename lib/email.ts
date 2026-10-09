@@ -65,7 +65,7 @@ export async function sendTicketEmail({
   const qrUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/tickets/qr/${qrCode}`;
 
   await transporter.sendMail({
-    from: '"Executive Corner" <no-reply@executivecorner.id>',
+    from: `"MindCare.id" <${process.env.SMTP_USER}>`,
     to,
     subject: `Your Ticket for ${eventTitle}`,
     html: `
@@ -87,7 +87,7 @@ export async function sendTicketEmail({
 
           <!-- HEADER -->
           <tr>
-            <td align="center" style="padding:30px; background:#0f172a;">
+            <td align="center" style="padding:30px; background:#0B2440;">
               <img src="${logoUrl}" width="180" />
             </td>
           </tr>
@@ -142,7 +142,7 @@ export async function sendTicketEmail({
             <td style="background:#f9fafb; padding:24px; text-align:center; font-size:12px; color:#9ca3af;">
               
               <p style="margin:0;">
-                This email was sent automatically by Executive Corner.
+                This email was sent automatically by MindCare.id.
               </p>
 
               <p style="margin-top:6px;">
@@ -180,16 +180,8 @@ export async function sendContactNotification({
     throw new Error("Missing required email env variable");
   }
 
-  console.log("📧 Sending email with config:", {
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_SECURE,
-    from: smtpuser,
-    to: [smtpuser, recipient, forward],
-  });
-
   await transporter.sendMail({
-    from: `"Executive Corner"<${process.env.SMTP_USER}>`,
+    from: `"MindCare.id"<${process.env.SMTP_USER}>`,
     to: [smtpuser, recipient, forward],
     replyTo: email,
     subject: `[Contact] ${subject}`,
@@ -224,8 +216,8 @@ export async function sendContactNotification({
 
           <!-- HEADER -->
           <tr>
-            <td class="email-header" align="center" style="padding:30px; background:#0f172a;">
-              <img src="${logoUrl}" width="180" alt="Executive Corner" style="display:block;" />
+            <td class="email-header" align="center" style="padding:30px; background:#0B2440;">
+              <img src="${logoUrl}" width="180" alt="MindCare.id" style="display:block;" />
             </td>
           </tr>
 
@@ -252,7 +244,7 @@ export async function sendContactNotification({
                 <tr>
                   <td class="label-col" style="padding:12px 16px; font-weight:bold; color:#374151; font-size:14px;">Email</td>
                   <td style="padding:12px 16px; font-size:14px;">
-                    <a href="mailto:${email}" style="color:#2563eb; text-decoration:none; word-break:break-all;">${email}</a>
+                    <a href="mailto:${email}" style="color:#154375; text-decoration:none; word-break:break-all;">${email}</a>
                   </td>
                 </tr>
 
@@ -283,7 +275,7 @@ export async function sendContactNotification({
           <!-- FOOTER -->
           <tr>
             <td class="email-footer" style="background:#f9fafb; padding:24px; text-align:center; font-size:12px; color:#9ca3af; border-top:1px solid #e5e7eb;">
-              <p style="margin:0;">This email was sent automatically by Executive Corner.</p>
+              <p style="margin:0;">This email was sent automatically by MindCare.id.</p>
               <p style="margin-top:6px;">Please do not reply to this email.</p>
             </td>
           </tr>
@@ -305,7 +297,7 @@ export async function sendResetPasswordEmail({
 }: SendResetPasswordEmailParams) {
   const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
   await transporter.sendMail({
-    from: `"Executive Corner"<${process.env.SMTP_USER}>`,
+    from: `"MindCare.id"<${process.env.SMTP_USER}>`,
     to,
     subject: "Reset Your Password",
     html: `<!DOCTYPE html>
@@ -337,8 +329,8 @@ export async function sendResetPasswordEmail({
 
           <!-- HEADER -->
           <tr>
-            <td class="email-header" align="center" style="padding:30px; background:#0f172a;">
-              <img src="${logoUrl}" width="180" alt="Executive Corner" style="display:block;" />
+            <td class="email-header" align="center" style="padding:30px; background:#0B2440;">
+              <img src="${logoUrl}" width="180" alt="MindCare.id" style="display:block;" />
             </td>
           </tr>
 
@@ -357,7 +349,7 @@ export async function sendResetPasswordEmail({
               <a
                 href="${resetUrl}"
                 class="email-button"
-                style="display:inline-block; background:#2563eb; color:#ffffff; font-size:15px; font-weight:600; padding:14px 32px; border-radius:10px; text-decoration:none; mso-padding-alt:0;"
+                style="display:inline-block; background:#154375; color:#ffffff; font-size:15px; font-weight:600; padding:14px 32px; border-radius:10px; text-decoration:none; mso-padding-alt:0;"
               >
                 Reset Password
               </a>
@@ -383,7 +375,7 @@ export async function sendResetPasswordEmail({
           <!-- FOOTER -->
           <tr>
             <td class="email-footer" style="background:#f9fafb; padding:24px; text-align:center; font-size:12px; color:#9ca3af; border-top:1px solid #e5e7eb;">
-              <p style="margin:0;">This email was sent automatically by Executive Corner.</p>
+              <p style="margin:0;">This email was sent automatically by MindCare.id.</p>
               <p style="margin-top:6px;">Please do not reply to this email.</p>
             </td>
           </tr>
@@ -405,7 +397,7 @@ export async function sendVerificationEmail({
 }: SendVerificationEmailParams) {
   const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
   await transporter.sendMail({
-    from: `"Executive Corner" <${process.env.SMTP_USER}>`,
+    from: `"MindCare.id" <${process.env.SMTP_USER}>`,
     to,
     subject: "Verify Your Email Address",
     html: `<!DOCTYPE html>
@@ -436,8 +428,8 @@ export async function sendVerificationEmail({
 
           <!-- HEADER -->
           <tr>
-            <td class="email-header" align="center" style="padding:30px; background:#0f172a;">
-              <img src="${logoUrl}" width="180" alt="Executive Corner" style="display:block;" />
+            <td class="email-header" align="center" style="padding:30px; background:#0B2440;">
+              <img src="${logoUrl}" width="180" alt="MindCare.id" style="display:block;" />
             </td>
           </tr>
 
@@ -457,7 +449,7 @@ export async function sendVerificationEmail({
             <td class="email-info" align="center" style="padding:16px 40px 32px 40px;">
              <a 
                 href="${verifyUrl}"
-                style="display:inline-block; background:#2563eb; color:#ffffff; font-size:15px; font-weight:600; padding:14px 32px; border-radius:10px; text-decoration:none;"
+                style="display:inline-block; background:#154375; color:#ffffff; font-size:15px; font-weight:600; padding:14px 32px; border-radius:10px; text-decoration:none;"
               >
                 Verify Email Address
               </a>
@@ -482,7 +474,7 @@ export async function sendVerificationEmail({
           <!-- FOOTER -->
           <tr>
             <td class="email-footer" style="background:#f9fafb; padding:24px; text-align:center; font-size:12px; color:#9ca3af; border-top:1px solid #e5e7eb;">
-              <p style="margin:0;">This email was sent automatically by Executive Corner.</p>
+              <p style="margin:0;">This email was sent automatically by MindCare.id.</p>
               <p style="margin-top:6px;">Please do not reply to this email.</p>
             </td>
           </tr>
@@ -508,7 +500,7 @@ export async function sendCompanyInviteEmail({
   const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
 
   await transporter.sendMail({
-    from: `"Executive Corner" <${process.env.SMTP_USER}>`,
+    from: `"MindCare.id" <${process.env.SMTP_USER}>`,
     to,
     subject: `You're invited to join ${companyName}`,
     html: `<!DOCTYPE html>
@@ -540,8 +532,8 @@ export async function sendCompanyInviteEmail({
 
           <!-- HEADER -->
           <tr>
-            <td class="email-header" align="center" style="padding:30px; background:#0f172a;">
-              <img src="${logoUrl}" width="180" alt="Executive Corner" style="display:block;" />
+            <td class="email-header" align="center" style="padding:30px; background:#0B2440;">
+              <img src="${logoUrl}" width="180" alt="MindCare.id" style="display:block;" />
             </td>
           </tr>
 
@@ -562,7 +554,7 @@ export async function sendCompanyInviteEmail({
             <td class="email-info" align="center" style="padding:16px 40px 32px 40px;">
               <a
                 href="${acceptUrl}"
-                style="display:inline-block; background:#2563eb; color:#ffffff;
+                style="display:inline-block; background:#154375; color:#ffffff;
                        font-size:15px; font-weight:600; padding:14px 32px;
                        border-radius:10px; text-decoration:none;"
               >
@@ -589,7 +581,7 @@ export async function sendCompanyInviteEmail({
           <tr>
             <td class="email-footer" style="background:#f9fafb; padding:24px; text-align:center;
                        font-size:12px; color:#9ca3af; border-top:1px solid #e5e7eb;">
-              <p style="margin:0;">This email was sent automatically by Executive Corner.</p>
+              <p style="margin:0;">This email was sent automatically by MindCare.id.</p>
               <p style="margin-top:6px;">Please do not reply to this email.</p>
             </td>
           </tr>
@@ -612,7 +604,7 @@ export async function sendCompanySubmittedEmail({
   const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
 
   await transporter.sendMail({
-    from: `"Executive Corner" <${process.env.SMTP_USER}>`,
+    from: `"MindCare.id" <${process.env.SMTP_USER}>`,
     to,
     subject: `Your company "${companyName}" is under review`,
     html: `<!DOCTYPE html>
@@ -642,8 +634,8 @@ export async function sendCompanySubmittedEmail({
           style="background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 6px 20px rgba(0,0,0,0.05);">
 
           <tr>
-            <td class="email-header" align="center" style="padding:30px; background:#0f172a;">
-              <img src="${logoUrl}" width="180" alt="Executive Corner" style="display:block;" />
+            <td class="email-header" align="center" style="padding:30px; background:#0B2440;">
+              <img src="${logoUrl}" width="180" alt="MindCare.id" style="display:block;" />
             </td>
           </tr>
 
@@ -683,7 +675,7 @@ export async function sendCompanySubmittedEmail({
           <tr>
             <td class="email-footer" style="background:#f9fafb; padding:24px; text-align:center;
                        font-size:12px; color:#9ca3af; border-top:1px solid #e5e7eb;">
-              <p style="margin:0;">This email was sent automatically by Executive Corner.</p>
+              <p style="margin:0;">This email was sent automatically by MindCare.id.</p>
               <p style="margin-top:6px;">Please do not reply to this email.</p>
             </td>
           </tr>
@@ -706,7 +698,7 @@ export async function sendCompanyApprovedEmail({
   const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
 
   await transporter.sendMail({
-    from: `"Executive Corner" <${process.env.SMTP_USER}>`,
+    from: `"MindCare.id" <${process.env.SMTP_USER}>`,
     to,
     subject: `Your company "${companyName}" has been approved! `,
     html: `<!DOCTYPE html>
@@ -736,8 +728,8 @@ export async function sendCompanyApprovedEmail({
           style="background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 6px 20px rgba(0,0,0,0.05);">
 
           <tr>
-            <td class="email-header" align="center" style="padding:30px; background:#0f172a;">
-              <img src="${logoUrl}" width="180" alt="Executive Corner" style="display:block;" />
+            <td class="email-header" align="center" style="padding:30px; background:#0B2440;">
+              <img src="${logoUrl}" width="180" alt="MindCare.id" style="display:block;" />
             </td>
           </tr>
 
@@ -758,7 +750,7 @@ export async function sendCompanyApprovedEmail({
             <td class="email-info" align="center" style="padding:16px 40px 32px 40px;">
               <a
                 href="${dashboardUrl}"
-                style="display:inline-block; background:#2563eb; color:#ffffff;
+                style="display:inline-block; background:#154375; color:#ffffff;
                        font-size:15px; font-weight:600; padding:14px 32px;
                        border-radius:10px; text-decoration:none;"
               >
@@ -783,7 +775,7 @@ export async function sendCompanyApprovedEmail({
           <tr>
             <td class="email-footer" style="background:#f9fafb; padding:24px; text-align:center;
                        font-size:12px; color:#9ca3af; border-top:1px solid #e5e7eb;">
-              <p style="margin:0;">This email was sent automatically by Executive Corner.</p>
+              <p style="margin:0;">This email was sent automatically by MindCare.id.</p>
               <p style="margin-top:6px;">Please do not reply to this email.</p>
             </td>
           </tr>
@@ -805,7 +797,7 @@ export async function sendCompanyRejectedEmail({
   const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
 
   await transporter.sendMail({
-    from: `"Executive Corner" <${process.env.SMTP_USER}>`,
+    from: `"MindCare.id" <${process.env.SMTP_USER}>`,
     to,
     subject: `Update on your company "${companyName}"`,
     html: `<!DOCTYPE html>
@@ -835,8 +827,8 @@ export async function sendCompanyRejectedEmail({
           style="background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 6px 20px rgba(0,0,0,0.05);">
 
           <tr>
-            <td class="email-header" align="center" style="padding:30px; background:#0f172a;">
-              <img src="${logoUrl}" width="180" alt="Executive Corner" style="display:block;" />
+            <td class="email-header" align="center" style="padding:30px; background:#0B2440;">
+              <img src="${logoUrl}" width="180" alt="MindCare.id" style="display:block;" />
             </td>
           </tr>
 
@@ -864,7 +856,7 @@ export async function sendCompanyRejectedEmail({
           <tr>
             <td class="email-footer" style="background:#f9fafb; padding:24px; text-align:center;
                        font-size:12px; color:#9ca3af; border-top:1px solid #e5e7eb;">
-              <p style="margin:0;">This email was sent automatically by Executive Corner.</p>
+              <p style="margin:0;">This email was sent automatically by MindCare.id.</p>
               <p style="margin-top:6px;">Please do not reply to this email.</p>
             </td>
           </tr>
