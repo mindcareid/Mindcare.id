@@ -41,16 +41,12 @@ export const FooterMenu: FooterSection[] = [
         path: "/care-centres",
       },
       {
-        name: "Company",
-        path: "/company",
+        name: "Solutions",
+        path: "/solutions",
       },
       {
         name: "Events",
         path: "/events",
-      },
-      {
-        name: "Insight",
-        path: "/insights",
       },
     ],
   },
@@ -58,20 +54,20 @@ export const FooterMenu: FooterSection[] = [
     title: "Join with Mindcare",
     items: [
       {
-        name: "List your profile",
-        path: "/profile",
+        name: "Dashboard Profile",
+        path: "/dashboard",
+      },
+      {
+        name: "Register a Professional",
+        path: "/apply/professional",
       },
       {
         name: "Register a Centre",
-        path: "/register-company",
+        path: "/apply/care-centre",
       },
       {
-        name: "List a Company",
-        path: "/company/dahsboard",
-      },
-      {
-        name: "Submit a Event",
-        path: "/create-event",
+        name: "Register a Solutions",
+        path: "/apply/solution",
       },
     ],
   },

@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { useForm, type Path } from "react-hook-form";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -103,13 +101,12 @@ type ExistingApplication = {
 
 export default function CareCentreForm({
   services,
+  existing,
 }: {
   services: ServiceOption[];
+  existing: ExistingApplication | null;
 }) {
   const router = useRouter();
-  const { data: session, status } = useSession();
-  const [statusLoaded, setStatusLoaded] = useState(false);
-  const [existing, setExisting] = useState<ExistingApplication | null>(null);
 
   const {
     register,
@@ -122,33 +119,6 @@ export default function CareCentreForm({
     defaultValues,
     mode: "onTouched",
   });
-
-  useEffect(() => {
-    if (status === "loading") return;
-
-    if (!session) {
-      router.replace("/auth?tab=login&callbackUrl=/apply/care-centre");
-      return;
-    }
-
-    let cancelled = false;
-    fetch("/api/apply/status")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => {
-        if (cancelled) return;
-        if (json?.data?.careCentre) {
-          setExisting(json.data.careCentre as ExistingApplication);
-        }
-        setStatusLoaded(true);
-      })
-      .catch(() => {
-        if (!cancelled) setStatusLoaded(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [status, session, router]);
 
   const acceptTerms = watch("acceptTerms");
 
@@ -201,17 +171,6 @@ export default function CareCentreForm({
       });
     }
   };
-
-  if (status === "loading" || !statusLoaded) {
-    return (
-      <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card p-8 shadow-card">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted-foreground border-t-primary" />
-        <p className="text-sm text-muted-foreground">
-          Checking your application status...
-        </p>
-      </div>
-    );
-  }
 
   if (existing) {
     return (

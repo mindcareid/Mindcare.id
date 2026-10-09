@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
@@ -17,12 +18,14 @@ export const dynamic = "force-dynamic";
 
 export default async function ApplySolutionPage() {
   const session = await getServerSession(authOptions);
-  const existing = session?.user?.id
-    ? await prisma.solution.findFirst({
-        where: { ownerUserId: Number(session.user.id), deletedAt: null },
-        select: { slug: true, name: true, listingStatus: true },
-      })
-    : null;
+  if (!session?.user?.id) {
+    redirect("/auth/login?callbackUrl=/apply/solution");
+  }
+
+  const existing = await prisma.solution.findFirst({
+    where: { ownerUserId: Number(session.user.id), deletedAt: null },
+    select: { slug: true, name: true, listingStatus: true },
+  });
 
   if (existing) {
     return (

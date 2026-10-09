@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
 import { useFieldArray, useForm, type Path } from "react-hook-form";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
@@ -91,11 +90,14 @@ const APPLY_ERROR_TARGETS: Record<string, string> = {
   publicId: "photo",
 };
 
-export default function ProfessionalForm({ areas }: { areas: AreaOption[] }) {
+export default function ProfessionalForm({
+  areas,
+  existing,
+}: {
+  areas: AreaOption[];
+  existing: ExistingApplication | null;
+}) {
   const router = useRouter();
-  const { data: session, status } = useSession();
-  const [statusLoaded, setStatusLoaded] = useState(false);
-  const [existing, setExisting] = useState<ExistingApplication | null>(null);
 
   const {
     register,
@@ -186,33 +188,6 @@ export default function ProfessionalForm({ areas }: { areas: AreaOption[] }) {
     }
   };
 
-  useEffect(() => {
-    if (status === "loading") return;
-
-    if (!session) {
-      router.replace("/auth?tab=login&callbackUrl=/apply/professional");
-      return;
-    }
-
-    let cancelled = false;
-    fetch("/api/apply/status")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => {
-        if (cancelled) return;
-        if (json?.data?.professional) {
-          setExisting(json.data.professional as ExistingApplication);
-        }
-        setStatusLoaded(true);
-      })
-      .catch(() => {
-        if (!cancelled) setStatusLoaded(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [status, session, router]);
-
   const acceptTerms = watch("acceptTerms");
   const photo = watch("photo");
 
@@ -273,17 +248,6 @@ export default function ProfessionalForm({ areas }: { areas: AreaOption[] }) {
       });
     }
   };
-
-  if (status === "loading" || !statusLoaded) {
-    return (
-      <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card p-8 shadow-card">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted-foreground border-t-primary" />
-        <p className="text-sm text-muted-foreground">
-          Checking your application status...
-        </p>
-      </div>
-    );
-  }
 
   if (existing) {
     return (

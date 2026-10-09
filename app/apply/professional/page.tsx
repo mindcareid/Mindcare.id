@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Container from "@/app/components/reusable/Container";
 import ProfessionalForm from "./ProfessionalForm";
@@ -12,11 +15,23 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ApplyProfessionalPage() {
-  const areas = await prisma.areaOfSupport.findMany({
-    where: { isActive: true },
-    select: { slug: true, name: true },
-    orderBy: { name: "asc" },
-  });
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    redirect("/auth/login?callbackUrl=/apply/professional");
+  }
+
+  const userId = Number(session.user.id);
+  const [areas, existing] = await Promise.all([
+    prisma.areaOfSupport.findMany({
+      where: { isActive: true },
+      select: { slug: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.professional.findUnique({
+      where: { userId },
+      select: { slug: true, fullName: true, listingStatus: true },
+    }),
+  ]);
 
   return (
     <Container className="py-10 md:py-14">
@@ -34,7 +49,7 @@ export default async function ApplyProfessionalPage() {
             checked your practice licence.
           </p>
         </header>
-        <ProfessionalForm areas={areas} />
+        <ProfessionalForm areas={areas} existing={existing} />
       </div>
     </Container>
   );

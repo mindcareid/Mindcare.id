@@ -36,7 +36,7 @@ export default function AuthPage() {
         toast.success("Login successful!");
 
         setTimeout(() => {
-          router.replace(callbackUrl);
+          window.location.assign(callbackUrl);
         }, 500);
         return;
       }

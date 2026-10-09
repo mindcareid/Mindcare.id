@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Container from "@/app/components/reusable/Container";
 import CareCentreForm from "./CareCentreForm";
@@ -12,11 +15,28 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ApplyCareCentrePage() {
-  const services = await prisma.service.findMany({
-    where: { isActive: true },
-    select: { slug: true, name: true },
-    orderBy: { name: "asc" },
-  });
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    redirect("/auth/login?callbackUrl=/apply/care-centre");
+  }
+
+  const userId = Number(session.user.id);
+  const [services, membership] = await Promise.all([
+    prisma.service.findMany({
+      where: { isActive: true },
+      select: { slug: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.careCentreUser.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        centre: {
+          select: { slug: true, name: true, listingStatus: true },
+        },
+      },
+    }),
+  ]);
 
   return (
     <Container className="py-10 md:py-14">
@@ -34,7 +54,7 @@ export default async function ApplyCareCentrePage() {
             your operating permit and your role at the centre.
           </p>
         </header>
-        <CareCentreForm services={services} />
+        <CareCentreForm services={services} existing={membership?.centre ?? null} />
       </div>
     </Container>
   );
