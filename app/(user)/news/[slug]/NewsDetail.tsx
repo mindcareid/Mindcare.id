@@ -42,29 +42,29 @@ export default function NewsPageDetail({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="relative h-[55vh] w-full bg-gray-200 animate-pulse" />
+      <div className="min-h-screen bg-muted">
+        <div className="relative h-[55vh] w-full bg-muted animate-pulse" />
         <div className="max-w-5xl mx-auto px-6">
-          <div className="py-6 border-b border-gray-100">
-            <div className="h-4 w-24 bg-gray-200 rounded-full animate-pulse" />
+          <div className="py-6 border-b border-border">
+            <div className="h-4 w-24 bg-muted rounded-full animate-pulse" />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-12 py-10">
             <div className="space-y-4">
-              <div className="h-3 w-32 bg-gray-200 rounded-full animate-pulse" />
-              <div className="h-6 w-full bg-gray-200 rounded-lg animate-pulse" />
-              <div className="h-6 w-3/4 bg-gray-200 rounded-lg animate-pulse" />
+              <div className="h-3 w-32 bg-muted rounded-full animate-pulse" />
+              <div className="h-6 w-full bg-muted rounded-lg animate-pulse" />
+              <div className="h-6 w-3/4 bg-muted rounded-lg animate-pulse" />
               <div className="space-y-2 pt-4">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-4 bg-gray-100 rounded animate-pulse"
+                    className="h-4 bg-muted rounded animate-pulse"
                   />
                 ))}
               </div>
             </div>
             <div className="space-y-3">
-              <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
-              <div className="h-24 bg-gray-100 rounded-2xl animate-pulse" />
+              <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+              <div className="h-24 bg-muted rounded-2xl animate-pulse" />
             </div>
           </div>
         </div>
@@ -76,23 +76,23 @@ export default function NewsPageDetail({
 
   return (
     <article className="mx-auto max-w-7xl my-8">
-      <div className="border-b border-gray-100 bg-white">
-        <div className="mx-auto flex min-w-0 max-w-6xl items-center gap-2 px-6 py-3 text-xs font-medium text-gray-400 lg:text-sm">
+      <div className="border-b border-border bg-white">
+        <div className="mx-auto flex min-w-0 max-w-6xl items-center gap-2 px-6 py-3 text-xs font-medium text-muted-foreground lg:text-sm">
           <Link
             href="/"
-            className="shrink-0 transition-colors hover:text-blue-600"
+            className="shrink-0 transition-colors hover:text-primary"
           >
             Home
           </Link>
-          <span className="text-gray-300">/</span>
+          <span className="text-muted-foreground/60">/</span>
           <Link
             href="/news"
-            className="shrink-0 transition-colors hover:text-blue-600"
+            className="shrink-0 transition-colors hover:text-primary"
           >
             News
           </Link>
-          <span className="text-gray-300">/</span>
-          <span className="truncate text-gray-600">{article.title}</span>
+          <span className="text-muted-foreground/60">/</span>
+          <span className="truncate text-muted-foreground">{article.title}</span>
         </div>
       </div>
 
@@ -100,21 +100,21 @@ export default function NewsPageDetail({
         <section>
           <div className="mb-6">
             <div className="mb-3 flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-primary">
                 {article.category} · {article.type}
               </span>
             </div>
-            <h1 className="font-serif text-2xl font-bold leading-tight text-gray-900 sm:text-3xl lg:text-4xl">
+            <h1 className="font-heading text-2xl font-bold leading-tight text-foreground sm:text-3xl lg:text-4xl">
               {article.title}
             </h1>
           </div>
-          <div className="mb-8 flex items-center gap-3 border-b border-gray-100 pb-6">
-            <span className="text-sm text-gray-500">
+          <div className="mb-8 flex items-center gap-3 border-b border-border pb-6">
+            <span className="text-sm text-muted-foreground">
               {article.publishedAt ? formatDate(article.publishedAt) : "Draft"}
             </span>
-            <span className="h-1 w-1 rounded-full bg-gray-300" />
-            <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-600">
+            <span className="h-1 w-1 rounded-full bg-muted" />
+            <span className="rounded-full border border-primary bg-brand-lavender-100 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
               {article.type}
             </span>
             <div className="ml-auto lg:hidden">
@@ -122,7 +122,7 @@ export default function NewsPageDetail({
             </div>
           </div>
           {article.coverImage && (
-            <div className="relative mb-8 w-full overflow-hidden rounded-2xl bg-gray-100">
+            <div className="relative mb-8 w-full overflow-hidden rounded-2xl bg-muted">
               <Image
                 src={article.coverImage}
                 alt={article.title}
@@ -136,16 +136,16 @@ export default function NewsPageDetail({
 
           {article.content ? (
             <div
-              className="ql-editor prose prose-slate max-w-none prose-headings:font-serif prose-headings:font-bold prose-p:leading-relaxed prose-p:text-[17px] prose-img:rounded-xl"
+              className="ql-editor prose prose-slate max-w-none prose-headings:font-heading prose-headings:font-bold prose-p:leading-relaxed prose-p:text-[17px] prose-img:rounded-xl"
               dangerouslySetInnerHTML={{ __html: article.content }}
             />
           ) : (
-            <p className="italic text-gray-400">No content available.</p>
+            <p className="italic text-muted-foreground">No content available.</p>
           )}
           <div className="mt-10 lg:hidden">
             <Link
               href="/news"
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-white py-3 text-sm font-medium text-foreground transition-all hover:border-border hover:bg-muted"
             >
               <span>←</span>
               Back to News
@@ -153,38 +153,38 @@ export default function NewsPageDetail({
           </div>
         </section>
         <aside className="sticky top-6 hidden flex-col gap-4 lg:flex">
-          <div className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+          <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Article Info
             </p>
             <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] text-gray-400">Category</span>
+              <span className="text-[11px] text-muted-foreground">Category</span>
               <CategoryBadge category={article.category} size="md" />
             </div>
-            <div className="border-t border-gray-100" />
+            <div className="border-t border-border" />
             <div className="flex items-center justify-between">
-              <span className="text-[11px] text-gray-400">Type</span>
-              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-700">
+              <span className="text-[11px] text-muted-foreground">Type</span>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-foreground">
                 {article.type}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] text-gray-400">Published</span>
-              <span className="text-xs text-gray-600">
+              <span className="text-[11px] text-muted-foreground">Published</span>
+              <span className="text-xs text-muted-foreground">
                 {article.publishedAt ? formatDate(article.publishedAt) : "—"}
               </span>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-            <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+          <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+            <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Share
             </p>
             <ShareButton title={article.title} context="article" />
           </div>
           <Link
             href="/news"
-            className="group inline-flex items-center gap-2 px-1 text-sm font-medium text-gray-500 transition-colors hover:text-slate-900"
+            className="group inline-flex items-center gap-2 px-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <span className="transition-transform group-hover:-translate-x-0.5">
               ←

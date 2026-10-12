@@ -24,10 +24,10 @@ const ReadOnlyField = ({
   label: string;
   value: string;
 }) => (
-  <div className="flex items-center gap-2 bg-gray-300 border-transparent rounded-xl px-5 py-4 shadow-sm cursor-not-allowed">
+  <div className="flex items-center gap-2 bg-muted border-transparent rounded-xl px-5 py-4 shadow-sm cursor-not-allowed">
     <Icon className="w-5 h-5" />
-    <p className="text-sm font-semibold text-gray-800">{label}:</p>
-    <p className="text-sm font-medium text-gray-900">{value}</p>
+    <p className="text-sm font-semibold text-foreground">{label}:</p>
+    <p className="text-sm font-medium text-foreground">{value}</p>
   </div>
 );
 
@@ -47,12 +47,12 @@ const EditableField = ({
   <div className="flex flex-col gap-1">
     <div className="bg-white border rounded-xl px-5 py-4 shadow-sm">
       <div className="flex items-center gap-4">
-        <p className="text-sm font-semibold text-gray-800 whitespace-nowrap">
+        <p className="text-sm font-semibold text-foreground whitespace-nowrap">
           {label}:
         </p>
         <input
           {...register(name)}
-          className="flex-1 text-sm font-medium text-gray-900 bg-transparent outline-none"
+          className="flex-1 text-sm font-medium text-foreground bg-transparent outline-none"
           placeholder={placeholder}
         />
       </div>
@@ -79,8 +79,8 @@ const ContactField = ({
   <div className="flex items-center justify-between bg-white border rounded-xl px-5 py-4 shadow-sm">
     <div className="flex items-center gap-2">
       <Icon className="w-5 h-5" />
-      <p className="text-sm font-semibold text-gray-800">{label}:</p>
-      <p className="text-sm font-medium text-gray-900">{value}</p>
+      <p className="text-sm font-semibold text-foreground">{label}:</p>
+      <p className="text-sm font-medium text-foreground">{value}</p>
 
       {isVerified && (
         <div className="relative group flex items-center">
@@ -91,7 +91,7 @@ const ContactField = ({
             height={18}
             className="cursor-pointer"
           />
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition duration-200 whitespace-nowrap pointer-events-none">
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-primary text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition duration-200 whitespace-nowrap pointer-events-none">
             {label} Verified
           </div>
         </div>
@@ -103,7 +103,7 @@ const ContactField = ({
         type="button"
         onClick={onVerify}
         disabled={isLoading}
-        className="text-blue-600 text-sm font-medium cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+        className="text-primary text-sm font-medium cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isLoading ? "Sending..." : "Verify"}
       </button>
@@ -119,7 +119,7 @@ const GenderSelector = ({
   defaultValue?: string | null;
 }) => (
   <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm">
-    <p className="text-sm font-semibold text-gray-800">Gender:</p>
+    <p className="text-sm font-semibold text-foreground">Gender:</p>
     <div className="flex gap-6">
       {["male", "female"].map((gender) => (
         <label key={gender} className="flex items-center gap-2 cursor-pointer">
@@ -130,7 +130,7 @@ const GenderSelector = ({
             defaultChecked={defaultValue === gender}
             className="w-4 h-4"
           />
-          <span className="text-sm text-gray-700 capitalize">{gender}</span>
+          <span className="text-sm text-foreground capitalize">{gender}</span>
         </label>
       ))}
     </div>
@@ -238,14 +238,14 @@ export default function PersonalInformation({ user }: { user: User }) {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="bg-white border border-gray-200 rounded-2xl px-4 py-5 overflow-hidden"
+      className="bg-white border border-border rounded-2xl px-4 py-5 overflow-hidden"
     >
-      <div className="flex items-center justify-between gap-4 pb-6 mb-6 border-b border-gray-200">
+      <div className="flex items-center justify-between gap-4 pb-6 mb-6 border-b border-border">
         <div>
-          <h1 className="text-lg font-semibold text-gray-900">
+          <h1 className="text-lg font-semibold text-foreground">
             Personal information
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Update your name, bio, and work details.
           </p>
         </div>
@@ -285,18 +285,18 @@ export default function PersonalInformation({ user }: { user: User }) {
 
           <GenderSelector register={register} defaultValue={user?.gender} />
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-foreground mb-1.5">
               Bio
             </label>
             {!user?.bio && (
-              <p className="text-xs text-gray-400 italic mb-2">
+              <p className="text-xs text-muted-foreground italic mb-2">
                 This user hasn&apos;t created a bio yet.
               </p>
             )}
             <textarea
               {...register("bio")}
               rows={3}
-              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-shadow"
+              className="w-full text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus-visible:ring-ring focus-visible:border-ring resize-none transition-shadow"
               placeholder="Write something about yourself..."
             />
             {errors.bio && (
@@ -305,7 +305,7 @@ export default function PersonalInformation({ user }: { user: User }) {
           </div>
         </div>
       </Section>
-      <div className="h-px bg-gray-200" />
+      <div className="h-px bg-muted" />
 
       <Section title="Work">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -327,7 +327,7 @@ export default function PersonalInformation({ user }: { user: User }) {
         </div>
       </Section>
 
-      <div className="h-px bg-gray-200" />
+      <div className="h-px bg-muted" />
       <Section title="Contact">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ContactField

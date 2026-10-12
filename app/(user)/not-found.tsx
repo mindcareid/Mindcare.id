@@ -4,7 +4,7 @@ import { buttonStyles } from "../components/reusable/buttonStyles";
 
 export default function NotFound() {
   return (
-    <div className="col-span-full flex flex-col justify-center items-center text-center py-10 text-gray-500 text-lg font-medium">
+    <div className="col-span-full flex flex-col justify-center items-center text-center py-10 text-muted-foreground text-lg font-medium">
       <Image
         src={"/images/notfound.webp"}
         alt="Page_Not_Found"
@@ -15,7 +15,7 @@ export default function NotFound() {
       <h1 className="text-4xl font-bold mb-2">
         Oops! Page is unavailable :&#40;{" "}
       </h1>
-      <p className="text-gray-600 mb-4">
+      <p className="text-muted-foreground mb-4">
         Maaf, Halaman yang kamu cari tidak ditemukan.
       </p>
       <Link

@@ -8,12 +8,6 @@ import { toUtc } from "@/lib/date";
 
 type Params = { params: { id: string } };
 
-const PUBLISHER_FIELDS = [
-  "professionalId",
-  "careCentreId",
-  "solutionId",
-] as const;
-
 export async function PATCH(req: Request, { params }: Params) {
   try {
     const session = await getServerSession(authOptions);

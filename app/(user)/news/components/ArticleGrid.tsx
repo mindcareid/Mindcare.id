@@ -15,13 +15,13 @@ export function ArticleGrid({ articles }: Props) {
   if (articles.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
-          <MdArticle className="w-7 h-7 text-gray-400" />
+        <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
+          <MdArticle className="w-7 h-7 text-muted-foreground" />
         </div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-1">
+        <h3 className="text-sm font-semibold text-foreground mb-1">
           No articles found
         </h3>
-        <p className="text-xs text-gray-500 max-w-xs">
+        <p className="text-xs text-muted-foreground max-w-xs">
           Try selecting a different category or check back later for new
           content.
         </p>
@@ -32,10 +32,10 @@ export function ArticleGrid({ articles }: Props) {
   return (
     <>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-xs font-medium text-gray-400 tracking-wide uppercase">
+        <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
           Latest articles
         </p>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-muted-foreground">
           {articles.length} article{articles.length !== 1 ? "s" : ""}
         </p>
       </div>
@@ -45,9 +45,9 @@ export function ArticleGrid({ articles }: Props) {
           <Link
             key={article.publicId}
             href={`/news/${article.slug}`}
-            className="group bg-white rounded-2xl border border-gray-100 flex flex-col overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+            className="group bg-white rounded-2xl border border-border flex flex-col overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
           >
-            <div className="relative h-44 w-full shrink-0 bg-gray-100">
+            <div className="relative h-44 w-full shrink-0 bg-muted">
               <Image
                 src={article.coverImage || "/images/placeholder.png"}
                 alt={article.title}
@@ -60,22 +60,22 @@ export function ArticleGrid({ articles }: Props) {
               </div>
             </div>
             <div className="flex flex-col gap-2.5 p-5 flex-1">
-              <span className="text-[10px] font-semibold text-gray-400 tracking-widest uppercase">
+              <span className="text-[10px] font-semibold text-muted-foreground tracking-widest uppercase">
                 {article.type}
               </span>
-              <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
+              <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
                 {article.title}
               </p>
-              <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
+              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
                 {stripHtml(article.content) || "No description available."}
               </p>
-              <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
-                <span className="text-[11px] md:text-[12px] text-gray-400">
+              <div className="mt-auto pt-3 border-t border-border flex items-center justify-between">
+                <span className="text-[11px] md:text-[12px] text-muted-foreground">
                   {article.publishedAt
                     ? formatDate(article.publishedAt)
                     : "Draft"}
                 </span>
-                <FaArrowRight className="text-xs text-gray-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" />
+                <FaArrowRight className="text-xs text-muted-foreground/60 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
               </div>
             </div>
           </Link>

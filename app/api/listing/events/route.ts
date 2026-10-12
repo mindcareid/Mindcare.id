@@ -14,25 +14,40 @@ function publisherTypeOf(type: ListingType): EventPublisherType {
   if (type === "professional") return EventPublisherType.PROFESSIONAL;
   return EventPublisherType.CARE_CENTRE;
 }
-async function findOwnListings(
+async function resolveOwnedListing(
   userId: number,
-): Promise<{ type: ListingType; id: number }[]> {
-  const [professional, membership] = await Promise.all([
-    prisma.professional.findFirst({
-      where: { userId, listingStatus: "LISTED", deletedAt: null },
-      select: { id: true },
-    }),
-    prisma.careCentreUser.findFirst({
-      where: { userId, status: "ACTIVE" },
-      select: { centre: { select: { id: true } } },
-    }),
-  ]);
+  type: unknown,
+  id: unknown,
+): Promise<{ type: ListingType; id: number } | null> {
+  const listingId = typeof id === "number" ? id : Number(id);
+  if (!Number.isInteger(listingId) || listingId <= 0) return null;
 
-  const result: { type: ListingType; id: number }[] = [];
-  if (professional) result.push({ type: "professional", id: professional.id });
-  if (membership?.centre)
-    result.push({ type: "care-centre", id: membership.centre.id });
-  return result;
+  if (type === "professional") {
+    const professional = await prisma.professional.findFirst({
+      where: {
+        id: listingId,
+        userId,
+        listingStatus: "LISTED",
+        deletedAt: null,
+      },
+      select: { id: true },
+    });
+    return professional
+      ? { type: "professional", id: professional.id }
+      : null;
+  }
+
+  if (type === "care-centre") {
+    const membership = await prisma.careCentreUser.findFirst({
+      where: { userId, status: "ACTIVE", centreId: listingId },
+      select: { centre: { select: { id: true } } },
+    });
+    return membership?.centre
+      ? { type: "care-centre", id: membership.centre.id }
+      : null;
+  }
+
+  return null;
 }
 export async function POST(req: Request) {
   try {
@@ -41,13 +56,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
     const userId = Number(session.user.id);
-    const listings = await findOwnListings(userId);
-    if (listings.length === 0) {
-      return NextResponse.json(
-        { message: "You need an approved listing to create events" },
-        { status: 403 },
-      );
-    }
 
     let body: unknown;
     try {
@@ -86,12 +94,17 @@ export async function POST(req: Request) {
     const startDateUtc = toUtc(startDate, timeZone);
     const endDateUtc = toUtc(endDate, timeZone);
     const raw = body as Record<string, unknown>;
-    const listingIndex =
-      typeof raw.listingIndex === "number" ? raw.listingIndex : 0;
-    const chosen =
-      listingIndex >= 0 && listingIndex < listings.length
-        ? listings[listingIndex]
-        : listings[0];
+    const chosen = await resolveOwnedListing(
+      userId,
+      raw.listingType,
+      raw.listingId,
+    );
+    if (!chosen) {
+      return NextResponse.json(
+        { message: "You need an approved listing to create events" },
+        { status: 403 },
+      );
+    }
 
     const baseSlug = slugify(title, { lower: true, strict: true });
     let slug = baseSlug;

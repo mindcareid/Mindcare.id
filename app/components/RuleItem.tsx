@@ -13,7 +13,7 @@ export default function RuleItem({
   showIcon = true,
 }: RuleItemProps) {
   return (
-    <li className={`flex gap-2 ${valid ? "text-blue-600" : "text-red-500"}`}>
+    <li className={`flex gap-2 ${valid ? "text-primary" : "text-red-500"}`}>
       {showIcon && (
         <span className="w-4 flex justify-center pt-0.5">
           {valid ? (

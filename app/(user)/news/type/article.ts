@@ -32,28 +32,28 @@ export const CATEGORY_STYLE: Record<
   { bg: string; text: string; bar: string }
 > = {
   CORPORATE: {
-    bg: "bg-blue-50 dark:bg-blue-950/40",
-    text: "text-blue-800 dark:text-blue-200",
-    bar: "bg-blue-500",
+    bg: "bg-brand-lavender-100",
+    text: "text-primary",
+    bar: "bg-primary",
   },
   EXECUTIVE: {
-    bg: "bg-amber-50 dark:bg-amber-950/40",
-    text: "text-amber-800 dark:text-amber-200",
-    bar: "bg-amber-500",
+    bg: "bg-brand-mint-100",
+    text: "text-muted-foreground",
+    bar: "bg-brand-mint-200",
   },
   INSIGHT: {
-    bg: "bg-violet-50 dark:bg-violet-950/40",
-    text: "text-violet-800 dark:text-violet-200",
-    bar: "bg-violet-500",
+    bg: "bg-brand-lavender-100",
+    text: "text-secondary",
+    bar: "bg-secondary",
   },
   UPDATE: {
-    bg: "bg-emerald-50 dark:bg-emerald-950/40",
-    text: "text-emerald-800 dark:text-emerald-200",
-    bar: "bg-emerald-500",
+    bg: "bg-brand-mint-100",
+    text: "text-accent",
+    bar: "bg-accent",
   },
   EVENT: {
-    bg: "bg-rose-50 dark:bg-rose-950/40",
-    text: "text-rose-800 dark:text-rose-200",
-    bar: "bg-rose-500",
+    bg: "bg-brand-mint-100",
+    text: "text-muted-foreground",
+    bar: "bg-brand-mint-200",
   },
 };

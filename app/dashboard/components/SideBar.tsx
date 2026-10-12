@@ -25,8 +25,8 @@ const menu: MenuItems[] = [
   { name: "Orders", path: "/dashboard/orders", icon: FaRegCreditCard },
   { name: "Ticket", path: "/dashboard/my-ticket", icon: MdConfirmationNumber },
   {
-    name: "Find All Events",
-    path: "/events",
+    name: "Homepage Website",
+    path: "/",
     icon: TbWorld,
   },
 ];
@@ -93,39 +93,41 @@ export default function Sidebar() {
       onMouseLeave={() => {
         if (!locked) setCollapsed(true);
       }}
-      className={`h-screen top-0 transition-all duration-300
-  border-r border-gray-200 bg-white 
-   md:flex flex-col
+      className={`h-screen top-0 border-r border-border bg-card transition-all duration-300
+  md:flex flex-col
   ${isCollapsed ? "w-20" : "w-64"}`}
     >
       <div className="relative flex items-center p-4">
         <div
-          className={`flex items-center gap-x-2 h-24 w-full ${
+          className={`flex items-center gap-x-2 h-20 w-full ${
             isCollapsed ? "mx-auto w-full" : ""
           }`}
         >
           <Link
             href="/"
+            aria-label="MindCare.id, ke beranda"
             className="flex items-center justify-center transition-transform duration-200 hover:scale-[1.02]"
           >
             {isCollapsed ? (
-              <div className="relative w-12 h-12">
+              <div className="relative w-11 h-11">
                 <Image
-                  src="/images/logo/logoSmall.webp"
-                  alt="Execorner"
+                  src="/images/logo/iconMindcare.png"
+                  alt="MindCare.id"
                   fill
                   unoptimized
-                  className=" object-contain"
+                  sizes="44px"
+                  className="object-contain"
                 />
               </div>
             ) : (
-              <div className="relative w-44 h-32">
+              <div className="relative w-44 h-14">
                 <Image
                   src="/images/logo/logoNew.png"
-                  alt="Execorner"
+                  alt="MindCare.id"
                   fill
                   unoptimized
-                  className="object-contain"
+                  sizes="176px"
+                  className="object-contain object-left"
                 />
               </div>
             )}
@@ -135,6 +137,7 @@ export default function Sidebar() {
         {!isCollapsed && (
           <button
             onClick={() => setLocked(!locked)}
+            aria-label={locked ? "Buka kunci sidebar" : "Kunci sidebar"}
             className="absolute right-4"
           >
             <Image
@@ -143,19 +146,20 @@ export default function Sidebar() {
                   ? "/images/icon/side-panel-lock.svg"
                   : "/images/icon/side-panel.svg"
               }
-              alt="Toggle Sidebar Lock"
+              alt=""
               width={22}
               height={22}
             />
           </button>
         )}
       </div>
-      <nav className="mt-6 space-y-1 px-2 flex-1">
+
+      <nav className="mt-4 space-y-1 px-3 flex-1">
         {navigationMenu.map((item) => {
           const isActive =
             item.path === "/dashboard"
               ? pathname === "/dashboard"
-              : pathname.startsWith(item.path);
+              : pathname === item.path || pathname.startsWith(item.path + "/");
 
           const Icon = item.icon;
 
@@ -163,15 +167,17 @@ export default function Sidebar() {
             <Link
               key={item.path}
               href={item.path}
+              aria-current={isActive ? "page" : undefined}
+              title={isCollapsed ? item.name : undefined}
               className={`flex items-center ${
                 isCollapsed ? "justify-center" : "gap-3"
-              } px-2 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+              } px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-blue-600 text-white"
-                  : "text-neutral-900 hover:bg-white/10 hover:text-blue-500"
+                  ? "bg-brand-lavender-100 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
             >
-              <Icon size={24} />
+              <Icon size={22} />
               {!isCollapsed && <span>{item.name}</span>}
             </Link>
           );
@@ -179,26 +185,27 @@ export default function Sidebar() {
       </nav>
 
       {/* ================= User ================= */}
-      <div className="relative border-t border-gray-200 p-3">
+      <div className="relative border-t border-border p-3">
         <button
           onClick={() => setUserOpen((prev) => !prev)}
-          className={`w-full rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition ${
+          className={`w-full rounded-lg border border-border bg-card transition-colors hover:bg-muted ${
             isCollapsed
               ? "flex justify-center p-2"
-              : "flex items-center gap-3 px-3 py-3"
+              : "flex items-center gap-3 px-3 py-2.5"
           }`}
         >
-          <div className="relative h-10 w-10 shrink-0">
+          <div className="relative h-9 w-9 shrink-0">
             {session?.user?.photo ? (
               <Image
                 src={session.user.photo}
                 alt={session.user.name ?? ""}
                 fill
                 unoptimized
+                sizes="36px"
                 className="rounded-full object-cover"
               />
             ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white font-semibold">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                 {userInitial}
               </div>
             )}
@@ -207,17 +214,16 @@ export default function Sidebar() {
           {!isCollapsed && (
             <>
               <div className="flex-1 overflow-hidden text-left">
-                <p className="truncate text-sm font-semibold text-gray-900">
+                <p className="truncate text-sm font-semibold text-foreground">
                   {session?.user?.name}
                 </p>
-
-                <p className="truncate text-xs text-gray-500">
+                <p className="truncate text-xs text-muted-foreground">
                   {session?.user?.email}
                 </p>
               </div>
 
               <FiChevronDown
-                className={`transition duration-200 ${
+                className={`text-muted-foreground transition-transform duration-200 ${
                   userOpen ? "rotate-180" : ""
                 }`}
               />
@@ -232,12 +238,12 @@ export default function Sidebar() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.2 }}
-              className="absolute bottom-full left-3 right-3 mb-2 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"
+              className="absolute bottom-full left-3 right-3 mb-2 overflow-hidden rounded-xl border border-border bg-card shadow-card-hover"
             >
               <Link
                 href="/profile"
                 onClick={() => setUserOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
               >
                 <FiUser size={17} />
                 Edit Profile
@@ -245,7 +251,7 @@ export default function Sidebar() {
 
               <button
                 onClick={() => signOut()}
-                className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50"
+                className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
               >
                 <FiLogOut size={17} />
                 Logout

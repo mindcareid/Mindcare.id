@@ -104,9 +104,7 @@ html {
   --animate-marquee-vertical: marquee-vertical var(--duration, 30s) linear
     infinite;
   --animate-fade-in-up: fade-in-up 0.6s ease-out forwards;
-  /* --font-heading = Playfair Display, --font-sans = Inter. Keduanya di-set
-     oleh next/font di app/layout.tsx. Lihat design.md pasal 4. */
-  --font-heading: var(--font-heading);
+  --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -150,8 +148,7 @@ html {
   --color-brand-lavender-200: var(--brand-lavender-200);
   --color-brand-mint-100: var(--brand-mint-100);
   --color-brand-mint-200: var(--brand-mint-200);
-  --shadow-card:
-    0 1px 2px rgb(11 36 64 / 0.04), 0 1px 3px rgb(11 36 64 / 0.06);
+  --shadow-card: 0 1px 2px rgb(11 36 64 / 0.04), 0 1px 3px rgb(11 36 64 / 0.06);
   --shadow-card-hover: 0 4px 12px rgb(11 36 64 / 0.08);
   --shadow-search: 0 2px 8px rgb(11 36 64 / 0.06);
 

@@ -95,12 +95,5 @@ async function verifyEventOwner(
     });
     return mem !== null;
   }
-  if (/*solutionId*/0) {
-    const sol = await prisma.solution.findFirst({
-      where: { id: /*solutionId*/0, ownerUserId: userIdNum, deletedAt: null },
-      select: { id: true },
-    });
-    return sol !== null;
-  }
   return false;
 }

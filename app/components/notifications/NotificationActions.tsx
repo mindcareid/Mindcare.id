@@ -113,7 +113,7 @@ export default function NotificationActions({
         onClick={() =>
           handleAction("ACCEPT")
         }
-        className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition hover:bg-brand-navy-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <FiCheck size={12} />
         Accept
@@ -125,7 +125,7 @@ export default function NotificationActions({
         onClick={() =>
           handleAction("DECLINE")
         }
-        className="inline-flex items-center gap-1 rounded-lg border border-white/20 px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-1 rounded-lg border border-white/20 px-3 py-1.5 text-xs font-medium text-white/70 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <FiX size={12} />
         Decline

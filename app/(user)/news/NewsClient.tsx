@@ -51,7 +51,7 @@ export default function NewsPage() {
   const isFiltered = activeFilter !== "ALL";
 
   return (
-    <section className="min-h-screen bg-gray-50  py-10">
+    <section className="min-h-screen bg-muted  py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <NewsTopbar active={activeFilter} onChange={setActiveFilter} />
         {error && (
@@ -70,13 +70,13 @@ export default function NewsPage() {
         )}
         {!loading && filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
-              <MdArticle className="w-7 h-7 text-gray-400" />
+            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
+              <MdArticle className="w-7 h-7 text-muted-foreground" />
             </div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-1">
+            <h3 className="text-sm font-semibold text-foreground mb-1">
               No articles found
             </h3>
-            <p className="text-xs text-gray-500 max-w-xs">
+            <p className="text-xs text-muted-foreground max-w-xs">
               Try selecting a different category or check back later for new
               content.
             </p>

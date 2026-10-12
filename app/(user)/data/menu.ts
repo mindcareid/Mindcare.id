@@ -75,21 +75,17 @@ export const FooterMenu: FooterSection[] = [
     title: "Company",
     items: [
       {
-        name: "About Mindcare",
+        name: "About MindCare",
         path: "/help",
       },
       {
         name: "Contact",
         path: "/#contact",
       },
-      {
-        name: "Advertise",
-        path: "/advertise",
-      },
-      {
-        name: "Partner With Us",
-        path: "/partner-with-us",
-      },
+      // {
+      //   name: "Our Partners",
+      //   path: "/partners",
+      // },
     ],
   },
   {

@@ -32,9 +32,7 @@ export function useMyListings(): MyListings {
           careCentre: Boolean(json.data.careCentre),
           solution: Number(json.data.solutionCount ?? 0) > 0,
           canCreateEvents:
-            Boolean(json.data.professional) ||
-            Boolean(json.data.careCentre) ||
-            Number(json.data.solutionCount ?? 0) > 0,
+            Boolean(json.data.professional) || Boolean(json.data.careCentre),
         });
       })
       .catch(() => {});

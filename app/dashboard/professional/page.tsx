@@ -1,19 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Pencil } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import {
+  UserRound,
+  Briefcase,
+  HeartHandshake,
+  Wallet,
+  ShieldCheck,
+  ScrollText,
+} from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import Image from "next/image";
 import { formatCurrency } from "@/lib/utils/FormatCurrency";
 import { formatDate } from "@/lib/utils/FormatDate";
-import { buttonStyles } from "@/app/components/reusable/buttonStyles";
-import ListingStatusBadge, {
-  type ListingStatusValue,
-} from "../components/listing/ListingStatusBadge";
 import ListingStatusCard from "../components/listing/ListingStatusCard";
 import ListingEmptyState from "../components/listing/ListingEmptyState";
+import ListingHero from "../components/listing/ListingHero";
+import type { ListingStatusValue } from "../components/listing/ListingStatusBadge";
 import {
   DetailGrid,
   DetailRow,
@@ -65,46 +69,38 @@ export default async function DashboardProfessionalPage() {
   const languages = Array.isArray(professional.languages)
     ? (professional.languages as string[])
     : [];
+  const professionLabel =
+    PROFESSION_LABELS[professional.profession] ?? professional.profession;
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-8">
-      <header className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
-          My professional listing
-        </p>
-        <div className="flex flex-wrap items-center gap-3">
-          {professional.photoUrl ? (
-            <Image
-              src={professional.photoUrl}
-              alt={professional.fullName}
-              width={56}
-              height={56}
-              className="h-14 w-14 rounded-lg border border-border object-cover"
-            />
-          ) : null}
-          <h1 className="font-heading text-3xl font-semibold text-foreground">
-            {professional.fullName}
-          </h1>
-          <ListingStatusBadge
-            status={professional.listingStatus as ListingStatusValue}
-          />
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {professional.credentials} ·{" "}
-          {PROFESSION_LABELS[professional.profession] ??
-            professional.profession}{" "}
-          · {professional.baseCity}, {professional.baseProvince}
-        </p>
-        <div className="pt-1">
-          <Link
-            href="/dashboard/professional/edit"
-            className={buttonStyles({ variant: "outline", size: "sm" })}
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            Edit listing
-          </Link>
-        </div>
-      </header>
+      <ListingHero
+        eyebrow="My professional listing"
+        name={professional.fullName}
+        imageUrl={professional.photoUrl}
+        imageAlt={professional.fullName}
+        status={professional.listingStatus as ListingStatusValue}
+        meta={`${professional.credentials} · ${professionLabel} · ${professional.baseCity}, ${professional.baseProvince}`}
+        editHref="/dashboard/professional/edit"
+        stats={[
+          {
+            label: "Experience",
+            value: `${professional.yearsOfExperience} years`,
+          },
+          {
+            label: "Areas of support",
+            value: String(professional.areas.length),
+          },
+          { label: "Sessions", value: String(professional.services.length) },
+          {
+            label: "Starting price",
+            value:
+              professional.startingPriceIdr !== null
+                ? formatCurrency(professional.startingPriceIdr)
+                : "—",
+          },
+        ]}
+      />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-6">
@@ -119,6 +115,7 @@ export default async function DashboardProfessionalPage() {
           <ListingSection
             title="About you"
             description="How you are introduced in the directory."
+            icon={<UserRound className="size-5" />}
           >
             <p className="text-sm font-medium text-foreground">
               {professional.headline}
@@ -130,15 +127,12 @@ export default async function DashboardProfessionalPage() {
             ) : null}
           </ListingSection>
 
-          <ListingSection title="Practice details">
+          <ListingSection
+            title="Practice details"
+            icon={<Briefcase className="size-5" />}
+          >
             <DetailGrid>
-              <DetailRow
-                label="Profession"
-                value={
-                  PROFESSION_LABELS[professional.profession] ??
-                  professional.profession
-                }
-              />
+              <DetailRow label="Profession" value={professionLabel} />
               <DetailRow
                 label="Experience"
                 value={`${professional.yearsOfExperience} years`}
@@ -163,6 +157,7 @@ export default async function DashboardProfessionalPage() {
           <ListingSection
             title="Areas of support"
             description="The concerns visitors can come to you for."
+            icon={<HeartHandshake className="size-5" />}
           >
             {professional.areas.length ? (
               <div className="flex flex-wrap gap-2">
@@ -185,6 +180,7 @@ export default async function DashboardProfessionalPage() {
           <ListingSection
             title="Sessions & pricing"
             description="The lowest price becomes the “from” price on your card."
+            icon={<Wallet className="size-5" />}
           >
             {professional.services.length ? (
               <ul className="divide-y divide-border">
@@ -217,7 +213,10 @@ export default async function DashboardProfessionalPage() {
         </div>
 
         <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-          <ListingSection title="Verification">
+          <ListingSection
+            title="Verification"
+            icon={<ShieldCheck className="size-5" />}
+          >
             <DetailStack>
               <DetailStackRow
                 label="Review"
@@ -248,6 +247,7 @@ export default async function DashboardProfessionalPage() {
           <ListingSection
             title="Licence on record"
             description="Kept private — never shown on public pages."
+            icon={<ScrollText className="size-5" />}
           >
             <DetailStack>
               <DetailStackRow

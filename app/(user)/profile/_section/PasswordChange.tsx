@@ -32,20 +32,20 @@ const PasswordInput = ({
     <div className="flex flex-col gap-1">
       <div className="bg-white border rounded-xl px-5 py-4 shadow-sm">
         <div className="flex items-center gap-4">
-          <p className="text-sm font-semibold text-gray-800 whitespace-nowrap">
+          <p className="text-sm font-semibold text-foreground whitespace-nowrap">
             {label}:
           </p>
           <div className="flex-1 relative">
             <input
               {...register(name)}
               type={showPassword ? "text" : "password"}
-              className="w-full text-sm font-medium text-gray-900 bg-transparent outline-none pr-8"
+              className="w-full text-sm font-medium text-foreground bg-transparent outline-none pr-8"
               placeholder={placeholder || "Enter password"}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               {showPassword ? (
                 <AiOutlineEyeInvisible className="w-5 h-5" />
@@ -155,7 +155,7 @@ export default function ChangePassword() {
             </div>
 
             <div className="lg:sticky lg:top-4 h-fit">
-              <div className=" text-gray-500 bg-gray-50 border border-gray-200 rounded-xl p-4">
+              <div className=" text-muted-foreground bg-muted border border-border rounded-xl p-4">
                 <RuleItem
                   valid={passwordRules.minLength}
                   label="At least 8 characters include:"

@@ -1,8 +1,8 @@
-import { FiBriefcase, FiPhone, FiUser, FiMail } from "react-icons/fi";
-import ProfileAvatar from "../../(user)/profile/_section/ProfileAvatar";
-import { Session } from "next-auth";
 import Link from "next/link";
-import { FiEdit2 } from "react-icons/fi";
+import type { Session } from "next-auth";
+import { FiBriefcase, FiPhone, FiUser, FiMail, FiEdit2 } from "react-icons/fi";
+import ProfileAvatar from "../../(user)/profile/_section/ProfileAvatar";
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 
 function Badge({
   label,
@@ -12,19 +12,20 @@ function Badge({
   tone?: "neutral" | "success" | "info";
 }) {
   const toneStyles: Record<typeof tone, string> = {
-    neutral: "bg-gray-100 text-gray-600",
-    success: "bg-emerald-50 text-emerald-700",
-    info: "bg-blue-50 text-blue-700",
+    neutral: "bg-muted text-muted-foreground",
+    success: "bg-brand-mint-100 text-accent",
+    info: "bg-brand-lavender-100 text-secondary",
   };
 
   return (
     <span
-      className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${toneStyles[tone]}`}
+      className={`rounded-md px-2.5 py-1 text-xs font-medium ${toneStyles[tone]}`}
     >
       {label}
     </span>
   );
 }
+
 function InfoRow({
   icon,
   label,
@@ -36,12 +37,12 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 text-gray-500 shrink-0">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
         {icon}
       </span>
-      <div className="flex flex-col leading-tight">
-        <span className="text-xs text-gray-400">{label}</span>
-        <span className="text-sm font-medium text-gray-800">
+      <div className="flex min-w-0 flex-col leading-tight">
+        <span className="text-xs text-muted-foreground">{label}</span>
+        <span className="truncate text-sm font-medium text-foreground">
           {value || "-"}
         </span>
       </div>
@@ -51,64 +52,67 @@ function InfoRow({
 
 export default function ProfileHeader({ user }: { user: Session["user"] }) {
   return (
-    <div className="mx-4 mt-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-5 pb-6 border-b border-gray-100">
-          <ProfileAvatar image={user.photo ?? ""} name={user.name} />
+    <section className="rounded-xl border border-border bg-card p-5 shadow-card md:p-6">
+      <div className="flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-center">
+        <ProfileAvatar image={user.photo ?? ""} name={user.name} />
 
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {user.name || "-"}
-              </h2>
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-heading text-xl font-semibold text-foreground">
+              {user.name || "-"}
+            </h1>
+            <Badge
+              label={user.role}
+              tone={user.role === "ADMIN" ? "info" : "neutral"}
+            />
+            {user.companyStatus && (
               <Badge
-                label={user.role}
-                tone={user.role === "ADMIN" ? "info" : "neutral"}
+                label={user.companyStatus}
+                tone={user.companyStatus === "ACTIVE" ? "success" : "neutral"}
               />
-              {user.companyStatus && (
-                <Badge
-                  label={user.companyStatus}
-                  tone={user.companyStatus === "ACTIVE" ? "success" : "neutral"}
-                />
-              )}
-            </div>
-            <p className="text-sm text-gray-500">
-              {user.jobTitle || "No job title available"}
-              {user.jobName ? ` · ${user.jobName}` : ""}
-            </p>
+            )}
           </div>
-          <Link
-            href="/profile"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-500 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors shrink-0"
-          >
-            <FiEdit2 className="w-4 h-4" />
-            Edit Profile
-          </Link>
+          <p className="text-sm text-muted-foreground">
+            {user.jobTitle || "No job title available"}
+            {user.jobName ? ` · ${user.jobName}` : ""}
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 pt-6">
-          <InfoRow
-            icon={<FiMail className="w-4 h-4" />}
-            label="Email"
-            value={user.email}
-          />
-          <InfoRow
-            icon={<FiPhone className="w-4 h-4" />}
-            label="Phone Number"
-            value={user.phoneNumber}
-          />
-          <InfoRow
-            icon={<FiBriefcase className="w-4 h-4" />}
-            label="Job Title"
-            value={user.jobTitle}
-          />
-          <InfoRow
-            icon={<FiUser className="w-4 h-4" />}
-            label="Gender"
-            value={user.gender}
-          />
-        </div>
+        <Link
+          href="/profile"
+          className={buttonStyles({
+            variant: "outline",
+            size: "md",
+            className: "shrink-0",
+          })}
+        >
+          <FiEdit2 className="size-4" />
+          Edit profile
+        </Link>
       </div>
-    </div>
+
+      <div className="grid grid-cols-1 gap-x-6 gap-y-5 pt-6 sm:grid-cols-2">
+        <InfoRow
+          icon={<FiMail className="size-4" />}
+          label="Email"
+          value={user.email}
+        />
+        <InfoRow
+          icon={<FiPhone className="size-4" />}
+          label="Phone number"
+          value={user.phoneNumber}
+        />
+        <InfoRow
+          icon={<FiBriefcase className="size-4" />}
+          label="Job title"
+          value={user.jobTitle}
+        />
+        <InfoRow
+          icon={<FiUser className="size-4" />}
+          label="Gender"
+          value={user.gender}
+        />
+      </div>
+    </section>
   );
 }

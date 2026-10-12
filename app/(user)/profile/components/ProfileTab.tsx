@@ -21,15 +21,15 @@ export default function ProfileTabs({ user }: { user: any }) {
 
   return (
     <>
-      <div className="flex gap-6 border-b border-gray-200 mt-6">
+      <div className="flex gap-6 border-b border-border mt-6">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`pb-3 text-sm font-medium transition ${
               activeTab === tab.key
-                ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+                ? "text-primary border-b-2 border-primary"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {tab.label}

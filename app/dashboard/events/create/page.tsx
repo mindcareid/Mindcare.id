@@ -45,13 +45,6 @@ export default async function CreateEventPage({
     });
     if (!mem || mem.centre.id !== listingId) notFound();
     listingName = mem.centre.name;
-  } else if (rawType === "solution") {
-    const sol = await prisma.solution.findFirst({
-      where: { id: listingId, ownerUserId: userId, listingStatus: "LISTED", deletedAt: null },
-      select: { name: true },
-    });
-    if (!sol) notFound();
-    listingName = sol.name;
   } else {
     notFound();
   }
@@ -83,7 +76,7 @@ export default async function CreateEventPage({
       </header>
 
       <CreateEventForm
-        type={rawType as "professional" | "care-centre" | "solution"}
+        type={rawType as "professional" | "care-centre"}
         listingId={listingId}
         categories={categories}
         industries={industries}

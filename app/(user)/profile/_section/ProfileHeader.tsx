@@ -115,12 +115,12 @@ export default function ProfileHeader({
         <button
           type="button"
           onClick={openWidget}
-          className="text-blue-600 font-semibold hover:underline"
+          className="text-primary font-semibold hover:underline"
         >
           Upload photo
         </button>
 
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           • Upload with <span className="font-medium">1:1 (square)</span> ratio.
         </p>
       </div>

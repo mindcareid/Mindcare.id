@@ -1,77 +1,112 @@
-"use client";
-
-import Image from "next/image";
 import Link from "next/link";
-import { FaRegCreditCard } from "react-icons/fa6";
-import { FiExternalLink } from "react-icons/fi";
+import { Receipt } from "lucide-react";
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
+import { formatDate } from "@/lib/utils/FormatDate";
 
-type Order = {
+export type ProfileOrderItem = {
   id: string;
   amount: number;
   currency: string;
   status: string;
   ticketCount: number;
-  event: {
-    title: string;
-  };
+  createdAt?: string | Date | null;
+  event: { title: string };
 };
 
-export default function ProfileUserOrder({ orders }: { orders: Order[] }) {
-  const hasOrders = orders.length > 0;
+const STATUS_STYLE: Record<string, string> = {
+  PAID: "bg-brand-mint-100 text-accent",
+  PENDING: "bg-brand-lavender-100 text-secondary",
+  EXPIRED: "bg-muted text-muted-foreground",
+  FAILED: "bg-destructive/10 text-destructive",
+};
 
+function statusStyle(status: string) {
+  return STATUS_STYLE[status] ?? "bg-muted text-muted-foreground";
+}
+
+export default function ProfileUserOrder({
+  orders,
+}: {
+  orders: ProfileOrderItem[];
+}) {
   return (
-    <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-300 flex flex-col gap-6">
-      {/* HEADER */}
-      <div className="flex flex-row justify-between items-center gap-2">
-        <div className="flex flex-col items-start gap-1">
-          <div className="flex flex-row items-center gap-1">
-            <FaRegCreditCard className="w-5 h-5 text-gray-600" />
-            <p className="text-xl font-semibold text-gray-500">Orders</p>
+    <section className="flex flex-col rounded-xl border border-border bg-card p-5 shadow-card md:p-6">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <Receipt className="size-5" />
+          </span>
+          <div>
+            <h2 className="font-heading text-lg font-semibold text-foreground">
+              Recent orders
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {orders.length === 0
+                ? "No purchases yet"
+                : `${orders.length} latest`}
+            </p>
           </div>
-
-          <p className="text-base font-semibold text-gray-500">
-            {orders.length} latest purchases
-          </p>
         </div>
 
         <Link
           href="/dashboard/orders"
-          className="flex flex-row items-center gap-1"
+          className={buttonStyles({ variant: "ghost", size: "sm" })}
         >
-          <FiExternalLink className="w-5 h-5 text-gray-600 hover:text-blue-500" />
+          View all
         </Link>
       </div>
 
-      {/* EMPTY STATE */}
-      {!hasOrders && (
-        <div className="flex flex-col items-center justify-center text-center gap-4 py-6">
-          <Image
-            src="/images/logo/empty.webp"
-            alt="Empty"
-            width={200}
-            height={100}
-          />
-          <p className="text-base text-gray-500">
-            There are no orders at the moment.
+      {orders.length === 0 ? (
+        <div className="mt-6 rounded-lg border border-dashed border-border p-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            You have no orders yet.
           </p>
+          <Link
+            href="/events"
+            className={buttonStyles({
+              variant: "outline",
+              size: "sm",
+              className: "mt-3",
+            })}
+          >
+            Browse events
+          </Link>
         </div>
-      )}
-
-      {/* ORDER LIST */}
-      {hasOrders && (
-        <div className="flex flex-col gap-3">
-          {orders.slice(0, 5).map((order) => (
-            <div key={order.id} className="flex justify-between border-b pb-2">
-              <p className="text-sm font-medium">{order.event.title}</p>
-              <p className="text-sm text-gray-500">
-                {order.amount === 0
-                  ? "Free"
-                  : `Rp ${order.amount.toLocaleString("id-ID")}`}
-              </p>
-            </div>
+      ) : (
+        <ul className="mt-5 divide-y divide-border">
+          {orders.map((order) => (
+            <li
+              key={order.id}
+              className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-foreground">
+                  {order.event.title}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {order.ticketCount} ticket
+                  {order.ticketCount === 1 ? "" : "s"}
+                  {order.createdAt ? ` · ${formatDate(order.createdAt)}` : ""}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="text-sm font-semibold text-foreground">
+                  {order.amount === 0
+                    ? "Free"
+                    : `Rp ${order.amount.toLocaleString("id-ID")}`}
+                </span>
+                <span
+                  className={`rounded-md px-2 py-0.5 text-xs font-medium ${statusStyle(
+                    order.status,
+                  )}`}
+                >
+                  {order.status}
+                </span>
+              </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
-    </div>
+    </section>
   );
 }

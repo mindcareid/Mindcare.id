@@ -34,7 +34,7 @@ export default function NotificationBell() {
         aria-label="Notifications"
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className="relative rounded-lg p-2 text-neutral-700 transition hover:bg-white/10 hover:text-neutral-950"
+        className="relative rounded-lg p-2 text-foreground transition hover:bg-white/10 hover:text-foreground"
       >
         <FiBell size={20} />
 

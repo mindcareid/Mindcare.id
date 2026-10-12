@@ -4,11 +4,13 @@ import { cn } from "@/lib/utils";
 export function ListingSection({
   title,
   description,
+  icon,
   children,
   className,
 }: {
   title: string;
   description?: string;
+  icon?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
@@ -19,19 +21,25 @@ export function ListingSection({
         className,
       )}
     >
-      <div className="space-y-1">
-        <h2 className="font-heading text-lg font-semibold text-foreground">
-          {title}
-        </h2>
-        {description ? (
-          <p className="text-sm text-muted-foreground">{description}</p>
+      <div className="flex items-start gap-3">
+        {icon ? (
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-primary">
+            {icon}
+          </span>
         ) : null}
+        <div className="space-y-1">
+          <h2 className="font-heading text-lg font-semibold text-foreground">
+            {title}
+          </h2>
+          {description ? (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          ) : null}
+        </div>
       </div>
       <div className="mt-5">{children}</div>
     </section>
   );
 }
-
 
 export function DetailRow({
   label,
@@ -49,7 +57,6 @@ export function DetailRow({
     </div>
   );
 }
-
 
 export function DetailGrid({ children }: { children: ReactNode }) {
   return (

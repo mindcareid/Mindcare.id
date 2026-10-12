@@ -1,17 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Pencil } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import {
+  Building2,
+  MapPin,
+  Clock,
+  ListChecks,
+  ShieldCheck,
+  FileText,
+  UserCog,
+} from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { formatDate } from "@/lib/utils/FormatDate";
-import { buttonStyles } from "@/app/components/reusable/buttonStyles";
-import ListingStatusBadge, {
-  type ListingStatusValue,
-} from "../components/listing/ListingStatusBadge";
 import ListingStatusCard from "../components/listing/ListingStatusCard";
 import ListingEmptyState from "../components/listing/ListingEmptyState";
+import ListingHero from "../components/listing/ListingHero";
+import type { ListingStatusValue } from "../components/listing/ListingStatusBadge";
 import {
   DetailGrid,
   DetailRow,
@@ -19,7 +25,6 @@ import {
   DetailStackRow,
   ListingSection,
 } from "../components/listing/ListingSection";
-import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "My care centre",
@@ -90,43 +95,25 @@ export default async function DashboardCareCentrePage() {
     );
   }
 
+  const kindLabel = KIND_LABELS[centre.kind] ?? centre.kind;
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-8">
-      <header className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
-          My care centre
-        </p>
-        <div className="flex flex-wrap items-center gap-3">
-          {centre.photoUrl ? (
-            <Image
-              src={centre.photoUrl}
-              alt={centre.name}
-              width={56}
-              height={56}
-              className="h-14 w-14 rounded-lg border border-border object-cover"
-            />
-          ) : null}
-          <h1 className="font-heading text-3xl font-semibold text-foreground">
-            {centre.name}
-          </h1>
-          <ListingStatusBadge
-            status={centre.listingStatus as ListingStatusValue}
-          />
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {KIND_LABELS[centre.kind] ?? centre.kind} · {centre.city},{" "}
-          {centre.province}
-        </p>
-        <div className="pt-1">
-          <Link
-            href="/dashboard/care-centre/edit"
-            className={buttonStyles({ variant: "outline", size: "sm" })}
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            Edit listing
-          </Link>
-        </div>
-      </header>
+      <ListingHero
+        eyebrow="My care centre"
+        name={centre.name}
+        imageUrl={centre.photoUrl}
+        imageAlt={centre.name}
+        status={centre.listingStatus as ListingStatusValue}
+        meta={`${kindLabel} · ${centre.city}, ${centre.province}`}
+        editHref="/dashboard/care-centre/edit"
+        stats={[
+          { label: "Type", value: kindLabel },
+          { label: "Services", value: String(centre.services.length) },
+          { label: "BPJS", value: centre.acceptsBpjs ? "Accepted" : "No" },
+          { label: "Open days", value: String(centre.openingHours.length) },
+        ]}
+      />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-6">
@@ -139,14 +126,20 @@ export default async function DashboardCareCentrePage() {
           />
 
           {centre.description ? (
-            <ListingSection title="About the centre">
+            <ListingSection
+              title="About the centre"
+              icon={<Building2 className="size-5" />}
+            >
               <p className="whitespace-pre-line text-sm text-muted-foreground">
                 {centre.description}
               </p>
             </ListingSection>
           ) : null}
 
-          <ListingSection title="Location & contact">
+          <ListingSection
+            title="Location & contact"
+            icon={<MapPin className="size-5" />}
+          >
             <DetailGrid>
               <DetailRow
                 label="Address"
@@ -169,6 +162,7 @@ export default async function DashboardCareCentrePage() {
           <ListingSection
             title="Opening hours"
             description="Leave both times empty on days the centre is closed."
+            icon={<Clock className="size-5" />}
           >
             <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
               {centre.openingHours.map((hour) => (
@@ -200,7 +194,10 @@ export default async function DashboardCareCentrePage() {
             ) : null}
           </ListingSection>
 
-          <ListingSection title="Services offered">
+          <ListingSection
+            title="Services offered"
+            icon={<ListChecks className="size-5" />}
+          >
             {centre.services.length ? (
               <div className="flex flex-wrap gap-2">
                 {centre.services.map((entry) => (
@@ -221,7 +218,10 @@ export default async function DashboardCareCentrePage() {
         </div>
 
         <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-          <ListingSection title="Verification">
+          <ListingSection
+            title="Verification"
+            icon={<ShieldCheck className="size-5" />}
+          >
             <DetailStack>
               <DetailStackRow
                 label="Review"
@@ -252,6 +252,7 @@ export default async function DashboardCareCentrePage() {
           <ListingSection
             title="Operating permit"
             description="Kept private — never shown on public pages."
+            icon={<FileText className="size-5" />}
           >
             <DetailStack>
               <DetailStackRow label="Type" value={centre.permitType ?? "—"} />
@@ -270,7 +271,10 @@ export default async function DashboardCareCentrePage() {
             </DetailStack>
           </ListingSection>
 
-          <ListingSection title="Your access">
+          <ListingSection
+            title="Your access"
+            icon={<UserCog className="size-5" />}
+          >
             <DetailStack>
               <DetailStackRow label="Role" value="Owner" />
               <DetailStackRow

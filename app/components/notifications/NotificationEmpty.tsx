@@ -8,7 +8,7 @@ export default function NotificationEmpty() {
       <div className="mb-4 rounded-full bg-white/5 p-4">
         <FiBellOff
           size={28}
-          className="text-gray-500"
+          className="text-white/70"
         />
       </div>
 
@@ -16,7 +16,7 @@ export default function NotificationEmpty() {
         No notifications
       </h3>
 
-      <p className="mt-1 max-w-xs text-xs leading-relaxed text-gray-400">
+      <p className="mt-1 max-w-xs text-xs leading-relaxed text-white/70">
         You&apos;re all caught up. New notifications will appear here.
       </p>
     </div>

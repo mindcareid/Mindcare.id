@@ -76,7 +76,7 @@ export default function PaymentSuccessClient({ orderId }: Props) {
         <h1 className="text-xl font-bold mt-4 text-red-600">
           Something Went Wrong
         </h1>
-        <p className="text-gray-600 mt-2">{error}</p>
+        <p className="text-muted-foreground mt-2">{error}</p>
 
         <Link href="/" className={buttonStyles({ className: "mt-6" })}>
           Back to Home
@@ -93,7 +93,7 @@ export default function PaymentSuccessClient({ orderId }: Props) {
         <h1 className="text-xl font-semibold mt-4">
           Waiting for Payment Confirmation
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-muted-foreground mt-2">
           Please do not close this page.
         </p>
       </StatusLayout>
@@ -108,7 +108,7 @@ export default function PaymentSuccessClient({ orderId }: Props) {
         <h1 className="text-xl font-bold mt-4">
           Payment Expired
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-muted-foreground mt-2">
           Please try again.
         </p>
 
@@ -126,7 +126,7 @@ export default function PaymentSuccessClient({ orderId }: Props) {
       <h1 className="text-2xl font-bold mt-4">
         Payment Successful 🎉
       </h1>
-      <p className="text-gray-600 mt-2">
+      <p className="text-muted-foreground mt-2">
         Your ticket is ready to use.
       </p>
 

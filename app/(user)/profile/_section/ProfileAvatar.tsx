@@ -16,7 +16,7 @@ export default function ProfileAvatar({
   return (
     <div
       onClick={onClick}
-      className="relative flex items-center justify-center w-24 h-24 lg:w-28 lg:h-28 rounded-full border-2 border-dashed border-gray-300 cursor-pointer hover:border-blue-500 transition overflow-hidden"
+      className="relative flex items-center justify-center w-24 h-24 lg:w-28 lg:h-28 rounded-full border-2 border-dashed border-border cursor-pointer hover:border-primary transition overflow-hidden"
     >
       {image ? (
         <Image
@@ -28,7 +28,7 @@ export default function ProfileAvatar({
           className="object-cover"
         />
       ) : (
-        <div className="w-full h-full rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-3xl lg:text-4xl select-none">
+        <div className="w-full h-full rounded-full bg-primary flex items-center justify-center text-white font-semibold text-3xl lg:text-4xl select-none">
           {initial}
         </div>
       )}

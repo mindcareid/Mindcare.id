@@ -27,7 +27,6 @@ type FormValues = {
   coverUrl: string;
   coverPublicId: string;
   industryIds: string[];
-  listingIndex: number;
 };
 
 const DEFAULT_TZ = "Asia/Jakarta";
@@ -63,7 +62,7 @@ export default function CreateEventForm({
   industries,
   event,
 }: {
-  type?: "professional" | "care-centre" | "solution";
+  type?: "professional" | "care-centre";
   listingId?: number;
   categories: { id: number; name: string }[];
   industries: { id: number; name: string }[];
@@ -88,7 +87,6 @@ export default function CreateEventForm({
         coverUrl: event.coverImage ?? "",
         coverPublicId: event.publicId ?? "",
         industryIds: event.industries.map((i) => i.industryId.toString()),
-        listingIndex: 0,
       }
     : {
         title: "",
@@ -104,7 +102,6 @@ export default function CreateEventForm({
         coverUrl: "",
         coverPublicId: "",
         industryIds: [],
-        listingIndex: 0,
       };
 
   const {
@@ -137,7 +134,6 @@ export default function CreateEventForm({
       coverImage: coverUrl || null,
       publicId: coverPublicId || null,
       industryIds: values.industryIds.map(Number),
-      listingIndex: 0,
     };
 
     const parsed = CreateEventSchema.safeParse(payload);
@@ -163,7 +159,11 @@ export default function CreateEventForm({
       const res = await fetch(endpoint, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify(
+          isEdit || !type || !listingId
+            ? parsed.data
+            : { ...parsed.data, listingType: type, listingId },
+        ),
       });
       const json = await res.json();
       if (!res.ok) {

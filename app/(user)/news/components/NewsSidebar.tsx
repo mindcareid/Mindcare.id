@@ -19,8 +19,8 @@ const Category: ArticleCategory[] = [
 export function NewsSidebar({ categoryCount, total }: Props) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="bg-white rounded-2xl border border-gray-100 p-5">
-        <p className="text-xs font-semibold text-gray-500 tracking-wide uppercase mb-4">
+      <div className="bg-white rounded-2xl border border-border p-5">
+        <p className="text-xs font-semibold text-muted-foreground tracking-wide uppercase mb-4">
           By category
         </p>
         <div className="flex flex-col gap-3">
@@ -31,16 +31,16 @@ export function NewsSidebar({ categoryCount, total }: Props) {
 
             return (
               <div key={cat} className="flex items-center gap-3">
-                <span className="text-xs text-gray-700 w-20 shrink-0">
+                <span className="text-xs text-foreground w-20 shrink-0">
                   {CATEGORY_LABEL[cat]}
                 </span>
-                <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
+                <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${bar}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
-                <span className="text-[11px] text-gray-400 w-7 text-right tabular-nums">
+                <span className="text-[11px] text-muted-foreground w-7 text-right tabular-nums">
                   {pct}%
                 </span>
               </div>

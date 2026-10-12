@@ -19,7 +19,7 @@ interface Props {
 
 export function NewsTopbar({ active, onChange }: Props) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 pb-5 border-b border-gray-100">
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 pb-5 border-b border-border">
       <div className="flex items-center gap-3 shrink-0">
         <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center overflow-hidden">
           <Image
@@ -31,10 +31,10 @@ export function NewsTopbar({ active, onChange }: Props) {
           />
         </div>
         <div>
-          <p className="text-sm md:text-base font-semibold text-gray-900 leading-none">
+          <p className="text-sm md:text-base font-semibold text-foreground leading-none">
             News
           </p>
-          <p className="text-[11px] text-gray-400 mt-0.5">
+          <p className="text-[11px] text-muted-foreground mt-0.5">
             Curated for professionals
           </p>
         </div>
@@ -47,8 +47,8 @@ export function NewsTopbar({ active, onChange }: Props) {
             className={cn(
               "text-[12px] font-medium px-2.5 py-1.5 rounded-full border transition-all duration-150",
               active === filter.value
-                ? "bg-slate-900 text-white border-gray-900 font-medium"
-                : "bg-white text-gray-500 border-slate-900 hover:bg-gray-50",
+                ? "bg-brand-navy-950 text-white border-border font-medium"
+                : "bg-white text-muted-foreground border-border hover:bg-muted",
             )}
           >
             {filter.label}

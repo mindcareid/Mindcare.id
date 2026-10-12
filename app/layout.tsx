@@ -3,15 +3,14 @@ import "./globals.css";
 import Providers from "./providers";
 import BackToTop from "./components/BackToTop";
 import Script from "next/script";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-const playfair = Playfair_Display({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-heading",
+  variable: "--font-sans",
   display: "swap",
 });
 
@@ -60,7 +59,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("font-sans", inter.variable, playfair.variable)}
+      className={cn("font-sans", jakarta.variable)}
     >
       <body className="min-h-screen bg-background text-foreground antialiased">
         <Providers session={session}>

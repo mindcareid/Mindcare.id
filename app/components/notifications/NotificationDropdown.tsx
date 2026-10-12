@@ -23,7 +23,7 @@ export default function NotificationDropdown({
   const markAllMutation = useMarkAllNotificationsRead();
 
   return (
-    <div className="fixed left-2 right-2 top-16 z-50 w-auto overflow-hidden rounded-xl border border-white/10 bg-slate-900/95 shadow-2xl backdrop-blur-xl sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96">
+    <div className="fixed left-2 right-2 top-16 z-50 w-auto overflow-hidden rounded-xl border border-white/10 bg-brand-navy-950 shadow-2xl backdrop-blur-xl sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
 
@@ -32,7 +32,7 @@ export default function NotificationDropdown({
             Notifications
           </h3>
 
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-white/70">
             {unreadCount} unread
           </p>
         </div>
@@ -42,7 +42,7 @@ export default function NotificationDropdown({
             type="button"
             disabled={markAllMutation.isPending}
             onClick={() => markAllMutation.mutate()}
-            className="text-xs font-medium text-blue-400 transition hover:text-blue-300 disabled:opacity-50"
+            className="text-xs font-medium text-brand-mint-200 transition hover:text-brand-mint-200 disabled:opacity-50"
           >
             Mark all read
           </button>

@@ -60,7 +60,7 @@ export default function ShareButton({
     {
       label: "LinkedIn",
       icon: <FaLinkedin size={24} />,
-      color: "bg-blue-700",
+      color: "bg-primary",
       href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
     },
     {
@@ -74,13 +74,13 @@ export default function ShareButton({
     {
       label: "Facebook",
       icon: <FaFacebook size={24} />,
-      color: "bg-blue-600",
+      color: "bg-primary",
       href: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
     },
     {
       label: "Telegram",
       icon: <FaTelegramPlane size={24} />,
-      color: "bg-sky-500",
+      color: "bg-secondary",
       href: `https://t.me/share/url?url=${shareUrl}&text=${encodeURIComponent(title)}`,
     },
   ];
@@ -152,7 +152,7 @@ export default function ShareButton({
     <div>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center justify-center p-2 rounded-full hover:bg-gray-100 transition"
+        className="flex items-center justify-center p-2 rounded-full hover:bg-muted transition"
       >
         <FiShare2 />
         {!iconOnly && ""}
@@ -179,11 +179,11 @@ export default function ShareButton({
             >
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b">
-                <p className="font-semibold text-gray-800">{modalTitle}</p>
+                <p className="font-semibold text-foreground">{modalTitle}</p>
 
                 <button
                   onClick={() => setOpen(false)}
-                  className="text-gray-400 hover:text-gray-700"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   <FiX size={20} />
                 </button>
@@ -204,7 +204,7 @@ export default function ShareButton({
                       {item.icon}
                     </div>
 
-                    <span className="text-xs text-gray-600">{item.label}</span>
+                    <span className="text-xs text-muted-foreground">{item.label}</span>
                   </a>
                 ))}
 
@@ -212,7 +212,7 @@ export default function ShareButton({
                   onClick={copyLink}
                   className="flex flex-col items-center gap-2"
                 >
-                  <div className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-100">
+                  <div className="w-12 h-12 flex items-center justify-center rounded-full bg-muted">
                     {copied ? (
                       <FiCheck className="text-green-500" />
                     ) : (
@@ -220,7 +220,7 @@ export default function ShareButton({
                     )}
                   </div>
 
-                  <span className="text-xs text-gray-600">
+                  <span className="text-xs text-muted-foreground">
                     {copied ? "Copied" : "Copy Link"}
                   </span>
                 </button>
@@ -231,11 +231,11 @@ export default function ShareButton({
                   onClick={shareNative}
                   className="flex flex-col items-center gap-2 cursor-pointer"
                 >
-                  <div className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-100">
+                  <div className="w-12 h-12 flex items-center justify-center rounded-full bg-muted">
                     <FiMoreHorizontal size={20} />
                   </div>
 
-                  <span className="text-xs text-gray-600">Others</span>
+                  <span className="text-xs text-muted-foreground">Others</span>
                 </button>
               </div>
             </motion.div>

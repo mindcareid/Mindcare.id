@@ -1,12 +1,17 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiUser, FiLogOut } from "react-icons/fi";
-import { MdWorkOutline, MdLocalHospital, MdOutlineEmojiObjects } from "react-icons/md";
-import Link from "next/link";
+import {
+  MdWorkOutline,
+  MdLocalHospital,
+  MdOutlineEmojiObjects,
+} from "react-icons/md";
+import type { IconType } from "react-icons";
 import { useMyListings } from "./listing/useMyListings";
 
 export default function MobileTopbar() {
@@ -17,123 +22,131 @@ export default function MobileTopbar() {
   const userInitial = session?.user?.name?.charAt(0).toUpperCase() ?? "U";
 
   return (
-    <header
-      className="md:hidden sticky top-0 z-40
-                       bg-white 
-                       border-b border-white/10
-                       flex items-center gap-3 px-4 py-3"
-    >
-      <div className="flex items-center gap-2 flex-1">
-        <Link href="/" className="relative flex items-center h-16 w-32 md:w-64">
+    <header className="sticky top-0 z-40 border-b border-border bg-card md:hidden">
+      <div className="flex items-center gap-3 px-4 py-2.5">
+        <Link
+          href="/"
+          aria-label="MindCare.id, ke beranda"
+          className="relative flex h-10 w-36 items-center"
+        >
           <Image
             src="/images/logo/logoNew.png"
-            alt="Execorner"
+            alt="MindCare.id"
             fill
             priority
-            className="object-contain"
+            sizes="144px"
+            className="object-contain object-left"
           />
         </Link>
-      </div>
 
-      <div className="relative">
-        <button
-          onClick={() => setUserOpen((prev) => !prev)}
-          className="relative w-8 h-8 shrink-0"
-        >
-          {session?.user?.photo ? (
-            <Image
-              src={session.user.photo}
-              alt={session.user.name ?? "User"}
-              fill
-              unoptimized
-              className="rounded-full object-cover"
-            />
-          ) : (
-            <div
-              className="w-8 h-8 rounded-full bg-blue-600
-                            flex items-center justify-center
-                            text-white text-sm font-semibold"
-            >
-              {userInitial}
-            </div>
-          )}
-        </button>
+        <div className="relative ml-auto">
+          <button
+            type="button"
+            onClick={() => setUserOpen((prev) => !prev)}
+            aria-haspopup="menu"
+            aria-expanded={userOpen}
+            aria-label="Menu akun"
+            className="relative -mr-1 rounded-full p-1 transition-colors hover:bg-muted"
+          >
+            {session?.user?.photo ? (
+              <span className="relative block size-9 overflow-hidden rounded-full">
+                <Image
+                  src={session.user.photo}
+                  alt={session.user.name ?? "Pengguna"}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
+              </span>
+            ) : (
+              <span className="flex size-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                {userInitial}
+              </span>
+            )}
+          </button>
 
-        {/* Dropdown */}
-        <AnimatePresence>
-          {userOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              className="absolute right-0 top-10 w-56
-                         bg-white
-                         border border-black rounded-xl
-                         shadow-xl overflow-hidden z-50"
-            >
-              {hasListing.professional && (
-                <Link
-                  href="/dashboard/professional"
-                  onClick={() => setUserOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3
-                             text-neutral-900 font-semibold hover:bg-white/5
-                             hover:text-blue-500 transition text-sm"
-                >
-                  <MdWorkOutline size={17} />
-                  My Professional Listing
-                </Link>
-              )}
-
-              {hasListing.careCentre && (
-                <Link
-                  href="/dashboard/care-centre"
-                  onClick={() => setUserOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3
-                             text-neutral-900 font-semibold hover:bg-white/5
-                             hover:text-blue-500 transition text-sm"
-                >
-                  <MdLocalHospital size={17} />
-                  My Care Centre
-                </Link>
-              )}
-
-              {hasListing.solution && (
-                <Link
-                  href="/dashboard/solution"
-                  onClick={() => setUserOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3
-                             text-neutral-900 font-semibold hover:bg-white/5
-                             hover:text-blue-500 transition text-sm"
-                >
-                  <MdOutlineEmojiObjects size={17} />
-                  My Solutions
-                </Link>
-              )}
-
-              <Link
-                href="/profile"
-                onClick={() => setUserOpen(false)}
-                className="flex items-center gap-3 px-4 py-3
-                           text-neutral-900 font-semibold hover:bg-white/5
-                           hover:text-blue-500 transition text-sm"
+          <AnimatePresence>
+            {userOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-xl border border-border bg-card shadow-card-hover"
               >
-                <FiUser size={15} />
-                Edit Profile
-              </Link>
+                {hasListing.professional && (
+                  <TopbarLink
+                    href="/dashboard/professional"
+                    icon={MdWorkOutline}
+                    onClick={() => setUserOpen(false)}
+                  >
+                    My Professional Listing
+                  </TopbarLink>
+                )}
 
-              <button
-                onClick={() => signOut()}
-                className="flex w-full items-center gap-3 px-4 py-3
-                           text-neutral-900 hover:text-red-500
-                           transition text-sm"
-              >
-                <FiLogOut size={15} />
-                Logout
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                {hasListing.careCentre && (
+                  <TopbarLink
+                    href="/dashboard/care-centre"
+                    icon={MdLocalHospital}
+                    onClick={() => setUserOpen(false)}
+                  >
+                    My Care Centre
+                  </TopbarLink>
+                )}
+
+                {hasListing.solution && (
+                  <TopbarLink
+                    href="/dashboard/solution"
+                    icon={MdOutlineEmojiObjects}
+                    onClick={() => setUserOpen(false)}
+                  >
+                    My Solutions
+                  </TopbarLink>
+                )}
+
+                <TopbarLink
+                  href="/profile"
+                  icon={FiUser}
+                  onClick={() => setUserOpen(false)}
+                >
+                  Edit Profile
+                </TopbarLink>
+
+                <button
+                  type="button"
+                  onClick={() => signOut()}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted hover:text-destructive"
+                >
+                  <FiLogOut className="size-4" />
+                  Logout
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </header>
+  );
+}
+
+function TopbarLink({
+  href,
+  icon: Icon,
+  onClick,
+  children,
+}: {
+  href: string;
+  icon: IconType;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted hover:text-primary"
+    >
+      <Icon size={17} />
+      {children}
+    </Link>
   );
 }

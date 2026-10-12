@@ -133,7 +133,7 @@ export default function PaymentStatusClient({
           Something went wrong
         </h1>
 
-        <p className="mt-3 text-gray-600">
+        <p className="mt-3 text-muted-foreground">
           {error}
         </p>
 
@@ -153,7 +153,7 @@ export default function PaymentStatusClient({
     return (
       <StatusLayout>
         <Loader2
-          className="mx-auto animate-spin text-blue-600"
+          className="mx-auto animate-spin text-primary"
           size={70}
         />
 
@@ -161,7 +161,7 @@ export default function PaymentStatusClient({
           Waiting for Payment
         </h1>
 
-        <p className="mt-3 text-gray-600">
+        <p className="mt-3 text-muted-foreground">
           We are waiting for payment confirmation.
           <br />
           Please don&apos;t close this page.
@@ -184,7 +184,7 @@ export default function PaymentStatusClient({
           Payment Pending
         </h1>
 
-        <p className="mt-3 text-gray-600">
+        <p className="mt-3 text-muted-foreground">
           Your invoice is still active.
           <br />
           Please complete your payment.
@@ -193,7 +193,7 @@ export default function PaymentStatusClient({
         <div className="mt-8 flex flex-col gap-3">
           <Link
             href="/"
-            className="rounded-lg bg-blue-600 py-3 text-white hover:bg-blue-700"
+            className="rounded-lg bg-primary py-3 text-white hover:bg-brand-navy-800"
           >
             Back to Home
           </Link>
@@ -216,7 +216,7 @@ export default function PaymentStatusClient({
           Payment Successful 🎉
         </h1>
 
-        <p className="mt-3 text-gray-600">
+        <p className="mt-3 text-muted-foreground">
           Your payment has been received.
           <br />
           Your ticket is ready.
@@ -255,7 +255,7 @@ export default function PaymentStatusClient({
           Payment Expired
         </h1>
 
-        <p className="mt-3 text-gray-600">
+        <p className="mt-3 text-muted-foreground">
           Your invoice has expired.
           <br />
           Please create a new order.
@@ -293,7 +293,7 @@ export default function PaymentStatusClient({
         Payment Not Found
       </h1>
 
-      <p className="mt-3 text-gray-600">
+      <p className="mt-3 text-muted-foreground">
         We couldn&apos;t find this payment.
         <br />
         It may have been deleted or the payment link is invalid.
@@ -302,14 +302,14 @@ export default function PaymentStatusClient({
       <div className="mt-8 flex flex-col gap-3">
         <Link
           href="/events"
-          className="rounded-lg bg-blue-600 py-3 text-white hover:bg-blue-700"
+          className="rounded-lg bg-primary py-3 text-white hover:bg-brand-navy-800"
         >
           Browse Events
         </Link>
 
         <Link
           href="/"
-          className="text-blue-600 hover:underline"
+          className="text-primary hover:underline"
         >
           Back to Home
         </Link>
@@ -329,7 +329,7 @@ export default function PaymentStatusClient({
         Payment Failed
       </h1>
 
-      <p className="mt-3 text-gray-600">
+      <p className="mt-3 text-muted-foreground">
         Your payment could not be completed.
         <br />
         Please try again.
@@ -360,7 +360,7 @@ function StatusLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-muted flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg text-center">
         {children}
       </div>
