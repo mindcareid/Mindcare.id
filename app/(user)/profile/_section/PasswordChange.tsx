@@ -9,7 +9,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, type UseFormRegister } from "react-hook-form";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { toast } from "sonner";
 
@@ -21,42 +21,45 @@ const PasswordInput = ({
   placeholder,
 }: {
   label: string;
-  register: any;
-  name: string;
+  register: UseFormRegister<ChangePasswordFormData>;
+  name: keyof ChangePasswordFormData;
   error?: string;
   placeholder?: string;
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const id = `password-${name}`;
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="bg-white border rounded-xl px-5 py-4 shadow-sm">
-        <div className="flex items-center gap-4">
-          <p className="text-sm font-semibold text-foreground whitespace-nowrap">
-            {label}:
-          </p>
-          <div className="flex-1 relative">
-            <input
-              {...register(name)}
-              type={showPassword ? "text" : "password"}
-              className="w-full text-sm font-medium text-foreground bg-transparent outline-none pr-8"
-              placeholder={placeholder || "Enter password"}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              {showPassword ? (
-                <AiOutlineEyeInvisible className="w-5 h-5" />
-              ) : (
-                <AiOutlineEye className="w-5 h-5" />
-              )}
-            </button>
-          </div>
-        </div>
+    <div className="flex flex-col gap-1.5">
+      <label
+        htmlFor={id}
+        className="text-sm font-medium text-foreground"
+      >
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          id={id}
+          {...register(name)}
+          type={showPassword ? "text" : "password"}
+          placeholder={placeholder || "Enter password"}
+          aria-invalid={Boolean(error)}
+          className="w-full rounded-lg border border-border bg-card px-3 py-2 pr-10 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          aria-label={showPassword ? "Hide password" : "Show password"}
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {showPassword ? (
+            <AiOutlineEyeInvisible className="size-5" />
+          ) : (
+            <AiOutlineEye className="size-5" />
+          )}
+        </button>
       </div>
-      {error && <p className="text-xs text-red-500 px-2">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 };
@@ -94,7 +97,6 @@ export default function ChangePassword() {
 
   const onSubmit = async (data: ChangePasswordFormData) => {
     setIsLoading(true);
-    console.log("Form data:", data);
     try {
       const response = await fetch("/api/user/change-password", {
         method: "PUT",
@@ -104,8 +106,6 @@ export default function ChangePassword() {
           newPassword: data.newPassword,
         }),
       });
-      console.log("Response status:", response.status);
-      console.log("Response ok:", response.ok);
 
       const result = await response.json();
 
@@ -126,80 +126,91 @@ export default function ChangePassword() {
   };
 
   return (
-    <div className="space-y-8">
-      <section>
-        <h2 className="text-lg font-semibold mb-4">Change Password</h2>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="rounded-xl border border-border bg-card p-5 md:p-6"
+    >
+      <div className="border-b border-border pb-5">
+        <h1 className="font-heading text-lg font-semibold text-foreground">
+          Change password
+        </h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          Choose a strong password. You will be signed out afterwards.
+        </p>
+      </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 lg:gap-8">
-            {/* Kolom kiri: form input */}
-            <div className="flex flex-col gap-4">
-              <PasswordInput
-                label="Current Password"
-                register={register}
-                name="oldPassword"
-                error={errors.oldPassword?.message}
-              />
-              <PasswordInput
-                label="New Password"
-                register={register}
-                name="newPassword"
-                error={errors.newPassword?.message}
-              />
-              <PasswordInput
-                label="Confirm New Password"
-                register={register}
-                name="confirmPassword"
-                error={errors.confirmPassword?.message}
-              />
-            </div>
+      <div className="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[1fr_320px] lg:gap-8">
+        <div className="flex flex-col gap-4">
+          <PasswordInput
+            label="Current password"
+            register={register}
+            name="oldPassword"
+            error={errors.oldPassword?.message}
+          />
+          <PasswordInput
+            label="New password"
+            register={register}
+            name="newPassword"
+            error={errors.newPassword?.message}
+          />
+          <PasswordInput
+            label="Confirm new password"
+            register={register}
+            name="confirmPassword"
+            error={errors.confirmPassword?.message}
+          />
+        </div>
 
-            <div className="lg:sticky lg:top-4 h-fit">
-              <div className=" text-muted-foreground bg-muted border border-border rounded-xl p-4">
-                <RuleItem
-                  valid={passwordRules.minLength}
-                  label="At least 8 characters include:"
-                  showIcon={false}
-                />
-                <ul className="space-y-1.5 mt-2">
-                  <RuleItem
-                    valid={passwordRules.uppercase}
-                    label="1 uppercase letter"
-                  />
-                  <RuleItem
-                    valid={passwordRules.lowercase}
-                    label="1 lowercase letter"
-                  />
-                  <RuleItem valid={passwordRules.number} label="1 number" />
-                  <RuleItem
-                    valid={passwordRules.special}
-                    label="1 special character (Eg. .,/?';[]{}`!@#$%^&*()_+=-)"
-                  />
-                </ul>
-              </div>
-            </div>
+        <div className="h-fit lg:sticky lg:top-4">
+          <div className="rounded-xl border border-border bg-muted p-4 text-muted-foreground">
+            <RuleItem
+              valid={passwordRules.minLength}
+              label="At least 8 characters include:"
+              showIcon={false}
+            />
+            <ul className="mt-2 space-y-1.5">
+              <RuleItem
+                valid={passwordRules.uppercase}
+                label="1 uppercase letter"
+              />
+              <RuleItem
+                valid={passwordRules.lowercase}
+                label="1 lowercase letter"
+              />
+              <RuleItem valid={passwordRules.number} label="1 number" />
+              <RuleItem
+                valid={passwordRules.special}
+                label="1 special character (Eg. .,/?';[]{}`!@#$%^&*()_+=-)"
+              />
+            </ul>
           </div>
+        </div>
+      </div>
 
-          <div className="flex flex-col md:flex-row gap-3 pt-6">
-            <button
-              type="button"
-              onClick={() => reset()}
-              disabled={isLoading}
-              className={buttonStyles({ variant: "outline", size: "md" })}
-            >
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={buttonStyles({ size: "md" })}
-            >
-              {isLoading ? "Changing..." : "Change Password"}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
+      <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          onClick={() => reset()}
+          disabled={isLoading}
+          className={buttonStyles({
+            variant: "outline",
+            size: "md",
+            className: "w-full sm:w-auto",
+          })}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className={buttonStyles({
+            size: "md",
+            className: "w-full sm:w-auto",
+          })}
+        >
+          {isLoading ? "Changing..." : "Change password"}
+        </button>
+      </div>
+    </form>
   );
 }

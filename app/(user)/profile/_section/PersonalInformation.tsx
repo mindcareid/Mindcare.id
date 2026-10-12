@@ -1,8 +1,7 @@
 "use client";
-//import { formatDate } from "@/lib/utils/FormatDate";
+
 import { IoIosPhonePortrait } from "react-icons/io";
 import { MdAlternateEmail, MdEmail } from "react-icons/md";
-//import { FaRegCalendarCheck } from "react-icons/fa6";
 import { useForm, UseFormRegister } from "react-hook-form";
 import Image from "next/image";
 import { useState } from "react";
@@ -14,7 +13,10 @@ import type { User } from "@/types/auth";
 import type { IconType } from "react-icons";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 
-// Reusable Components
+const fieldLabelClassName = "text-sm font-medium text-foreground";
+const inputClassName =
+  "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:bg-muted";
+
 const ReadOnlyField = ({
   icon: Icon,
   label,
@@ -24,10 +26,12 @@ const ReadOnlyField = ({
   label: string;
   value: string;
 }) => (
-  <div className="flex items-center gap-2 bg-muted border-transparent rounded-xl px-5 py-4 shadow-sm cursor-not-allowed">
-    <Icon className="w-5 h-5" />
-    <p className="text-sm font-semibold text-foreground">{label}:</p>
-    <p className="text-sm font-medium text-foreground">{value}</p>
+  <div className="flex flex-col gap-1.5 cursor-not-allowed">
+    <span className={fieldLabelClassName}>{label}</span>
+    <div className="flex min-h-10 items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
+      <Icon className="size-4 shrink-0" />
+      <span className="truncate">{value}</span>
+    </div>
   </div>
 );
 
@@ -43,23 +47,24 @@ const EditableField = ({
   name: keyof ProfileFormData;
   placeholder?: string;
   error?: string;
-}) => (
-  <div className="flex flex-col gap-1">
-    <div className="bg-white border rounded-xl px-5 py-4 shadow-sm">
-      <div className="flex items-center gap-4">
-        <p className="text-sm font-semibold text-foreground whitespace-nowrap">
-          {label}:
-        </p>
-        <input
-          {...register(name)}
-          className="flex-1 text-sm font-medium text-foreground bg-transparent outline-none"
-          placeholder={placeholder}
-        />
-      </div>
+}) => {
+  const id = `profile-${String(name)}`;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className={fieldLabelClassName}>
+        {label}
+      </label>
+      <input
+        id={id}
+        {...register(name)}
+        placeholder={placeholder}
+        aria-invalid={Boolean(error)}
+        className={inputClassName}
+      />
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
-    {error && <p className="text-xs text-red-500 px-2">{error}</p>}
-  </div>
-);
+  );
+};
 
 const ContactField = ({
   icon: Icon,
@@ -76,38 +81,34 @@ const ContactField = ({
   isVerified?: boolean;
   onVerify?: () => void;
 }) => (
-  <div className="flex items-center justify-between bg-white border rounded-xl px-5 py-4 shadow-sm">
-    <div className="flex items-center gap-2">
-      <Icon className="w-5 h-5" />
-      <p className="text-sm font-semibold text-foreground">{label}:</p>
-      <p className="text-sm font-medium text-foreground">{value}</p>
-
-      {isVerified && (
-        <div className="relative group flex items-center">
+  <div className="flex flex-col gap-1.5">
+    <span className={fieldLabelClassName}>{label}</span>
+    <div className="flex min-h-10 items-center justify-between gap-3 rounded-lg border border-border bg-muted px-3 py-2">
+      <span className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+        <Icon className="size-4 shrink-0" />
+        <span className="truncate">{value}</span>
+        {isVerified && (
           <Image
             src="/images/icon/verified.svg"
             alt="Verified"
             width={18}
             height={18}
-            className="cursor-pointer"
+            className="shrink-0"
           />
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-primary text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition duration-200 whitespace-nowrap pointer-events-none">
-            {label} Verified
-          </div>
-        </div>
+        )}
+      </span>
+
+      {!isVerified && onVerify && (
+        <button
+          type="button"
+          onClick={onVerify}
+          disabled={isLoading}
+          className="shrink-0 text-sm font-medium cursor-pointer text-primary transition-colors hover:text-brand-navy-800 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isLoading ? "Sending..." : "Verify"}
+        </button>
       )}
     </div>
-
-    {!isVerified && onVerify && (
-      <button
-        type="button"
-        onClick={onVerify}
-        disabled={isLoading}
-        className="text-primary text-sm font-medium cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {isLoading ? "Sending..." : "Verify"}
-      </button>
-    )}
   </div>
 );
 
@@ -118,19 +119,19 @@ const GenderSelector = ({
   register: UseFormRegister<ProfileFormData>;
   defaultValue?: string | null;
 }) => (
-  <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm">
-    <p className="text-sm font-semibold text-foreground">Gender:</p>
-    <div className="flex gap-6">
+  <div className="flex flex-col gap-1.5">
+    <span className={fieldLabelClassName}>Gender</span>
+    <div className="flex min-h-10 items-center gap-6 rounded-lg border border-border bg-card px-3 py-2">
       {["male", "female"].map((gender) => (
-        <label key={gender} className="flex items-center gap-2 cursor-pointer">
+        <label key={gender} className="flex cursor-pointer items-center gap-2">
           <input
             {...register("gender")}
             type="radio"
             value={gender}
             defaultChecked={defaultValue === gender}
-            className="w-4 h-4"
+            className="size-4 accent-primary"
           />
-          <span className="text-sm text-foreground capitalize">{gender}</span>
+          <span className="text-sm capitalize text-foreground">{gender}</span>
         </label>
       ))}
     </div>
@@ -139,13 +140,22 @@ const GenderSelector = ({
 
 const Section = ({
   title,
+  description,
   children,
 }: {
   title: string;
+  description?: string;
   children: React.ReactNode;
 }) => (
-  <section>
-    <h2 className="text-lg font-semibold mb-4">{title}</h2>
+  <section className="space-y-4">
+    <div className="space-y-0.5">
+      <h2 className="font-heading text-base font-semibold text-foreground">
+        {title}
+      </h2>
+      {description && (
+        <p className="text-sm text-muted-foreground">{description}</p>
+      )}
+    </div>
     {children}
   </section>
 );
@@ -174,6 +184,7 @@ export default function PersonalInformation({ user }: { user: User }) {
     phone: false,
     email: false,
   });
+
   const onSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
     const previousUser = localUser;
@@ -238,115 +249,128 @@ export default function PersonalInformation({ user }: { user: User }) {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="bg-white border border-border rounded-2xl px-4 py-5 overflow-hidden"
+      className="rounded-xl border border-border bg-card p-5 md:p-6"
     >
-      <div className="flex items-center justify-between gap-4 pb-6 mb-6 border-b border-border">
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">
-            Personal information
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Update your name, bio, and work details.
-          </p>
+      <div className="border-b border-border pb-5">
+        <h1 className="font-heading text-lg font-semibold text-foreground">
+          Personal information
+        </h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          Update your name, bio, and work details.
+        </p>
+      </div>
+
+      <div className="space-y-6 py-6">
+        <Section title="Basic details">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <ReadOnlyField
+              icon={MdAlternateEmail}
+              label="Username"
+              value={user?.username ?? "-"}
+            />
+
+            <EditableField
+              label="Full name"
+              register={register}
+              name="fullname"
+              error={errors.fullname?.message}
+            />
+
+            <GenderSelector register={register} defaultValue={user?.gender} />
+
+            <div className="flex flex-col gap-1.5 md:col-span-2">
+              <label htmlFor="profile-bio" className={fieldLabelClassName}>
+                Bio
+              </label>
+              {!user?.bio && (
+                <p className="text-xs italic text-muted-foreground">
+                  This user hasn&apos;t created a bio yet.
+                </p>
+              )}
+              <textarea
+                id="profile-bio"
+                {...register("bio")}
+                rows={3}
+                placeholder="Write something about yourself..."
+                aria-invalid={Boolean(errors.bio)}
+                className={`${inputClassName} resize-none`}
+              />
+              {errors.bio && (
+                <p className="text-xs text-destructive">{errors.bio.message}</p>
+              )}
+            </div>
+          </div>
+        </Section>
+
+        <div className="border-t border-border pt-6">
+          <Section title="Work">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <EditableField
+                label="Job title"
+                register={register}
+                name="jobTitle"
+                placeholder="IT Manager"
+                error={errors.jobTitle?.message}
+              />
+
+              <EditableField
+                label="Company name"
+                register={register}
+                name="jobName"
+                placeholder="PT. Tribun Asia Tbk."
+                error={errors.jobName?.message}
+              />
+            </div>
+          </Section>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-2 shrink-0">
-          <button
-            type="submit"
-            disabled={isLoading || !isDirty}
-            className={buttonStyles({ size: "sm" })}
-          >
-            {isLoading ? "Saving..." : "Save changes"}
-          </button>
-          <button
-            type="button"
-            onClick={() => reset()}
-            disabled={isLoading || !isDirty}
-            className={buttonStyles({ variant: "outline", size: "sm" })}
-          >
-            Discard
-          </button>
+        <div className="border-t border-border pt-6">
+          <Section title="Contact">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <ContactField
+                icon={IoIosPhonePortrait}
+                label="Phone"
+                value={user?.phoneNumber ?? "-"}
+                isVerified={false}
+              />
+
+              <ContactField
+                icon={MdEmail}
+                label="Email"
+                value={user?.email ?? "-"}
+                isVerified={user?.emailVerified}
+                isLoading={isVerifying.email}
+                onVerify={!user?.emailVerified ? handleVerifyEmail : undefined}
+              />
+            </div>
+          </Section>
         </div>
       </div>
-      <Section title="Personal information">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ReadOnlyField
-            icon={MdAlternateEmail}
-            label="Username"
-            value={user?.username ?? "-"}
-          />
 
-          <EditableField
-            label="Full Name"
-            register={register}
-            name="fullname"
-            error={errors.fullname?.message}
-          />
-
-          <GenderSelector register={register} defaultValue={user?.gender} />
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              Bio
-            </label>
-            {!user?.bio && (
-              <p className="text-xs text-muted-foreground italic mb-2">
-                This user hasn&apos;t created a bio yet.
-              </p>
-            )}
-            <textarea
-              {...register("bio")}
-              rows={3}
-              className="w-full text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus-visible:ring-ring focus-visible:border-ring resize-none transition-shadow"
-              placeholder="Write something about yourself..."
-            />
-            {errors.bio && (
-              <p className="text-xs text-red-500 mt-1">{errors.bio.message}</p>
-            )}
-          </div>
-        </div>
-      </Section>
-      <div className="h-px bg-muted" />
-
-      <Section title="Work">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <EditableField
-            label="Job Title"
-            register={register}
-            name="jobTitle"
-            placeholder="IT Manager"
-            error={errors.jobTitle?.message}
-          />
-
-          <EditableField
-            label="Company Name"
-            register={register}
-            name="jobName"
-            placeholder="PT. Tribun Asia Tbk."
-            error={errors.jobName?.message}
-          />
-        </div>
-      </Section>
-
-      <div className="h-px bg-muted" />
-      <Section title="Contact">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ContactField
-            icon={IoIosPhonePortrait}
-            label="Phone"
-            value={user?.phoneNumber ?? "-"}
-            isVerified={false}
-          />
-
-          <ContactField
-            icon={MdEmail}
-            label="Email"
-            value={user?.email ?? "-"}
-            isVerified={user?.emailVerified}
-            isLoading={isVerifying.email}
-            onVerify={!user?.emailVerified ? handleVerifyEmail : undefined}
-          />
-        </div>
-      </Section>
+      <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          onClick={() => reset()}
+          disabled={isLoading || !isDirty}
+          className={buttonStyles({
+            variant: "outline",
+            size: "md",
+            className: "w-full sm:w-auto",
+          })}
+        >
+          Discard
+        </button>
+        <button
+          type="submit"
+          disabled={isLoading || !isDirty}
+          className={buttonStyles({
+            size: "md",
+            className: "w-full sm:w-auto",
+          })}
+        >
+          {isLoading ? "Saving..." : "Save changes"}
+        </button>
+      </div>
     </form>
   );
 }
