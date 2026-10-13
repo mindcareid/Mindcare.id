@@ -1,7 +1,6 @@
-import { EventStatus, Prisma } from "@prisma/client";
+import { EventStatus, OrderStatus, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-
 
 const eventListInclude = {
   category: true,
@@ -9,7 +8,6 @@ const eventListInclude = {
   professional: true,
 
   careCentre: true,
-
 
   agenda: {
     orderBy: {
@@ -22,16 +20,6 @@ const eventListInclude = {
       focusArea: true,
     },
   },
-
-  _count: {
-    select: {
-      orders: {
-        where: {
-          status: "PAID",
-        },
-      },
-    },
-  },
 } satisfies Prisma.EventInclude;
 
 const eventDetailInclude = {
@@ -39,7 +27,7 @@ const eventDetailInclude = {
 
   professional: true,
 
-  careCentre: true,  
+  careCentre: true,
 
   agenda: {
     orderBy: {
@@ -56,16 +44,6 @@ const eventDetailInclude = {
       focusArea: true,
     },
   },
-
-  _count: {
-    select: {
-      orders: {
-        where: {
-          status: "PAID",
-        },
-      },
-    },
-  },
 } satisfies Prisma.EventInclude;
 
 type EventListPayload = Prisma.EventGetPayload<{
@@ -76,10 +54,53 @@ type EventDetailPayload = Prisma.EventGetPayload<{
   include: typeof eventDetailInclude;
 }>;
 
+const REGISTERED_ORDER_STATUSES = [OrderStatus.PAID, OrderStatus.PENDING];
+
+async function getRegisteredCounts(
+  eventIds: number[],
+): Promise<Map<number, number>> {
+  const counts = new Map<number, number>();
+
+  if (eventIds.length === 0) {
+    return counts;
+  }
+
+  const orders = await prisma.order.findMany({
+    where: {
+      eventId: { in: eventIds },
+      status: { in: REGISTERED_ORDER_STATUSES },
+    },
+    select: {
+      eventId: true,
+      _count: { select: { tickets: true } },
+    },
+  });
+
+  for (const order of orders) {
+    counts.set(
+      order.eventId,
+      (counts.get(order.eventId) ?? 0) + order._count.tickets,
+    );
+  }
+
+  return counts;
+}
+
+async function getRegisteredCount(eventId: number): Promise<number> {
+  return prisma.ticket.count({
+    where: {
+      order: {
+        eventId,
+        status: { in: REGISTERED_ORDER_STATUSES },
+      },
+    },
+  });
+}
+
 export type EventHost = {
   name: string;
   type: "PLATFORM" | "PROFESSIONAL" | "CARE_CENTRE" | "SOLUTION";
-  slug?: string;  
+  slug?: string;
 };
 
 export type EventFocusArea = {
@@ -106,18 +127,13 @@ export type EventDetail = Omit<EventDetailPayload, "focusAreas"> & {
   soldOut: boolean;
 };
 
-
 const publicEventWhere = {
   deletedAt: null,
   status: EventStatus.PUBLISHED,
 } satisfies Prisma.EventWhereInput;
 
-
 function resolveEventHost(
-  event: Pick<
-    EventListPayload,
-    "professional" | "careCentre"
-  >,
+  event: Pick<EventListPayload, "professional" | "careCentre">,
 ): EventHost {
   if (event.professional) {
     return {
@@ -142,7 +158,6 @@ function resolveEventHost(
   };
 }
 
-
 function resolveFocusAreas(
   event: Pick<EventListPayload, "focusAreas">,
 ): EventFocusArea[] {
@@ -153,17 +168,12 @@ function resolveFocusAreas(
   }));
 }
 
-
-
 function serializeEvent(
   event: EventListPayload,
+  registeredCount: number,
 ): EventListItem {
-  const registeredCount = event._count.orders;
-
   const remaining =
-    event.quota === null
-      ? null
-      : Math.max(event.quota - registeredCount, 0);
+    event.quota === null ? null : Math.max(event.quota - registeredCount, 0);
 
   return {
     ...event,
@@ -171,60 +181,34 @@ function serializeEvent(
     focusAreas: resolveFocusAreas(event),
     registeredCount,
     remaining,
-    soldOut:
-      event.quota !== null && remaining === 0,
+    soldOut: event.quota !== null && remaining === 0,
   };
 }
 
 function serializeEventDetail(
   event: EventDetailPayload,
+  registeredCount: number,
 ): EventDetail {
-  const registeredCount = event._count.orders;
-
   const remaining =
-    event.quota === null
-      ? null
-      : Math.max(
-        event.quota - registeredCount,
-        0,
-      );
+    event.quota === null ? null : Math.max(event.quota - registeredCount, 0);
 
-  const soldOut =
-    event.quota !== null &&
-    remaining === 0;
+  const soldOut = event.quota !== null && remaining === 0;
+
   return {
     ...event,
-
     host: resolveEventHost(event),
-
     focusAreas: resolveFocusAreas(event),
-
     registeredCount,
-
     remaining,
-
     soldOut,
   };
 }
-
-
 
 export async function getEvents(): Promise<EventListItem[]> {
   const events = await prisma.event.findMany({
     where: publicEventWhere,
 
-    include: {
-      ...eventListInclude,
-      _count: {
-        select: {
-          orders: {
-            where: {
-              status: "PAID",
-            },
-          },
-        },
-      },
-    },
+    include: eventListInclude,
 
     orderBy: [
       {
@@ -236,26 +220,12 @@ export async function getEvents(): Promise<EventListItem[]> {
     ],
   });
 
-  return events.map((event) => {
-    const registeredCount = event._count.orders;
+  const counts = await getRegisteredCounts(events.map((event) => event.id));
 
-    const remaining =
-      event.quota === null
-        ? null
-        : Math.max(event.quota - registeredCount, 0);
-
-    const soldOut =
-      event.quota !== null && remaining === 0;
-
-    return {
-      ...serializeEvent(event),
-      registeredCount,
-      remaining,
-      soldOut,
-    };
-  });
+  return events.map((event) =>
+    serializeEvent(event, counts.get(event.id) ?? 0),
+  );
 }
-
 
 export async function getEventBySlug(
   slug: string,
@@ -273,9 +243,10 @@ export async function getEventBySlug(
     return null;
   }
 
-  return serializeEventDetail(event);
-}
+  const registeredCount = await getRegisteredCount(event.id);
 
+  return serializeEventDetail(event, registeredCount);
+}
 
 export async function getUpcomingEvents(
   limit = 6,
@@ -306,9 +277,12 @@ export async function getUpcomingEvents(
     take: safeLimit,
   });
 
-  return events.map(serializeEvent);
-}
+  const counts = await getRegisteredCounts(events.map((event) => event.id));
 
+  return events.map((event) =>
+    serializeEvent(event, counts.get(event.id) ?? 0),
+  );
+}
 
 export async function getRelatedEvents(
   slug: string,
@@ -363,11 +337,9 @@ export async function getRelatedEvents(
   });
 
   const sortedEvents = events.sort((a, b) => {
-    const aSameCategory =
-      a.categoryId === currentEvent.categoryId;
+    const aSameCategory = a.categoryId === currentEvent.categoryId;
 
-    const bSameCategory =
-      b.categoryId === currentEvent.categoryId;
+    const bSameCategory = b.categoryId === currentEvent.categoryId;
 
     if (aSameCategory && !bSameCategory) {
       return -1;
@@ -377,8 +349,7 @@ export async function getRelatedEvents(
       return 1;
     }
 
-    const dateDifference =
-      a.startDate.getTime() - b.startDate.getTime();
+    const dateDifference = a.startDate.getTime() - b.startDate.getTime();
 
     if (dateDifference !== 0) {
       return dateDifference;
@@ -387,9 +358,13 @@ export async function getRelatedEvents(
     return a.id - b.id;
   });
 
-  return sortedEvents
-    .slice(0, safeLimit)
-    .map(serializeEvent);
+  const selected = sortedEvents.slice(0, safeLimit);
+
+  const counts = await getRegisteredCounts(selected.map((event) => event.id));
+
+  return selected.map((event) =>
+    serializeEvent(event, counts.get(event.id) ?? 0),
+  );
 }
 
 /*

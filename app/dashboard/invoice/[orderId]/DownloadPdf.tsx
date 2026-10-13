@@ -5,13 +5,34 @@ import { Download, Loader2 } from "lucide-react";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
+const CAPTURE_WIDTH_PX = 794;
+async function captureReceipt(element: HTMLElement): Promise<string> {
+  const previousWidth = element.style.width;
+  const previousShadow = element.style.boxShadow;
+
+  element.style.width = `${CAPTURE_WIDTH_PX}px`;
+  element.style.boxShadow = "none";
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+  try {
+    return await toPng(element, {
+      cacheBust: true,
+      pixelRatio: 3,
+      backgroundColor: "#ffffff",
+      skipFonts: false,
+    });
+  } finally {
+    element.style.width = previousWidth;
+    element.style.boxShadow = previousShadow;
+  }
+}
+
 interface Props {
   orderId: string;
 }
 
-export default function DownloadPdf({
-  orderId,
-}: Props) {
+export default function DownloadPdf({ orderId }: Props) {
   const [loading, setLoading] = useState(false);
 
   const handleDownload = async () => {
@@ -32,15 +53,9 @@ export default function DownloadPdf({
         await document.fonts.ready;
       }
 
-      const dataUrl = await toPng(receipt, {
-        cacheBust: true,
-        pixelRatio: 3,
-        backgroundColor: "#ffffff",
-        skipFonts: false,
-      });
+      const dataUrl = await captureReceipt(receipt);
 
       const img = new Image();
-
       img.src = dataUrl;
 
       await new Promise<void>((resolve, reject) => {
@@ -64,8 +79,7 @@ export default function DownloadPdf({
       const usableHeight = pageHeight - margin * 2;
 
       const imgWidth = usableWidth;
-      const imgHeight =
-        (img.height * imgWidth) / img.width;
+      const imgHeight = (img.height * imgWidth) / img.width;
 
       let heightLeft = imgHeight;
       let position = margin;
@@ -78,7 +92,7 @@ export default function DownloadPdf({
         imgWidth,
         imgHeight,
         undefined,
-        "FAST"
+        "FAST",
       );
 
       heightLeft -= usableHeight;
@@ -96,7 +110,7 @@ export default function DownloadPdf({
           imgWidth,
           imgHeight,
           undefined,
-          "FAST"
+          "FAST",
         );
 
         heightLeft -= usableHeight;
@@ -114,21 +128,19 @@ export default function DownloadPdf({
 
   return (
     <button
+      type="button"
       disabled={loading}
       onClick={handleDownload}
-      className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+      className={buttonStyles({ className: "min-h-11" })}
     >
       {loading ? (
         <>
-          <Loader2
-            size={18}
-            className="animate-spin"
-          />
+          <Loader2 size={18} className="animate-spin" aria-hidden="true" />
           Generating...
         </>
       ) : (
         <>
-          <Download size={18} />
+          <Download size={18} aria-hidden="true" />
           Download PDF
         </>
       )}

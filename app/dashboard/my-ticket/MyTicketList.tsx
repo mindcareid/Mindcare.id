@@ -1,191 +1,157 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Ticket as PrismaTicket, OrderStatus } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
-import { HiOutlineTicket } from "react-icons/hi2";
-import { FiSearch } from "react-icons/fi";
+import { MapPin, Ticket as TicketIcon } from "lucide-react";
+import { Ticket as PrismaTicket, OrderStatus } from "@prisma/client";
+
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
+
 interface TicketWithEvent extends PrismaTicket {
   order: {
     status: OrderStatus;
-    event: { title: string; startDate: Date; location?: string | null };
+    event: {
+      title: string;
+      slug: string;
+      startDate: Date;
+      location?: string | null;
+    };
   };
 }
-
-const ITEMS_PER_PAGE = 4;
 
 export default function MyTicketList({
   tickets,
 }: {
   tickets: TicketWithEvent[];
 }) {
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const totalPages = Math.ceil(tickets.length / ITEMS_PER_PAGE);
-
-  const paginatedTickets = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    return tickets.slice(start, end);
-  }, [tickets, currentPage]);
-
   if (tickets.length === 0) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 text-center">
-        <div className="relative mb-6">
-          <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-blue-50 flex items-center justify-center">
-            <HiOutlineTicket className="w-11 h-11 md:w-14 md:h-14 text-blue-400" />
-          </div>
-          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-200" />
-          <div className="absolute -bottom-1 -left-1 w-3 h-3 rounded-full bg-purple-200" />
-        </div>
-        <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          No tickets yet
-        </h2>
-        <p className="text-gray-500 text-sm md:text-base max-w-xs leading-relaxed mb-8">
-          You haven&apos;t registered for any events. Browse upcoming events and
-          secure your spot today.
-        </p>
-        <Link
-          href="/events"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all hover:scale-105"
-        >
-          <FiSearch className="w-4 h-4" />
-          Browse Events
-        </Link>
-      </div>
-    );
+    return <EmptyTickets />;
   }
 
   return (
-    <div className="p-6 max-w-6xl mt-10 mx-auto">
-      <h1 className="text-2xl font-bold mb-6">🎟️ My Tickets</h1>
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+      <header className="mb-6">
+        <h1 className="font-heading text-2xl font-semibold text-foreground">
+          My tickets
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {tickets.length} active {tickets.length === 1 ? "ticket" : "tickets"}.
+          Show the QR code at the venue entrance.
+        </p>
+      </header>
 
-      {/* TICKET GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {paginatedTickets.map((ticket) => (
+      <div className="grid gap-5 sm:grid-cols-2">
+        {tickets.map((ticket) => (
           <TicketCard key={ticket.id} ticket={ticket} />
         ))}
       </div>
-
-      {/* PAGINATION */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-8">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 rounded border text-sm disabled:opacity-40"
-          >
-            Prev
-          </button>
-
-          {Array.from({ length: totalPages }).map((_, i) => {
-            const page = i + 1;
-            return (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-3 py-1 rounded text-sm border ${
-                  page === currentPage
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white"
-                }`}
-              >
-                {page}
-              </button>
-            );
-          })}
-
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 rounded border text-sm disabled:opacity-40"
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
 }
 
-/* ================= TICKET CARD ================= */
-
 function TicketCard({ ticket }: { ticket: TicketWithEvent }) {
-  const displayStatus: "PAID" | "PENDING" | "EXPIRED" | "CANCELED" | "REFUNDED" =
-    ticket.order.status === "PAID" ||
-    ticket.order.status === "PENDING" ||
-    ticket.order.status === "REFUNDED" ||
-    ticket.order.status === "CANCELED" || 
-    ticket.order.status === "EXPIRED"
-      ? ticket.order.status
-      : "PENDING";
+  const event = ticket.order.event;
+  const date = new Date(event.startDate);
 
-      const statusColor =
-  displayStatus === "PAID"
-    ? "bg-green-100 text-green-700"
-    : displayStatus === "REFUNDED"
-      ? "bg-purple-100 text-purple-700"
-      : displayStatus === "CANCELED"
-        ? "bg-red-100 text-red-700"
-        : displayStatus === "EXPIRED"
-          ? "bg-gray-100 text-gray-700"
-          : "bg-yellow-100 text-yellow-700";
+  const month = date.toLocaleDateString("en-US", { month: "short" });
+  const day = date.toLocaleDateString("en-US", { day: "2-digit" });
+  const weekday = date.toLocaleDateString("en-US", { weekday: "short" });
 
   return (
-    <div className="border rounded-xl p-5 shadow-sm bg-white">
-      {/* EVENT INFO */}
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">{ticket.order.event.title}</h2>
-        <p className="text-sm text-gray-600">
-          📅{" "}
-          {new Date(ticket.order.event.startDate).toLocaleDateString("en-US", {
-            weekday: "short",
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}
-        </p>
-        {ticket.order.event.location && (
-          <p className="text-sm text-gray-600">
-            📍 {ticket.order.event.location}
-          </p>
-        )}
-      </div>
-
-      {/* STATUS */}
-      <div className="mb-4">
-        <span
-          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}
-        >
-          {displayStatus}
+    <article className="flex overflow-hidden rounded-xl border border-border bg-card shadow-card">
+      <div className="flex w-20 shrink-0 flex-col items-center justify-center gap-0.5 bg-brand-navy-700 px-2 py-5 text-center text-primary-foreground">
+        <span className="text-xs font-medium uppercase tracking-wide">
+          {month}
         </span>
+        <span className="font-heading text-3xl font-semibold leading-none">
+          {day}
+        </span>
+        <span className="text-xs text-primary-foreground/80">{weekday}</span>
       </div>
 
-      {/* ATTENDEE + QR */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm">
-            <span className="font-semibold">Name:</span> {ticket.attendeeName}
-          </p>
-          <p className="text-sm">
-            <span className="font-semibold">Email:</span> {ticket.attendeeEmail}
-          </p>
-          <p className="mt-2 text-xs text-gray-500">Ticket Code</p>
-          <p className="font-mono text-sm">{ticket.code}</p>
+      <div className="flex min-w-0 flex-1 flex-col p-5">
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="font-heading text-base font-semibold leading-snug text-foreground sm:text-lg">
+            {event.title}
+          </h2>
+          <span className="shrink-0 rounded-full bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent">
+            Paid
+          </span>
         </div>
 
-        {ticket.qrCode && (
-          <Image
-            src={ticket.qrCode.trim()}
-            alt="QR Ticket"
-            width={96}
-            height={96}
-            className="border rounded-md"
-          />
+        {event.location && (
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="line-clamp-1">{event.location}</span>
+          </p>
         )}
+
+        <div className="mt-4 flex items-end justify-between gap-4 border-t border-border pt-4">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-foreground">
+              {ticket.attendeeName}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {ticket.attendeeEmail}
+            </p>
+            <p className="mt-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Ticket code
+            </p>
+            <p className="text-sm font-semibold tracking-wide text-foreground">
+              {ticket.code}
+            </p>
+          </div>
+
+          {ticket.qrCode && (
+            <Image
+              src={ticket.qrCode.trim()}
+              alt={`QR code for ${ticket.attendeeName}`}
+              width={88}
+              height={88}
+              className="h-22 w-22 shrink-0 rounded-md border border-border"
+              unoptimized
+            />
+          )}
+        </div>
+
+        <div className="mt-4">
+          <Link
+            href={`/events/${event.slug}`}
+            className={buttonStyles({
+              variant: "outline",
+              size: "md",
+              className: "min-h-11 w-full sm:w-auto",
+            })}
+          >
+            View event
+          </Link>
+        </div>
       </div>
+    </article>
+  );
+}
+
+function EmptyTickets() {
+  return (
+    <div className="mx-auto flex min-h-[60vh] w-full max-w-md flex-col items-center justify-center px-4 py-12 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-lavender-100">
+        <TicketIcon className="h-8 w-8 text-secondary" aria-hidden="true" />
+      </div>
+
+      <h2 className="mt-5 font-heading text-lg font-semibold text-foreground">
+        No tickets yet
+      </h2>
+      <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
+        You have not registered for any event. Browse upcoming events to secure
+        a seat.
+      </p>
+
+      <Link
+        href="/events"
+        className={buttonStyles({ size: "lg", className: "mt-6 min-h-11" })}
+      >
+        Browse events
+      </Link>
     </div>
   );
 }

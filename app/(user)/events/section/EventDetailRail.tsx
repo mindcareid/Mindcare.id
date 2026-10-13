@@ -11,7 +11,8 @@ import {
   formatEventDateLong,
   formatEventTimeRange,
   hasEnded,
-} from "../data/eventTime";
+} from "../data/eventTime"
+import RegisterEventButton from "./RegisterEventButton";
 
 import type { EventDetail } from "../data/events";
 
@@ -31,7 +32,6 @@ export default function EventDetailRail({
   now,
 }: EventDetailRailProps) {
   const ended = hasEnded(event, now);
-  const currentTime = new Date(now);
   const soldOut = !ended && event.soldOut;
   const remaining = !ended && event.remaining !== null
     ? Math.max(event.remaining, 0)
@@ -86,7 +86,7 @@ export default function EventDetailRail({
           )}
         </dl>
 
-        {hasExternal && (
+        {hasExternal ? (
           <Link
             href={event.externalUrl as string}
             target="_blank"
@@ -95,6 +95,23 @@ export default function EventDetailRail({
           >
             Register now
           </Link>
+        ) : (
+          <RegisterEventButton
+            eventId={event.id}
+            title={event.title}
+            price={event.price}
+            remaining={remaining}
+            soldOut={soldOut}
+            ended={ended}
+            attendeeFields={event.attendeeFields.map((field) => ({
+              id: field.id,
+              label: field.label,
+              key: field.key,
+              type: field.type,
+              required: field.required,
+              options: field.options,
+            }))}
+          />
         )}
       </div>
 

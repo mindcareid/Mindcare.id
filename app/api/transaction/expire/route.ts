@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 import { Prisma, PaymentStatus } from "@prisma/client";
+import { expireXenditInvoice } from "@/lib/xendit";
 
 const XENDIT_SECRET_KEY = process.env.XENDIT_SECRET_KEY;
 
@@ -13,9 +14,9 @@ function getXenditAuthHeader(): HeadersInit {
     throw new Error("XENDIT_SECRET_KEY is not configured");
   }
 
-  const encodedCredentials = Buffer.from(
-    `${XENDIT_SECRET_KEY}:`,
-  ).toString("base64");
+  const encodedCredentials = Buffer.from(`${XENDIT_SECRET_KEY}:`).toString(
+    "base64",
+  );
 
   return {
     Authorization: `Basic ${encodedCredentials}`,
@@ -38,9 +39,7 @@ function getXenditAuthHeader(): HeadersInit {
  * - CANCELED
  */
 
-function normalizePaymentStatus(
-  xenditStatus: string,
-): PaymentStatus {
+function normalizePaymentStatus(xenditStatus: string): PaymentStatus {
   switch (xenditStatus.toUpperCase()) {
     case "PAID":
     case "SETTLED":
@@ -67,9 +66,7 @@ function normalizePaymentStatus(
 /**
  * Ambil status Xendit sebagai string untuk response/logging.
  */
-function getXenditStatus(
-  invoice: Prisma.InputJsonValue,
-): string {
+function getXenditStatus(invoice: Prisma.InputJsonValue): string {
   if (
     typeof invoice === "object" &&
     invoice !== null &&
@@ -88,6 +85,19 @@ function getXenditStatus(
 
 export async function GET(req: NextRequest) {
   try {
+    const cronSecret = process.env.CRON_SECRET;
+
+    if (!cronSecret) {
+      return NextResponse.json(
+        { message: "CRON_SECRET is not configured" },
+        { status: 500 },
+      );
+    }
+
+    if (req.headers.get("authorization") !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
 
     const orderId = searchParams.get("order_id");
@@ -98,31 +108,80 @@ export async function GET(req: NextRequest) {
 
     if (!orderId) {
       const now = new Date();
+      const ttlMinutes = Number(process.env.ORDER_PENDING_TTL_MINUTES ?? "30");
+      const safeTtlMinutes =
+        Number.isFinite(ttlMinutes) && ttlMinutes > 0 ? ttlMinutes : 30;
 
       const expirationLimit = new Date(
-        now.getTime() - 24 * 60 * 60 * 1000,
+        now.getTime() - safeTtlMinutes * 60 * 1000,
       );
+      const batchSizeRaw = Number(process.env.ORDER_EXPIRE_BATCH_SIZE ?? "50");
+      const batchSize =
+        Number.isFinite(batchSizeRaw) && batchSizeRaw > 0
+          ? Math.floor(batchSizeRaw)
+          : 50;
 
-      const expired = await prisma.order.updateMany({
+      const candidates = await prisma.order.findMany({
         where: {
           status: PaymentStatus.PENDING,
           createdAt: {
             lte: expirationLimit,
           },
         },
-        data: {
-          status: PaymentStatus.EXPIRED,
+        select: {
+          id: true,
+          invoiceId: true,
         },
+        orderBy: {
+          createdAt: "asc",
+        },
+        take: batchSize,
       });
 
+      let expiredCount = 0;
+      let skipped = 0;
+
+      for (const candidate of candidates) {
+        if (candidate.invoiceId) {
+          try {
+            await expireXenditInvoice(candidate.invoiceId);
+          } catch (error) {
+            console.error(
+              "[TRANSACTION_EXPIRE] Failed to expire Xendit invoice",
+              {
+                orderId: candidate.id,
+                invoiceId: candidate.invoiceId,
+                error,
+              },
+            );
+
+            skipped++;
+            continue;
+          }
+        }
+
+        await prisma.order.updateMany({
+          where: {
+            id: candidate.id,
+            status: PaymentStatus.PENDING,
+          },
+          data: {
+            status: PaymentStatus.EXPIRED,
+          },
+        });
+
+        expiredCount++;
+      }
+
       console.log(
-        `[TRANSACTION_EXPIRE] Marked ${expired.count} PENDING orders as EXPIRED`,
+        `[TRANSACTION_EXPIRE] Expired ${expiredCount} PENDING orders, skipped ${skipped}`,
       );
 
       return NextResponse.json({
         success: true,
-        message: `Marked ${expired.count} PENDING orders as EXPIRED`,
-        count: expired.count,
+        message: `Expired ${expiredCount} PENDING orders`,
+        count: expiredCount,
+        skipped,
       });
     }
 
@@ -216,11 +275,7 @@ export async function GET(req: NextRequest) {
     if (!res.ok) {
       const errorText = await res.text();
 
-      console.error(
-        "[XENDIT_INVOICE_ERROR]",
-        res.status,
-        errorText,
-      );
+      console.error("[XENDIT_INVOICE_ERROR]", res.status, errorText);
 
       return NextResponse.json(
         {
@@ -248,9 +303,7 @@ export async function GET(req: NextRequest) {
      * Xendit EXPIRED -> Prisma EXPIRED
      * lainnya        -> Prisma PENDING
      */
-    const paymentStatus = normalizePaymentStatus(
-      xenditStatus,
-    );
+    const paymentStatus = normalizePaymentStatus(xenditStatus);
 
     // ============================================================
     // SAVE PAYMENT LOG
@@ -360,10 +413,7 @@ export async function GET(req: NextRequest) {
       xenditStatus,
     });
   } catch (error) {
-    console.error(
-      "[TRANSACTION_GET_ERROR]",
-      error,
-    );
+    console.error("[TRANSACTION_GET_ERROR]", error);
 
     return NextResponse.json(
       {
@@ -375,4 +425,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-

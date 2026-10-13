@@ -922,6 +922,7 @@ model Order {
 
   invoiceId  String? @unique @db.VarChar(255)
   invoiceUrl String? @db.VarChar(1000)
+  idempotencyKey String? @unique @db.VarChar(255)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

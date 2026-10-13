@@ -3,9 +3,10 @@
 import Image from "next/image";
 import { CheckCircle2, Clock3, Printer, XCircle } from "lucide-react";
 
-import { formatDate } from "@/lib/utils/FormatDate";
+import { formatDateTime } from "@/lib/utils/FormatDate";
 import DownloadPdf from "./DownloadPdf";
 import type { OrderEvent } from "@/lib/orders";
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 
 import type { Prisma } from "@prisma/client";
 
@@ -19,6 +20,14 @@ interface Props {
   order: OrderEvent;
 }
 
+const SELLER = {
+  name: "MindCare.id",
+  address:
+    "Rukan Aries Niaga, Jl. Taman Aries No.1 Blok D1 2D, Meruya Utara, Kec. Kembangan, Jakarta Barat, DKI Jakarta 11620",
+  email: "info@mindcare.id",
+  phone: "+6221 5890 5593",
+};
+
 export default function Receipt({ order }: Props) {
   const buyer = order.user;
 
@@ -30,107 +39,94 @@ export default function Receipt({ order }: Props) {
 
   const paymentMethod = payload
     ? [payload.payment_method, payload.payment_channel ?? payload.bank_code]
-      .filter(Boolean)
-      .join(" - ")
+        .filter(Boolean)
+        .join(" - ")
     : order.amount === 0
       ? "Free"
       : "-";
 
-  const statusMap = {
-    PAID: {
-      color: "bg-green-100 text-green-700",
-      icon: <CheckCircle2 size={16} />,
-    },
-    PENDING: {
-      color: "bg-yellow-100 text-yellow-700",
-      icon: <Clock3 size={16} />,
-    },
-    EXPIRED: {
-      color: "bg-red-100 text-red-700",
-      icon: <XCircle size={16} />,
-    },
-    CANCELED: {
-      color: "bg-gray-100 text-gray-700",
-      icon: <XCircle size={16} />,
-    },
-  } as const;
+  const statusBadge =
+    order.status === "PAID"
+      ? { className: "bg-accent/10 text-accent", Icon: CheckCircle2 }
+      : order.status === "PENDING"
+        ? { className: "bg-primary/10 text-primary", Icon: Clock3 }
+        : { className: "bg-destructive/10 text-destructive", Icon: XCircle };
 
-  const status =
-    statusMap[order.status as keyof typeof statusMap] ?? statusMap.PENDING;
+  const StatusIcon = statusBadge.Icon;
+  const unitPrice =
+    order.tickets.length > 0
+      ? order.amount / order.tickets.length
+      : order.amount;
 
   return (
-    <div className="space-y-6">
-      {/* Toolbar */}
-
-      <div className="flex justify-end gap-3 print:hidden">
+    <div className="space-y-5">
+      <div className="flex flex-wrap justify-end gap-2 print:hidden">
         <DownloadPdf orderId={order.id} />
 
         <button
+          type="button"
           onClick={() => window.print()}
-          className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 hover:bg-gray-100"
+          className={buttonStyles({
+            variant: "outline",
+            className: "min-h-11",
+          })}
         >
-          <Printer size={18} />
+          <Printer className="h-4 w-4" aria-hidden="true" />
           Print
         </button>
       </div>
 
-      {/* Receipt */}
-
       <div
         id="receipt"
-        className="bg-white rounded-xl shadow-lg overflow-hidden"
-        style={{
-          width: "950px",
-          minHeight: "1123px",
-        }}
+        className="overflow-hidden rounded-xl border border-border bg-card shadow-card"
       >
         {/* HEADER */}
+        <div className="flex flex-col gap-4 border-b border-border px-5 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <Image
+            src="/images/logo/logoNew.png"
+            alt="MindCare.id"
+            width={150}
+            height={48}
+            priority
+            className="h-10 w-auto self-start object-contain"
+          />
 
-        <div className="border-b px-10 py-8 flex justify-between items-center">
-          <div className="space-y-2">
-            <Image
-              src="/images/logo/logoNew.png"
-              alt="Executive Corner"
-              width={170}
-              height={60}
-              priority
-            />
-          </div>
-
-          <div>
-            <h1 className="text-5xl italic font-light">E-Receipt</h1>
+          <div className="sm:text-right">
+            <h1 className="font-heading text-xl font-semibold text-foreground sm:text-2xl">
+              Payment receipt
+            </h1>
+            <p className="mt-1 text-sm uppercase text-primary">
+              Order #{order.id}
+            </p>
           </div>
         </div>
 
         {/* PAYMENT */}
+        <section className="border-b border-border px-5 py-6 sm:px-8 sm:py-8">
+          <h2 className="font-heading text-base font-semibold text-foreground">
+            Payment details
+          </h2>
 
-        <section className="border-b px-10 py-8">
-          <h2 className="font-bold text-xl mb-5">Payment Details</h2>
-
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="mt-5 grid gap-6 sm:grid-cols-2">
             <div className="space-y-3">
-              <Info label="Order ID" value={order.id} />
-
               <Info label="Invoice ID" value={order.invoiceId ?? "-"} />
-
-              <Info label="Created" value={formatDate(order.createdAt)} />
-
+              <Info label="Created" value={formatDateTime(order.createdAt)} />
               {order.paidAt && (
-                <Info label="Paid At" value={formatDate(order.paidAt)} />
+                <Info label="Paid at" value={formatDateTime(order.paidAt)} />
               )}
             </div>
 
             <div className="space-y-3">
-              <Info label="Payment Method" value={paymentMethod} />
+              <Info label="Method" value={paymentMethod} />
 
-              <div className="flex items-center gap-3">
-                <span className="font-medium">Status</span>
-
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="w-28 shrink-0 text-muted-foreground sm:w-36">
+                  Status
+                </span>
                 <span
-                  className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold ${status.color}`}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${statusBadge.className}`}
                 >
-                  {status.icon}
-
+                  <StatusIcon className="h-4 w-4" aria-hidden="true" />
                   {order.status}
                 </span>
               </div>
@@ -138,99 +134,134 @@ export default function Receipt({ order }: Props) {
           </div>
         </section>
 
-        {/* BUYER */}
-
-        <section className="border-b px-10 py-8 grid md:grid-cols-2 gap-10">
+        {/* BUYER + SELLER */}
+        <section className="grid gap-6 border-b border-border px-5 py-6 sm:grid-cols-2 sm:gap-10 sm:px-8 sm:py-8">
           <div>
-            <h2 className="font-bold text-xl mb-5">Buyer Details</h2>
-
-            <Info label="Name" value={buyer.name} />
-
-            <Info label="Email" value={buyer.email} />
+            <h2 className="font-heading text-base font-semibold text-foreground">
+              Buyer details
+            </h2>
+            <div className="mt-4 space-y-3">
+              <Info label="Name" value={buyer.name} />
+              <Info label="Email" value={buyer.email} />
+            </div>
           </div>
 
           <div>
-            <h2 className="font-bold text-xl mb-5">Seller Details</h2>
-
-            <Info label="Company" value="" />
-
-            <Info
-              label="Location"
-              value="-"
-            />
+            <h2 className="font-heading text-base font-semibold text-foreground">
+              Seller details
+            </h2>
+            <div className="mt-4 space-y-3">
+              <Info label="Company" value={SELLER.name} />
+              <Info label="Address" value={SELLER.address} />
+              <Info label="Email" value={SELLER.email} />
+              <Info label="Phone" value={SELLER.phone} />
+            </div>
           </div>
         </section>
 
         {/* PARTICIPANTS */}
+        <section className="border-b border-border px-5 py-6 sm:px-8 sm:py-8">
+          <h2 className="font-heading text-base font-semibold text-foreground">
+            Participants
+          </h2>
 
-        <section className="border-b px-10 py-8">
-          <h2 className="font-bold text-xl mb-5">Participant Data</h2>
-
-          <div className="space-y-2">
+          <ul className="mt-4 space-y-2.5">
             {order.tickets.map((ticket, index) => (
-              <div
+              <li
                 key={ticket.id}
-                className="flex justify-between border-b py-2"
+                className="flex items-start gap-3 rounded-lg border border-border px-4 py-3"
               >
-                <span>Participant {index + 1}</span>
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-lavender-100 text-xs font-semibold text-secondary">
+                  {index + 1}
+                </span>
 
-                <span className="font-medium">{ticket.attendeeName}</span>
-              </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {ticket.attendeeName}
+                  </p>
+                  <p className="truncate text-sm text-muted-foreground">
+                    {ticket.attendeeEmail}
+                  </p>
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
 
-        {/* TABLE */}
+        {/* LINE ITEMS */}
+        <section className="px-5 py-6 sm:px-8 sm:py-8">
+          <h2 className="font-heading text-base font-semibold text-foreground">
+            Order summary
+          </h2>
 
-        <section className="px-10 py-8">
-          <table className="w-full border text-sm">
-            <thead className="bg-gray-100">
+          {/* table on sm+ */}
+          <table className="mt-4 hidden w-full border border-border text-sm sm:table">
+            <thead className="bg-muted">
               <tr>
-                <th className="border p-3">No</th>
-
-                <th className="border p-3">Event</th>
-
-                <th className="border p-3">Qty</th>
-
-                <th className="border p-3">Price</th>
-
-                <th className="border p-3">Total</th>
+                <th className="border border-border p-3 text-left font-medium">
+                  No
+                </th>
+                <th className="border border-border p-3 text-left font-medium">
+                  Event
+                </th>
+                <th className="border border-border p-3 text-center font-medium">
+                  Qty
+                </th>
+                <th className="border border-border p-3 text-right font-medium">
+                  Price
+                </th>
+                <th className="border border-border p-3 text-right font-medium">
+                  Total
+                </th>
               </tr>
             </thead>
-
             <tbody>
               <tr>
-                <td className="border p-3 text-center">1</td>
-
-                <td className="border p-3">{order.event.title}</td>
-
-                <td className="border p-3 text-center">
+                <td className="border border-border p-3 text-center">1</td>
+                <td className="border border-border p-3">
+                  {order.event.title}
+                </td>
+                <td className="border border-border p-3 text-center">
                   {order.tickets.length}
                 </td>
-
-                <td className="border p-3 text-right">
-                  Rp{" "}
-                  {(order.amount / order.tickets.length).toLocaleString("id-ID")}
+                <td className="border border-border p-3 text-right">
+                  Rp {unitPrice.toLocaleString("id-ID")}
                 </td>
-
-                <td className="border p-3 text-right font-bold">
+                <td className="border border-border p-3 text-right font-semibold">
                   Rp {order.amount.toLocaleString("id-ID")}
                 </td>
               </tr>
             </tbody>
           </table>
 
-          {/* TOTAL */}
+          {/* stacked on mobile */}
+          <dl className="mt-4 space-y-2 text-sm sm:hidden">
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Event</dt>
+              <dd className="text-right font-medium text-foreground">
+                {order.event.title}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Qty</dt>
+              <dd className="font-medium text-foreground">
+                {order.tickets.length}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Price</dt>
+              <dd className="font-medium text-foreground">
+                Rp {unitPrice.toLocaleString("id-ID")}
+              </dd>
+            </div>
+          </dl>
 
-          <div className="flex justify-end mt-8">
-            <div className="w-80">
-              <div className="flex justify-between py-2">
-                <span>Total</span>
-
-                <span className="font-bold text-lg">
-                  Rp {order.amount.toLocaleString("id-ID")}
-                </span>
-              </div>
+          <div className="mt-6 flex justify-end border-t border-border pt-4">
+            <div className="flex w-full justify-between gap-4 sm:w-80">
+              <span className="text-muted-foreground">Total</span>
+              <span className="font-heading text-lg font-semibold text-foreground">
+                Rp {order.amount.toLocaleString("id-ID")}
+              </span>
             </div>
           </div>
         </section>
@@ -241,12 +272,13 @@ export default function Receipt({ order }: Props) {
 
 function Info({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex">
-      <span className="w-36 text-gray-500">{label}</span>
-
-      <span className="mr-2">:</span>
-
-      <span className="font-medium break-all">{value}</span>
+    <div className="flex gap-2 text-sm">
+      <span className="w-28 shrink-0 text-muted-foreground sm:w-36">
+        {label}
+      </span>
+      <span className="font-medium wrap-break-word text-foreground">
+        {value}
+      </span>
     </div>
   );
 }

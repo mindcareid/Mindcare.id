@@ -31,6 +31,7 @@ export default async function MyTicketPage({
           event: {
             select: {
               title: true,
+              slug: true,
               startDate: true,
               location: true,
             },

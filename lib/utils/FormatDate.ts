@@ -49,6 +49,15 @@ export const getTimeZoneLabel = (
   const date = toDate(value) ?? new Date();
   return formatInTimeZone(date, timeZone, "zzz");
 };
+export const formatDateTime = (
+  value?: string | Date | null,
+  timeZone: string = DEFAULT_TIMEZONE,
+) => {
+  const date = toDate(value);
+  if (!date) return "";
+  const label = TZ_LABEL_OVERRIDE[timeZone] ?? timeZone;
+  return `${formatInTimeZone(date, timeZone, "dd MMMM yyyy, HH:mm")} ${label}`;
+};
 
 export const sameDate = (
   first?: string | Date | null,

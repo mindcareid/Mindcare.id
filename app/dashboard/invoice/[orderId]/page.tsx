@@ -37,8 +37,8 @@ export default async function InvoicePage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 py-10">
-      <div className="mx-auto max-w-6xl px-4">
+    <main className="min-h-screen bg-background py-8 sm:py-10">
+      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
         <Receipt order={order} />
       </div>
     </main>

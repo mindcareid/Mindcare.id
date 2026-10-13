@@ -7,10 +7,13 @@ export async function GET(
 ) {
   const ticket = await prisma.ticket.findUnique({
     where: { code: params.code },
-    select: { qrCode: true },
+    select: {
+      qrCode: true,
+      order: { select: { status: true } },
+    },
   });
 
-  if (!ticket) {
+  if (!ticket || ticket.order.status !== "PAID") {
     return new NextResponse("QR not found", { status: 404 });
   }
 
@@ -40,7 +43,7 @@ export async function GET(
   return new NextResponse(buffer, {
     headers: {
       "Content-Type": "image/png",
-      "Cache-Control": "public, max-age=31536000",
+      "Cache-Control": "public, max-age=3600",
     },
   });
 }

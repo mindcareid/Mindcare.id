@@ -1,16 +1,43 @@
 @media print {
-
+  html,
   body {
+    height: auto !important;
+    overflow: visible !important;
     background: white;
   }
 
+  body * {
+    visibility: hidden;
+  }
+
+  #receipt,
+  #receipt * {
+    visibility: visible;
+  }
+
   #receipt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    border-color: transparent !important;
     box-shadow: none !important;
     border-radius: 0 !important;
+  }
+  .h-screen,
+  .overflow-hidden,
+  .overflow-y-auto {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   .print\:hidden {
     display: none !important;
   }
 
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
 }

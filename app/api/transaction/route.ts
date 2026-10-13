@@ -6,30 +6,31 @@ import { Prisma, OrderStatus, PaymentStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { sendOrderTicketEmails } from "@/lib/orders/sendTicketEmails";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 const XENDIT_API_URL = "https://api.xendit.co";
 
 function getXenditAuthHeader(): HeadersInit {
   const secretKey = process.env.XENDIT_SECRET_KEY;
-  const forUserId = process.env.XENDIT_FOR_USER_ID;
+  const forUserId = process.env.XENDIT_FOR_USER_ID?.trim();
 
   if (!secretKey) {
     throw new Error("XENDIT_SECRET_KEY is not configured");
   }
 
-  if (!forUserId) {
-    throw new Error("XENDIT_FOR_USER_ID is not configured");
-  }
+  const credentials = Buffer.from(`${secretKey}:`).toString("base64");
 
-  const credentials = Buffer.from(
-    `${secretKey}:`,
-  ).toString("base64");
-
-  return {
+  const headers: Record<string, string> = {
     Authorization: `Basic ${credentials}`,
-    "for-user-id": forUserId,
     Accept: "application/json",
   };
+
+  if (forUserId) {
+    headers["for-user-id"] = forUserId;
+  }
+
+  return headers;
 }
 
 /**
@@ -52,9 +53,7 @@ type XenditInvoiceStatus =
 /**
  * Convert unknown value menjadi XenditInvoiceStatus.
  */
-function parseXenditStatus(
-  value: unknown,
-): XenditInvoiceStatus {
+function parseXenditStatus(value: unknown): XenditInvoiceStatus {
   if (typeof value !== "string") {
     return "UNKNOWN";
   }
@@ -100,9 +99,7 @@ function parseXenditStatus(
  *   REFUNDED       -> REFUNDED
  *   lainnya        -> PENDING
  */
-function mapToPaymentStatus(
-  status: XenditInvoiceStatus,
-): PaymentStatus {
+function mapToPaymentStatus(status: XenditInvoiceStatus): PaymentStatus {
   switch (status) {
     case "PAID":
     case "SETTLED":
@@ -132,22 +129,48 @@ function mapToPaymentStatus(
  * Pastikan response Xendit merupakan JSON object
  * yang bisa disimpan sebagai Prisma JSON.
  */
-function parseInvoiceJson(
-  value: unknown,
-): Prisma.InputJsonObject | null {
-  if (
-    typeof value !== "object" ||
-    value === null ||
-    Array.isArray(value)
-  ) {
+function parseInvoiceJson(value: unknown): Prisma.InputJsonObject | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return null;
   }
 
   return value as Prisma.InputJsonObject;
 }
 
+function readNumberField(
+  obj: Prisma.InputJsonObject,
+  key: string,
+): number | null {
+  const value = obj[key];
+  return typeof value === "number" ? value : null;
+}
+
+function readStringField(
+  obj: Prisma.InputJsonObject,
+  key: string,
+): string | null {
+  const value = obj[key];
+  return typeof value === "string" ? value : null;
+}
+
 export async function GET(req: NextRequest) {
   try {
+    const statusLimit = rateLimit(`status:${getClientIp(req)}`, 120, 60_000);
+
+    if (!statusLimit.ok) {
+      return NextResponse.json(
+        { message: "Too many requests. Please slow down." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.max(Math.ceil((statusLimit.resetAt - Date.now()) / 1000), 1),
+            ),
+          },
+        },
+      );
+    }
+
     const { searchParams } = new URL(req.url);
 
     const orderId = searchParams.get("order_id");
@@ -205,6 +228,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         success: true,
         status: order.status,
+        invoiceUrl: order.invoiceUrl,
       });
     }
 
@@ -228,8 +252,7 @@ export async function GET(req: NextRequest) {
     // ============================================================
 
     const invoiceUrl =
-      `${XENDIT_API_URL}/v2/invoices/` +
-      encodeURIComponent(order.invoiceId);
+      `${XENDIT_API_URL}/v2/invoices/` + encodeURIComponent(order.invoiceId);
 
     const res = await fetch(invoiceUrl, {
       method: "GET",
@@ -240,15 +263,12 @@ export async function GET(req: NextRequest) {
     if (!res.ok) {
       const errorText = await res.text();
 
-      console.error(
-        "[XENDIT_INVOICE_ERROR]",
-        {
-          status: res.status,
-          orderId: order.id,
-          invoiceId: order.invoiceId,
-          response: errorText,
-        },
-      );
+      console.error("[XENDIT_INVOICE_ERROR]", {
+        status: res.status,
+        orderId: order.id,
+        invoiceId: order.invoiceId,
+        response: errorText,
+      });
 
       return NextResponse.json(
         {
@@ -269,13 +289,10 @@ export async function GET(req: NextRequest) {
     const invoice = parseInvoiceJson(rawInvoice);
 
     if (!invoice) {
-      console.error(
-        "[XENDIT_INVALID_RESPONSE]",
-        {
-          orderId: order.id,
-          invoiceId: order.invoiceId,
-        },
-      );
+      console.error("[XENDIT_INVALID_RESPONSE]", {
+        orderId: order.id,
+        invoiceId: order.invoiceId,
+      });
 
       return NextResponse.json(
         {
@@ -291,17 +308,41 @@ export async function GET(req: NextRequest) {
     // GET XENDIT STATUS
     // ============================================================
 
-    const xenditStatus = parseXenditStatus(
-      invoice.status,
-    );
+    const xenditStatus = parseXenditStatus(invoice.status);
 
     // ============================================================
     // MAP TO INTERNAL PAYMENT STATUS
     // ============================================================
 
-    const paymentStatus = mapToPaymentStatus(
-      xenditStatus,
-    );
+    const paymentStatus = mapToPaymentStatus(xenditStatus);
+    let effectiveStatus = paymentStatus;
+
+    if (paymentStatus === PaymentStatus.PAID) {
+      const paidAmount =
+        readNumberField(invoice, "paid_amount") ??
+        readNumberField(invoice, "amount");
+      const paidCurrency =
+        readStringField(invoice, "currency") ?? order.currency;
+
+      if (
+        paidAmount !== null &&
+        (paidAmount !== order.amount || paidCurrency !== order.currency)
+      ) {
+        console.error(
+          "[TRANSACTION] Amount/currency mismatch, order not marked paid",
+          {
+            orderId: order.id,
+            invoiceId: order.invoiceId,
+            expectedAmount: order.amount,
+            paidAmount,
+            expectedCurrency: order.currency,
+            paidCurrency,
+          },
+        );
+
+        effectiveStatus = PaymentStatus.FAILED;
+      }
+    }
 
     // ============================================================
     // SAVE PAYMENT LOG
@@ -311,17 +352,16 @@ export async function GET(req: NextRequest) {
      * Hindari membuat log yang sama berkali-kali
      * ketika frontend melakukan polling.
      */
-    const existingLog =
-      await prisma.paymentLog.findFirst({
-        where: {
-          orderId: order.id,
-          provider: "XENDIT",
-          status: paymentStatus,
-        },
-        select: {
-          id: true,
-        },
-      });
+    const existingLog = await prisma.paymentLog.findFirst({
+      where: {
+        orderId: order.id,
+        provider: "XENDIT",
+        status: paymentStatus,
+      },
+      select: {
+        id: true,
+      },
+    });
 
     if (!existingLog) {
       try {
@@ -329,7 +369,7 @@ export async function GET(req: NextRequest) {
           data: {
             orderId: order.id,
             provider: "XENDIT",
-            status: paymentStatus,
+            status: effectiveStatus,
             payload: invoice,
           },
         });
@@ -338,10 +378,7 @@ export async function GET(req: NextRequest) {
          * Payment log gagal tidak boleh membuat
          * polling payment gagal.
          */
-        console.error(
-          "[PAYMENT_LOG_ERROR]",
-          logError,
-        );
+        console.error("[PAYMENT_LOG_ERROR]", logError);
       }
     }
 
@@ -349,8 +386,8 @@ export async function GET(req: NextRequest) {
     // HANDLE PAID
     // ============================================================
 
-    if (paymentStatus === PaymentStatus.PAID) {
-      await prisma.order.updateMany({
+    if (effectiveStatus === PaymentStatus.PAID) {
+      const updated = await prisma.order.updateMany({
         where: {
           id: order.id,
           status: OrderStatus.PENDING,
@@ -360,11 +397,15 @@ export async function GET(req: NextRequest) {
           paidAt: new Date(),
         },
       });
+      if (updated.count > 0) {
+        await sendOrderTicketEmails(order.id);
+      }
 
       return NextResponse.json({
         success: true,
         status: PaymentStatus.PAID,
         xenditStatus,
+        invoiceUrl: order.invoiceUrl,
       });
     }
 
@@ -372,9 +413,7 @@ export async function GET(req: NextRequest) {
     // HANDLE EXPIRED
     // ============================================================
 
-    if (
-      paymentStatus === PaymentStatus.EXPIRED
-    ) {
+    if (effectiveStatus === PaymentStatus.EXPIRED) {
       await prisma.order.updateMany({
         where: {
           id: order.id,
@@ -389,17 +428,15 @@ export async function GET(req: NextRequest) {
         success: true,
         status: PaymentStatus.EXPIRED,
         xenditStatus,
+        invoiceUrl: order.invoiceUrl,
       });
     }
-
 
     // ============================================================
     // HANDLE CANCELED
     // ============================================================
 
-    if (
-      paymentStatus === PaymentStatus.CANCELED
-    ) {
+    if (effectiveStatus === PaymentStatus.CANCELED) {
       await prisma.order.updateMany({
         where: {
           id: order.id,
@@ -414,6 +451,7 @@ export async function GET(req: NextRequest) {
         success: true,
         status: PaymentStatus.CANCELED,
         xenditStatus,
+        invoiceUrl: order.invoiceUrl,
       });
     }
 
@@ -421,9 +459,7 @@ export async function GET(req: NextRequest) {
     // HANDLE REFUNDED
     // ============================================================
 
-    if (
-      paymentStatus === PaymentStatus.REFUNDED
-    ) {
+    if (effectiveStatus === PaymentStatus.REFUNDED) {
       await prisma.order.updateMany({
         where: {
           id: order.id,
@@ -437,6 +473,7 @@ export async function GET(req: NextRequest) {
         success: true,
         status: PaymentStatus.REFUNDED,
         xenditStatus,
+        invoiceUrl: order.invoiceUrl,
       });
     }
 
@@ -446,14 +483,12 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      status: PaymentStatus.PENDING,
+      status: effectiveStatus,
       xenditStatus,
+      invoiceUrl: order.invoiceUrl,
     });
   } catch (error) {
-    console.error(
-      "[TRANSACTION_GET_ERROR]",
-      error,
-    );
+    console.error("[TRANSACTION_GET_ERROR]", error);
 
     return NextResponse.json(
       {
@@ -465,4 +500,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
