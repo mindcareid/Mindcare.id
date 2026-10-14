@@ -23,8 +23,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const role = session?.user?.role;
-  const isAdmin = role === "ADMIN" || role === "SUPERADMIN";
+  const isAdmin = Boolean(session?.user?.adminRole);
   const pathname = usePathname();
   const userInitial = session?.user?.name?.charAt(0).toUpperCase() ?? "U";
 

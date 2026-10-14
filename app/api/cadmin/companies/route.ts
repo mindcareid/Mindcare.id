@@ -1,26 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAdminUser } from "@/lib/adminGuard";
 
-async function checkAdmin() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user.id) return null;
-  const user = await prisma.user.findUnique({
-    where: { id: Number(session.user.id) },
-    select: { role: true },
-  });
-
-  if (!user || !["SUPERADMIN", "ADMIN"].includes(user.role)) return null;
-  return user;
-}
 /**
  * GET
  * - /api/companies
  * - /api/companies?id=1
  */
 export async function GET(req: NextRequest) {
-  const admin = await checkAdmin();
+  const admin = await getAdminUser();
   if (!admin) {
     return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
   }
@@ -128,7 +116,7 @@ export async function GET(req: NextRequest) {
  * - Create Company
  */
 export async function POST(req: NextRequest) {
-  const admin = await checkAdmin();
+  const admin = await getAdminUser();
   if (!admin) {
     return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
   }
@@ -185,7 +173,7 @@ export async function POST(req: NextRequest) {
  * - /api/companies?id=1
  */
 export async function PUT(req: NextRequest) {
-  const admin = await checkAdmin();
+  const admin = await getAdminUser();
   if (!admin) {
     return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
   }
@@ -265,7 +253,7 @@ export async function PUT(req: NextRequest) {
  * - /api/companies?id=1
  */
 export async function DELETE(req: NextRequest) {
-  const admin = await checkAdmin();
+  const admin = await getAdminUser();
   if (!admin) {
     return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
   }

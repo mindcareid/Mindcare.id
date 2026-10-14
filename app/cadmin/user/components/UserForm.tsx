@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import Button from "@/app/components/reusable/Button";
 import { uploadToCloudinary } from "@/lib/cloudinary/upload";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
@@ -14,6 +17,9 @@ type UserFormProps = {
   defaultValues?: Partial<UserFormFields>;
 };
 
+const inputClass =
+  "w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
+
 type UserFormFields = {
   email: string;
   username: string;
@@ -23,7 +29,6 @@ type UserFormFields = {
   bio?: string;
   instagram?: string;
   facebook?: string;
-  role: "ADMIN" | "SUPERADMIN" | "USER";
   isActive: boolean;
   image?: {
     secure_url: string;
@@ -41,7 +46,6 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
     bio: "",
     instagram: "",
     facebook: "",
-    role: "USER",
     isActive: true,
     image: defaultValues?.image ?? undefined, // 👈 ini penting
     ...defaultValues,
@@ -49,6 +53,7 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
 
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
+  const { data: session, update } = useSession();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -83,9 +88,10 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
           public_id: data.public_id,
         },
       }));
+      toast.success("Image uploaded!");
     } catch (err) {
       console.error("Upload error:", err);
-      alert(err instanceof Error ? err.message : "Image upload failed");
+      toast.error(err instanceof Error ? err.message : "Image upload failed");
     }
   };
 
@@ -102,14 +108,20 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
       });
 
       if (res.ok) {
+        // Kalau admin mengedit akunnya sendiri, segarkan sesi agar perubahan
+        // langsung terlihat tanpa login ulang.
+        if (id && session?.user?.id && Number(session.user.id) === id) {
+          await update();
+        }
+        toast.success(id ? "User updated" : "User created");
         router.push("/cadmin/user");
       } else {
-        const err = await res.json();
-        alert(err.message || "Failed to submit");
+        const err = await res.json().catch(() => null);
+        toast.error(err?.message || "Failed to submit");
       }
     } catch (error) {
       console.error(error);
-      alert("Something went wrong");
+      toast.error("Something went wrong");
     } finally {
       setSubmitting(false);
     }
@@ -118,13 +130,13 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="max-w-7xl mx-auto bg-white p-6 rounded shadow"
+      className="mx-auto max-w-5xl rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6"
     >
-      <h2 className="text-xl font-semibold mb-6">
+      <h2 className="mb-6 font-heading text-xl font-semibold text-foreground">
         {id ? "Edit User" : "Create User"}
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* === LEFT COLUMN === */}
         <div className="space-y-4">
           <input
@@ -133,7 +145,7 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
             onChange={handleChange}
             required
             placeholder="Name"
-            className="w-full border border-gray-300 px-3 py-2 rounded"
+            className={inputClass}
           />
           <input
             name="username"
@@ -141,7 +153,7 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
             onChange={handleChange}
             required
             placeholder="Username"
-            className="w-full border border-gray-300 px-3 py-2 rounded"
+            className={inputClass}
           />
           <input
             type="email"
@@ -150,22 +162,24 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
             onChange={handleChange}
             required
             placeholder="Email"
-            className="w-full border border-gray-300 px-3 py-2 rounded"
+            className={inputClass}
           />
-          <input
-            type="password"
-            name="password"
-            value={form.password || ""}
-            onChange={handleChange}
-            placeholder="Password (optional)"
-            className="w-full border border-gray-300 px-3 py-2 rounded"
-          />
+          {!id && (
+            <input
+              type="password"
+              name="password"
+              value={form.password || ""}
+              onChange={handleChange}
+              placeholder="Initial password (optional)"
+              className={inputClass}
+            />
+          )}
           <input
             name="phoneNumber"
             value={form.phoneNumber || ""}
             onChange={handleChange}
             placeholder="Phone Number"
-            className="w-full border border-gray-300 px-3 py-2 rounded"
+            className={inputClass}
           />
         </div>
 
@@ -176,28 +190,18 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
             value={form.instagram || ""}
             onChange={handleChange}
             placeholder="Instagram"
-            className="w-full border border-gray-300 px-3 py-2 rounded"
+            className={inputClass}
           />
           <input
             name="facebook"
             value={form.facebook || ""}
             onChange={handleChange}
             placeholder="Facebook"
-            className="w-full border border-gray-300 px-3 py-2 rounded"
+            className={inputClass}
           />
-          <select
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-            className="w-full border border-gray-300 px-3 py-2 rounded"
-          >
-            <option value="USER">User</option>
-            <option value="SUPERADMIN">Super Admin</option>
-            <option value="ADMIN">Admin</option>
-          </select>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-foreground">
               Bio
             </label>
             <ReactQuill
@@ -208,16 +212,14 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Upload Image
             </label>
             <input
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
-              className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-                         file:rounded-full file:border-0 file:text-sm file:font-semibold
-                         file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              className="mt-1 block w-full text-sm text-muted-foreground file:mr-4 file:rounded-full file:border-0 file:bg-brand-lavender-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-secondary hover:file:bg-brand-lavender-200"
             />
             {form.image?.secure_url && (
               <div className="mt-2">
@@ -226,7 +228,7 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
                   alt="Preview"
                   width={96}
                   height={96}
-                  className="rounded-full object-cover"
+                  className="size-24 rounded-full object-cover"
                 />
               </div>
             )}
@@ -234,21 +236,13 @@ export default function UserForm({ id, defaultValues }: UserFormProps) {
         </div>
       </div>
 
-      <div className="mt-6 flex gap-4">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-        >
-          {submitting ? "Submitting..." : id ? "Update User" : "Create User"}
-        </button>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded"
-        >
+      <div className="mt-6 flex gap-3">
+        <Button type="submit" isLoading={submitting}>
+          {id ? "Update User" : "Create User"}
+        </Button>
+        <Button type="button" variant="outline" onClick={() => router.back()}>
           Cancel
-        </button>
+        </Button>
       </div>
     </form>
   );

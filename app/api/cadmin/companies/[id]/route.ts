@@ -1,26 +1,12 @@
-import { authOptions } from "@/lib/auth";
 import {
   sendCompanyApprovedEmail,
   sendCompanyRejectedEmail,
 } from "@/lib/email";
+import { getAdminUser } from "@/lib/adminGuard";
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import z from "zod";
-
-async function checkSuperAdmin() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user.id) return null;
-
-  const user = await prisma.user.findUnique({
-    where: { id: Number(session.user.id) },
-    select: { role: true },
-  });
-
-  if (!user || !["SUPERADMIN", "ADMIN"].includes(user.role)) return null;
-  return user;
-}
 
 const PatchCompanySchema = z.object({
   action: z.enum(["APPROVE", "REJECT"]),
@@ -29,7 +15,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: { id: string } },
 ) {
-  const admin = await checkSuperAdmin();
+  const admin = await getAdminUser();
 
   if (!admin) {
     return NextResponse.json({ message: "Forbidden!" }, { status: 403 });

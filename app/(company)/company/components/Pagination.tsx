@@ -42,13 +42,13 @@ export function Pagination({
   const isLastPage = currentPage === totalPages;
 
   return (
-    <div className="flex items-center justify-center gap-1 mt-8">
+    <div className="mt-8 flex flex-wrap items-center justify-center gap-1">
       <Link
         href={isFirstPage ? "#" : buildPageHref(basePath, currentPage - 1)}
         aria-disabled={isFirstPage}
         aria-label="Previous page"
         tabIndex={isFirstPage ? -1 : undefined}
-        className={`flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-sm transition-colors hover:bg-gray-50 ${
+        className={`flex h-9 w-9 items-center justify-center rounded-lg border border-border text-sm transition-colors hover:bg-muted ${
           isFirstPage ? "pointer-events-none opacity-40" : ""
         }`}
       >
@@ -60,7 +60,7 @@ export function Pagination({
           <span
             key={`ellipsis-${i}`}
             aria-hidden="true"
-            className="flex h-9 w-9 items-center justify-center text-sm text-gray-400"
+            className="flex h-9 w-9 items-center justify-center text-sm text-muted-foreground"
           >
             ···
           </span>
@@ -72,8 +72,8 @@ export function Pagination({
             aria-current={page === currentPage ? "page" : undefined}
             className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm transition-colors ${
               page === currentPage
-                ? "bg-blue-600 text-white"
-                : "border border-gray-200 hover:bg-gray-50"
+                ? "bg-primary text-primary-foreground"
+                : "border border-border hover:bg-muted"
             }`}
           >
             {page}
@@ -86,7 +86,7 @@ export function Pagination({
         aria-disabled={isLastPage}
         aria-label="Next page"
         tabIndex={isLastPage ? -1 : undefined}
-        className={`flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-sm transition-colors hover:bg-gray-50 ${
+        className={`flex h-9 w-9 items-center justify-center rounded-lg border border-border text-sm transition-colors hover:bg-muted ${
           isLastPage ? "pointer-events-none opacity-40" : ""
         }`}
       >

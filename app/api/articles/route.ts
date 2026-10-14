@@ -1,37 +1,13 @@
 import { ArticleStatus } from "@prisma/client";
-import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { authOptions } from "@/lib/auth";
+import { getAdminUser } from "@/lib/adminGuard";
 import prisma from "@/lib/prisma";
 import {
   CreateArticleNewsSchema,
   UpdateArticleSchema,
 } from "@/lib/validations/auth";
-
-async function checkAdmin() {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return null;
-  }
-
-  const user = await prisma.user.findUnique({
-    where: {
-      id: Number(session.user.id),
-    },
-    select: {
-      role: true,
-    },
-  });
-
-  if (!user || !["SUPERADMIN", "ADMIN"].includes(user.role)) {
-    return null;
-  }
-
-  return user;
-}
 
 function formatZodError(error: ZodError) {
   return error.issues.reduce(
@@ -203,7 +179,7 @@ export async function GET(req: NextRequest) {
  * =========================================================
  */
 export async function POST(req: NextRequest) {
-  const admin = await checkAdmin();
+  const admin = await getAdminUser();
 
   if (!admin) {
     return NextResponse.json(
@@ -317,7 +293,7 @@ export async function POST(req: NextRequest) {
  * =========================================================
  */
 export async function PUT(req: NextRequest) {
-  const admin = await checkAdmin();
+  const admin = await getAdminUser();
 
   if (!admin) {
     return NextResponse.json(
@@ -512,7 +488,7 @@ export async function PUT(req: NextRequest) {
  *
  */
 export async function DELETE(req: NextRequest) {
-  const admin = await checkAdmin();
+  const admin = await getAdminUser();
 
   if (!admin) {
     return NextResponse.json(

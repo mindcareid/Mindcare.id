@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import Button from "@/app/components/reusable/Button";
 import { autoSlug } from "@/lib/utils/autoSlug";
-
 
 type EventCategoryFormProps = {
   id?: number;
@@ -16,6 +17,9 @@ type EventCategoryFormFields = {
   isActive: boolean;
 };
 
+const inputClass =
+  "w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
+
 export default function EventCategoryForm({
   id,
   defaultValues,
@@ -23,7 +27,6 @@ export default function EventCategoryForm({
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [slugTouched, setSlugTouched] = useState(false);
-
 
   const [form, setForm] = useState<EventCategoryFormFields>({
     name: "",
@@ -84,17 +87,18 @@ export default function EventCategoryForm({
           method: id ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
-        }
+        },
       );
 
       if (res.ok) {
+        toast.success(id ? "Category updated" : "Category created");
         router.push("/cadmin/event-categories");
       } else {
-        const err = await res.json();
-        alert(err.message || "Failed to submit");
+        const err = await res.json().catch(() => null);
+        toast.error(err?.message || "Failed to submit");
       }
     } catch {
-      alert("Something went wrong");
+      toast.error("Something went wrong");
     } finally {
       setSubmitting(false);
     }
@@ -105,15 +109,15 @@ export default function EventCategoryForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="max-w-2xl mx-auto bg-white p-6 rounded shadow"
+      className="mx-auto max-w-2xl rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6"
     >
-      <h2 className="text-xl font-semibold mb-6">
+      <h2 className="mb-6 font-heading text-xl font-semibold text-foreground">
         {id ? "Edit Event Category" : "Create Event Category"}
       </h2>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">
+          <label className="mb-1 block text-sm font-medium text-foreground">
             Category Name
           </label>
           <input
@@ -122,56 +126,42 @@ export default function EventCategoryForm({
             onChange={handleNameChange}
             required
             placeholder="Ex: Workshop, Conference"
-            className="w-full border px-3 py-2 rounded"
+            className={inputClass}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Slug</label>
-
+          <label className="mb-1 block text-sm font-medium text-foreground">
+            Slug
+          </label>
           <input
             name="slug"
             value={form.slug}
             onChange={handleSlugChange}
             required
-            className="w-full border px-3 py-2 rounded bg-gray-50"
+            className={`${inputClass} font-mono text-xs`}
           />
         </div>
 
-
-
-        <label className="inline-flex items-center gap-2">
+        <label className="inline-flex items-center gap-2 text-sm text-foreground">
           <input
             type="checkbox"
             name="isActive"
             checked={form.isActive}
             onChange={handleChange}
-            className="h-5 w-5 text-blue-600"
+            className="h-4 w-4 rounded border-border accent-primary"
           />
-          <span>Active</span>
+          Active
         </label>
       </div>
 
-      <div className="mt-6 flex gap-4">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-        >
-          {submitting
-            ? "Submitting..."
-            : id
-              ? "Update Category"
-              : "Create Category"}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded"
-        >
+      <div className="mt-6 flex gap-3">
+        <Button type="submit" isLoading={submitting}>
+          {id ? "Update Category" : "Create Category"}
+        </Button>
+        <Button type="button" variant="outline" onClick={() => router.back()}>
           Cancel
-        </button>
+        </Button>
       </div>
     </form>
   );

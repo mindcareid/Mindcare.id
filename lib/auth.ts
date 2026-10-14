@@ -4,6 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import prisma from "@/lib/prisma";
 import { generateUniqueUsername } from "@/lib/utils/generateUsername";
+import { resolveAdminRole } from "@/lib/adminAccess";
 import bcrypt from "bcryptjs";
 
 /* ---------------------------------------------------
@@ -94,23 +95,15 @@ export const authOptions: NextAuthOptions = {
     /* ---------------------------------------------------
        JWT CALLBACK (Single Source of Truth)
     --------------------------------------------------- */
-    async jwt({ token, user, account, trigger, session }) {
+    async jwt({ token, user, account, trigger }) {
       // 1️⃣ Session update (AMAN)
       if (trigger === "update") {
-        // 1️⃣ update profile fields jika ada
-        if (session) {
-          token.name = session.name ?? token.name;
-          token.bio = session.bio ?? token.bio;
-          token.jobTitle = session.jobTitle ?? token.jobTitle;
-          token.jobName = session.jobName ?? token.jobName;
-          token.gender = session.gender ?? token.gender;
-          token.photo = session.photo ?? token.photo;
-        }
-
-        // 2️⃣ refresh company dari database
+        // Refresh token dari database supaya perubahan (profil, email,
+        // username, akses admin) langsung terlihat tanpa login ulang.
         const dbUser = await prisma.user.findUnique({
           where: { id: Number(token.id) },
           include: {
+            adminAccess: { select: { role: true, isActive: true } },
             companies: {
               include: {
                 company: {
@@ -123,6 +116,18 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (dbUser) {
+          token.email = dbUser.email;
+          token.name = dbUser.name;
+          token.phoneNumber = dbUser.phoneNumber;
+          token.username = dbUser.username;
+          token.bio = dbUser.bio;
+          token.jobTitle = dbUser.jobTitle ?? null;
+          token.jobName = dbUser.jobName ?? null;
+          token.gender = dbUser.gender;
+          token.role = dbUser.role;
+          token.adminRole = resolveAdminRole(dbUser.adminAccess, dbUser.role);
+          token.photo = dbUser.photo;
+          token.emailVerified = dbUser.emailVerified;
           token.companies = dbUser.companies.map((cu) => ({
             id: cu.company.id,
             name: cu.company.name,
@@ -150,6 +155,7 @@ export const authOptions: NextAuthOptions = {
       let dbUser = await prisma.user.findUnique({
         where: { email: user.email! },
         include: {
+          adminAccess: { select: { role: true, isActive: true } },
           companies: {
             include: {
               company: {
@@ -180,6 +186,7 @@ export const authOptions: NextAuthOptions = {
               emailVerifiedAt: new Date(),
             },
             include: {
+              adminAccess: { select: { role: true, isActive: true } },
               companies: {
                 include: {
                   company: { select: { id: true, name: true, slug: true } },
@@ -198,6 +205,7 @@ export const authOptions: NextAuthOptions = {
               emailVerificationAttempts: 0,
             },
             include: {
+              adminAccess: { select: { role: true, isActive: true } },
               companies: {
                 include: {
                   company: { select: { id: true, name: true, slug: true } },
@@ -210,8 +218,9 @@ export const authOptions: NextAuthOptions = {
         dbUser = await prisma.user.findUnique({
           where: { email: user.email! },
           include: {
+            adminAccess: { select: { role: true, isActive: true } },
             companies: {
-              include: { company: true },
+              include: { company: { select: { id: true, name: true, slug: true } } },
             },
           },
         });
@@ -231,6 +240,7 @@ export const authOptions: NextAuthOptions = {
       token.gender = dbUser.gender;
       // token.createAt = dbUser.createdAt?.toISOString();
       token.role = dbUser.role;
+      token.adminRole = resolveAdminRole(dbUser.adminAccess, dbUser.role);
       token.photo = dbUser.photo;
       token.emailVerified = dbUser.emailVerified;
       token.companies = dbUser.companies.map((cu) => ({
@@ -269,6 +279,7 @@ export const authOptions: NextAuthOptions = {
       // session.user.createAt = token.createAt ?? null;
       session.user.username = token.username;
       session.user.role = token.role;
+      session.user.adminRole = token.adminRole ?? null;
       session.user.photo = token.photo as string | null;
       session.user.emailVerified = token.emailVerified as boolean;
       session.user.companies = token.companies ?? [];

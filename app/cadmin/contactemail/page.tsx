@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils/FormatDate";
 
 type Contact = {
@@ -16,66 +18,82 @@ type Contact = {
   repliedAt: string | null;
 };
 
-const statusBadge = {
-  UNREAD: "bg-red-100 text-red-600",
-  READ: "bg-yellow-100 text-yellow-700",
-  REPLIED: "bg-green-100 text-green-700",
+const FILTERS = ["ALL", "UNREAD", "READ", "REPLIED"] as const;
+type Filter = (typeof FILTERS)[number];
+
+const STATUS_BADGE: Record<Contact["status"], string> = {
+  UNREAD: "bg-destructive/10 text-destructive",
+  READ: "bg-brand-lavender-100 text-secondary",
+  REPLIED: "bg-brand-mint-100 text-accent",
 };
 
 export default function ContactEmailAdmin() {
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"ALL" | "UNREAD" | "READ" | "REPLIED">(
-    "ALL",
-  );
+  const [loadedFilter, setLoadedFilter] = useState<Filter | null>(null);
+  const [filter, setFilter] = useState<Filter>("ALL");
 
-  useEffect(() => {
-    const fetch_ = async () => {
-      setLoading(true);
-      const url =
-        filter === "ALL"
-          ? "/api/cadmin/contacts"
-          : `/api/cadmin/contacts?status=${filter}`;
-      const res = await fetch(url);
-      const json = await res.json();
-      setContacts(json.data ?? []);
-      setLoading(false);
-    };
-    fetch_();
-  }, [filter]);
-
+  const loading = loadedFilter !== filter;
   const unreadCount = contacts.filter((c) => c.status === "UNREAD").length;
 
+  useEffect(() => {
+    let cancelled = false;
+    const url =
+      filter === "ALL"
+        ? "/api/cadmin/contacts"
+        : `/api/cadmin/contacts?status=${filter}`;
+
+    fetch(url)
+      .then((res) => res.json())
+      .then((json) => {
+        if (!cancelled) setContacts(json.data ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Failed to load messages");
+      })
+      .finally(() => {
+        if (!cancelled) setLoadedFilter(filter);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [filter]);
+
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Contact Messages</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage incoming messages from the contact form
+          <h1 className="font-heading text-2xl font-semibold text-foreground">
+            Contact Messages
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage incoming messages from the contact form.
           </p>
         </div>
         {unreadCount > 0 && (
-          <span className="bg-red-500 text-white text-sm font-semibold px-3 py-1 rounded-full">
+          <span className="inline-flex items-center rounded-full bg-destructive/10 px-3 py-1 text-sm font-medium text-destructive">
             {unreadCount} unread
           </span>
         )}
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-2 mb-6 flex-wrap">
-        {(["ALL", "UNREAD", "READ", "REPLIED"] as const).map((tab) => (
+      {/* Filters */}
+      <div className="mb-5 flex flex-wrap gap-2">
+        {FILTERS.map((tab) => (
           <button
             key={tab}
+            type="button"
             onClick={() => setFilter(tab)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+            aria-pressed={filter === tab}
+            className={cn(
+              "rounded-full px-4 py-2 text-sm font-medium transition",
               filter === tab
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
+                ? "bg-primary text-primary-foreground"
+                : "border border-border bg-card text-foreground hover:bg-muted",
+            )}
           >
-            {tab}
+            {tab.charAt(0) + tab.slice(1).toLowerCase()}
           </button>
         ))}
       </div>
@@ -86,64 +104,65 @@ export default function ContactEmailAdmin() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-20 bg-gray-100 rounded-xl animate-pulse"
+              className="h-20 animate-pulse rounded-xl border border-border bg-muted/40"
             />
           ))}
         </div>
       ) : contacts.length === 0 ? (
-        <div className="text-center py-16 text-gray-400 text-sm">
-          No messages found
+        <div className="rounded-xl border border-border bg-card p-12 text-center text-sm text-muted-foreground">
+          No messages found.
         </div>
       ) : (
         <div className="space-y-3">
-          {contacts.map((contact) => (
-            <Link
-              key={contact.id}
-              href={`/cadmin/contactemail/${contact.id}`}
-              className="flex items-center justify-between p-5 bg-white border border-gray-200 rounded-2xl hover:shadow-md transition group"
-            >
-              <div className="flex items-start gap-3 min-w-0">
-                {/* Dot unread */}
-                <div className="mt-1.5 shrink-0">
-                  {contact.status === "UNREAD" ? (
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 block" />
-                  ) : (
-                    <span className="w-2.5 h-2.5 rounded-full bg-gray-200 block" />
-                  )}
-                </div>
-
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p
-                      className={`font-semibold text-gray-900 ${contact.status === "UNREAD" ? "font-bold" : ""}`}
-                    >
-                      {contact.name}
+          {contacts.map((contact) => {
+            const unread = contact.status === "UNREAD";
+            return (
+              <Link
+                key={contact.id}
+                href={`/cadmin/contactemail/${contact.id}`}
+                className="group flex items-start justify-between gap-4 rounded-xl border border-border bg-card p-4 shadow-card transition hover:shadow-card-hover"
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <span
+                    className={cn(
+                      "mt-1.5 size-2.5 shrink-0 rounded-full",
+                      unread ? "bg-destructive" : "bg-border",
+                    )}
+                  />
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p
+                        className={cn(
+                          "text-foreground",
+                          unread ? "font-semibold" : "font-medium",
+                        )}
+                      >
+                        {contact.name}
+                      </p>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {contact.email}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                      {contact.subject}
                     </p>
-                    <span className="text-xs text-gray-400">
-                      {contact.email}
-                    </span>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {formatDate(contact.createdAt)}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-600 truncate mt-0.5">
-                    {contact.subject}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {formatDate(contact.createdAt)}
-                  </p>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-3 shrink-0 ml-4">
                 <span
-                  className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusBadge[contact.status]}`}
+                  className={cn(
+                    "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium",
+                    STATUS_BADGE[contact.status],
+                  )}
                 >
                   {contact.status}
                 </span>
-                <span className="text-gray-400 group-hover:text-gray-600 transition text-sm">
-                  →
-                </span>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

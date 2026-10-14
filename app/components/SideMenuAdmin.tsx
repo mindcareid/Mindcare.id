@@ -1,235 +1,353 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
-  faHome,
-  faDotCircle,
-  faBriefcase,
-  faUsers,
   faBars,
-  faCircleInfo,
-  faTimes,
-  faImage,
-  faLightbulb,
-  faBuilding,
-  faCalendar,
-  faNewspaper,
+  faXmark,
+  faGauge,
+  faCalendarDays,
+  faEnvelope,
+  faClipboardCheck,
+  faUsers,
   faChevronDown,
   faArrowUpRightFromSquare,
   faRightFromBracket,
-  faEnvelope,
-  faClipboardCheck,
+  faShieldHalved,
   faTags,
+  faBriefcase,
+  faLayerGroup,
+  faUserGroup,
 } from "@fortawesome/free-solid-svg-icons";
-import clsx from "clsx";
-import { signOut } from "next-auth/react";
+import { cn } from "@/lib/utils";
+
+const EVENT_LINKS = [
+  { href: "/cadmin/events", label: "Event List" },
+  { href: "/cadmin/event-categories", label: "Event Categories" },
+  { href: "/cadmin/event-industries", label: "Event Industries" },
+  { href: "/cadmin/event-focus-areas", label: "Event Focus Areas" },
+] as const;
+
+const NAV_LINKS: {
+  href: string;
+  label: string;
+  icon: IconProp;
+  section: string;
+}[] = [
+  { href: "/cadmin", label: "Dashboard", icon: faGauge, section: "Overview" },
+  {
+    href: "/cadmin/contactemail",
+    label: "Email Contact",
+    icon: faEnvelope,
+    section: "Messages",
+  },
+  {
+    href: "/cadmin/applications",
+    label: "Directory Applications",
+    icon: faClipboardCheck,
+    section: "Applications",
+  },
+  {
+    href: "/cadmin/user",
+    label: "Users",
+    icon: faUsers,
+    section: "Access",
+  },
+  {
+    href: "/cadmin/areas-of-support",
+    label: "Areas of Support",
+    icon: faTags,
+    section: "Reference",
+  },
+  {
+    href: "/cadmin/centre-services",
+    label: "Centre Services",
+    icon: faBriefcase,
+    section: "Reference",
+  },
+  {
+    href: "/cadmin/solution-categories",
+    label: "Solution Categories",
+    icon: faLayerGroup,
+    section: "Reference",
+  },
+  {
+    href: "/cadmin/solution-audiences",
+    label: "Solution Audiences",
+    icon: faUserGroup,
+    section: "Reference",
+  },
+];
 
 export default function SideMenuAdmin() {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(true);
-  const [eventOpen, setEventOpen] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [eventToggle, setEventToggle] = useState<boolean | null>(null);
 
-  const isActive = (href: string) => {
-    if (href === "/cadmin") return pathname === "/cadmin";
-    return pathname.startsWith(href);
-  };
+  const isActive = (href: string) =>
+    href === "/cadmin"
+      ? pathname === "/cadmin"
+      : pathname === href || pathname.startsWith(`${href}/`);
+
+  const eventsActive = EVENT_LINKS.some((link) => isActive(link.href));
+  const eventOpen = eventToggle ?? eventsActive;
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 1024) setOpen(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const sections = Array.from(new Set(NAV_LINKS.map((item) => item.section)));
 
   return (
     <>
-      {/* Mobile Toggle */}
-      <button
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-lg shadow"
-        onClick={() => setIsOpen(true)}
-      >
-        <FontAwesomeIcon icon={faBars} />
-      </button>
+      {/* Mobile top bar */}
+      <header className="lg:hidden fixed inset-x-0 top-0 z-30 flex h-14 items-center gap-3 border-b border-white/10 bg-brand-navy-950 px-4 text-white">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Open admin menu"
+          aria-expanded={open}
+          className="flex size-9 items-center justify-center rounded-lg transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple-600"
+        >
+          <FontAwesomeIcon icon={faBars} className="size-5" />
+        </button>
+        <span className="font-heading text-sm font-semibold tracking-wide">
+          MindCare <span className="text-brand-lavender-200/70">Admin</span>
+        </span>
+      </header>
 
-      {/* Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 md:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      {/* Backdrop */}
+      <div
+        onClick={() => setOpen(false)}
+        aria-hidden="true"
+        className={cn(
+          "fixed inset-0 z-40 bg-brand-navy-950/60 backdrop-blur-sm transition-opacity lg:hidden",
+          open ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+      />
 
       {/* Sidebar */}
       <aside
-        className={clsx(
-          "fixed md:static top-0 left-0 z-50 bg-white border-r min-h-screen p-6 w-64 transition-transform duration-300 shadow",
-          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+        aria-label="Admin navigation"
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-brand-navy-950 text-brand-lavender-100 transition-transform duration-300 ease-out",
+          "lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0",
+          open ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-semibold text-blue-600">Admin Panel</h3>
+        {/* Brand */}
+        <div className="flex items-center gap-3 border-b border-white/10 px-5 py-4">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-purple-600 text-white shadow-lg">
+            <FontAwesomeIcon icon={faShieldHalved} className="size-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-heading text-base font-semibold leading-tight text-white">
+              MindCare
+            </p>
+            <p className="text-xs text-brand-lavender-200/70">Admin Panel</p>
+          </div>
           <button
-            className="md:hidden text-gray-500"
-            onClick={() => setIsOpen(false)}
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Close admin menu"
+            className="flex size-8 items-center justify-center rounded-lg transition hover:bg-white/10 lg:hidden"
           >
-            <FontAwesomeIcon icon={faTimes} />
+            <FontAwesomeIcon icon={faXmark} className="size-4" />
           </button>
         </div>
 
-        <ul className="space-y-1">
-          {/* Dashboard */}
-          <MenuItem
-            href="/cadmin"
-            icon={faHome}
-            label="Dashboard"
-            active={isActive("/cadmin")}
-          />
+        {/* Navigation */}
+        <nav className="flex-1 space-y-5 overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-4 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-track]:bg-transparent">
+          {sections.map((section) => (
+            <div key={section} className="space-y-1">
+              <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-lavender-200/50">
+                {section}
+              </p>
 
-          <MenuItem
-            href="/"
-            icon={faArrowUpRightFromSquare}
-            label="Go to Website"
-            active={false}
-          />
+              {NAV_LINKS.filter((item) => item.section === section).map(
+                (item) => (
+                  <NavLink
+                    key={item.href}
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    active={isActive(item.href)}
+                    onNavigate={() => setOpen(false)}
+                  />
+                ),
+              )}
+            </div>
+          ))}
 
-          <MenuItem
-            href="/cadmin/categories"
-            icon={faBriefcase}
-            label="Categories"
-            active={isActive("/cadmin/categories")}
-          />
-
-          <MenuItem
-            href="/cadmin/user"
-            icon={faUsers}
-            label="Users"
-            active={isActive("/cadmin/user")}
-          />
-
-          <MenuItem
-            href="/cadmin/companies"
-            icon={faBuilding}
-            label="Companies"
-            active={isActive("/cadmin/companies")}
-          />
-
-          {/* ===== EVENT GROUP ===== */}
-          <li className="mt-3">
+          {/* Events group */}
+          <div className="space-y-1">
+            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-lavender-200/50">
+              Events
+            </p>
             <button
               type="button"
-              onClick={() => setEventOpen((p) => !p)}
-              className={clsx(
-                "flex w-full items-center justify-between px-4 py-2 rounded-lg transition",
-                isActive("/cadmin/events") ||
-                  isActive("/cadmin/event-categories")
-                  ? "bg-blue-50 text-blue-700 font-semibold"
-                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-600",
+              onClick={() => setEventToggle(!eventOpen)}
+              aria-expanded={eventOpen}
+              className={cn(
+                "group relative flex w-full min-w-0 items-center gap-3 rounded-xl px-3 py-2 text-sm transition",
+                eventsActive
+                  ? "bg-white/10 text-white"
+                  : "text-brand-lavender-100/80 hover:bg-white/10 hover:text-white",
               )}
             >
-              <span className="flex items-center gap-3">
-                <FontAwesomeIcon icon={faCalendar} className="w-4 h-4" />
-                <span className="text-sm">Events</span>
+              {eventsActive && <ActiveBar />}
+              <FontAwesomeIcon
+                icon={faCalendarDays}
+                className="size-4 shrink-0"
+              />
+              <span className="min-w-0 flex-1 truncate text-left font-medium">
+                Manage Events
               </span>
-
               <FontAwesomeIcon
                 icon={faChevronDown}
-                className={clsx(
-                  "transition-transform text-xs",
+                className={cn(
+                  "size-3 transition-transform duration-200",
                   eventOpen && "rotate-180",
                 )}
               />
             </button>
 
-            {eventOpen && (
-              <ul className="ml-6 mt-1 space-y-1">
-                <MenuItem
-                  href="/cadmin/events"
-                  icon={faDotCircle}
-                  label="Event List"
-                  active={isActive("/cadmin/events")}
-                  compact
-                />
-                <MenuItem
-                  href="/cadmin/event-categories"
-                  icon={faDotCircle}
-                  label="Event Categories"
-                  active={isActive("/cadmin/event-categories")}
-                  compact
-                />
-                <MenuItem
-                  href="/cadmin/event-industries"
-                  icon={faDotCircle}
-                  label="Event Industries"
-                  active={isActive("/cadmin/event-industries")}
-                  compact
-                />
+            <div
+              className={cn(
+                "grid transition-all duration-200",
+                eventOpen
+                  ? "grid-rows-[1fr] opacity-100"
+                  : "grid-rows-[0fr] opacity-0",
+              )}
+            >
+              <ul className="ml-4 overflow-hidden border-l border-white/10">
+                {EVENT_LINKS.map((link) => {
+                  const active = isActive(link.href);
+                  return (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        onClick={() => setOpen(false)}
+                        aria-current={active ? "page" : undefined}
+                        className={cn(
+                          "relative flex items-center gap-3 rounded-lg py-2 pl-4 pr-3 text-sm transition",
+                          active
+                            ? "text-white"
+                            : "text-brand-lavender-100/70 hover:bg-white/10 hover:text-white",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "size-1.5 shrink-0 rounded-full transition",
+                            active
+                              ? "bg-brand-emerald-600"
+                              : "bg-brand-lavender-200/40",
+                          )}
+                        />
+                        {link.label}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
-            )}
-          </li>
-          <MenuItem
-            href="/cadmin/contactemail"
-            icon={faEnvelope}
-            label="Email Contact"
-            active={isActive("/cadmin/contactemail")}
-          />
-          <MenuItem
-            href="/cadmin/company-accept"
-            icon={faBuilding}
-            label="Company Accept"
-            active={isActive("/cadmin/company-accept")}
-          />
-          <MenuItem
-            href="/cadmin/applications"
-            icon={faClipboardCheck}
-            label="Directory Applications"
-            active={isActive("/cadmin/applications")}
-          />
-          <MenuItem
-            href="/cadmin/event-categories"
-            icon={faTags}
-            label="Event Categories"
-            active={isActive("/cadmin/event-categories")}
-          />
-        </ul>
-        <li className="pt-4 mt-4 border-t">
-          <button
-            onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex w-full items-center gap-3 px-4 py-2 rounded-lg text-red-600 hover:bg-red-50 transition"
+            </div>
+          </div>
+        </nav>
+
+        {/* Footer */}
+        <div className="space-y-1 border-t border-white/10 px-3 py-3">
+          <Link
+            href="/"
+            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-brand-lavender-100/80 transition hover:bg-white/10 hover:text-white"
           >
-            <FontAwesomeIcon icon={faRightFromBracket} className="w-4 h-4" />
-            <span>Logout</span>
+            <FontAwesomeIcon
+              icon={faArrowUpRightFromSquare}
+              className="size-4 shrink-0"
+            />
+            View website
+          </Link>
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-destructive transition hover:bg-white/10"
+          >
+            <FontAwesomeIcon
+              icon={faRightFromBracket}
+              className="size-4 shrink-0"
+            />
+            Logout
           </button>
-        </li>
+        </div>
       </aside>
     </>
   );
 }
 
-/* =========================
-   REUSABLE COMPONENTS
-========================= */
-
-type MenuItemProps = {
+function NavLink({
+  href,
+  label,
+  icon,
+  active,
+  onNavigate,
+}: {
   href: string;
-  icon: IconProp;
   label: string;
+  icon: IconProp;
   active: boolean;
-  compact?: boolean;
-};
-
-function MenuItem({ href, icon, label, active, compact }: MenuItemProps) {
+  onNavigate: () => void;
+}) {
   return (
-    <li>
-      <Link
-        href={href}
-        className={clsx(
-          "flex items-center gap-3 rounded-lg transition",
-          compact ? "px-3 py-2 text-sm" : "px-4 py-2",
-          active
-            ? "bg-blue-100 text-blue-700 font-semibold"
-            : "text-gray-700 hover:bg-blue-50 hover:text-blue-600",
+    <Link
+      href={href}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "group relative flex min-w-0 items-center gap-3 rounded-xl px-3 py-2 text-sm transition",
+        active
+          ? "bg-white/10 text-white"
+          : "text-brand-lavender-100/80 hover:bg-white/10 hover:text-white",
+      )}
+    >
+      {active && <ActiveBar />}
+      <FontAwesomeIcon icon={icon} className="size-4 shrink-0" />
+      <span
+        className={cn(
+          "min-w-0 truncate font-medium",
+          active && "font-semibold",
         )}
       >
-        <FontAwesomeIcon icon={icon} className="w-4 h-4" />
-        <span>{label}</span>
-      </Link>
-    </li>
+        {label}
+      </span>
+    </Link>
+  );
+}
+
+function ActiveBar() {
+  return (
+    <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-brand-emerald-600" />
   );
 }

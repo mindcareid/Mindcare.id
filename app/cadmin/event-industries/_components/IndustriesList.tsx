@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Button from "@/app/components/reusable/Button";
+import { Pencil, Trash2 } from "lucide-react";
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
+import { cn } from "@/lib/utils";
 
 type Industry = {
   id: number;
@@ -91,16 +95,26 @@ export default function IndustriesList({ initialData }: Props) {
     }
   }
 
+  if (initialData.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-10 text-center text-sm text-muted-foreground shadow-card">
+        No industries yet. Add one above.
+      </div>
+    );
+  }
+
   return (
-    <ul className="divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden">
+    <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-card">
       {initialData.map((industry) => {
         const isProcessing = processingId === industry.id;
+        const editing = editingId === industry.id;
+
         return (
           <li
             key={industry.id}
-            className="flex items-center gap-3 px-4 py-3 bg-white hover:bg-gray-50"
+            className="flex flex-col gap-3 p-4 transition hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
           >
-            {editingId === industry.id ? (
+            {editing ? (
               <>
                 <input
                   autoFocus
@@ -110,66 +124,88 @@ export default function IndustriesList({ initialData }: Props) {
                     e.key === "Enter" && handleUpdate(industry.id)
                   }
                   disabled={isProcessing}
-                  className="flex-1 border border-blue-400 rounded px-2 py-1 text-sm disabled:opacity-50"
+                  className="min-w-0 flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
                 />
-                <button
+                <Button
+                  size="sm"
+                  isLoading={isProcessing}
                   onClick={() => handleUpdate(industry.id)}
-                  disabled={isProcessing}
-                  className="text-sm text-blue-600 font-medium disabled:opacity-50"
                 >
-                  {isProcessing ? "Saving..." : "Save"}
-                </button>
-                <button
-                  onClick={() => setEditingId(null)}
+                  Save
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
                   disabled={isProcessing}
-                  className="text-sm text-gray-400 disabled:opacity-50"
+                  onClick={() => setEditingId(null)}
                 >
                   Cancel
-                </button>
+                </Button>
               </>
             ) : (
               <>
-                <span
-                  className={`flex-1 text-sm ${
-                    !industry.isActive
-                      ? "text-gray-400 line-through"
-                      : "text-gray-800"
-                  }`}
-                >
-                  {industry.name}
-                </span>
-                <button
-                  onClick={() => {
-                    setEditingId(industry.id);
-                    setEditName(industry.name);
-                  }}
-                  disabled={isProcessing}
-                  className="text-xs text-gray-500 hover:text-blue-600 disabled:opacity-50"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleToggle(industry.id, industry.isActive)}
-                  disabled={isProcessing}
-                  className={`text-xs font-medium disabled:opacity-50 ${
-                    industry.isActive
-                      ? "text-orange-500 hover:text-orange-700"
-                      : "text-green-500 hover:text-green-700"
-                  }`}
-                >
-                  {isProcessing
-                    ? "..."
-                    : industry.isActive
-                      ? "Nonactive"
-                      : "Active"}
-                </button>
-                <button
-                  onClick={() => handleDelete(industry.id)}
-                  disabled={isProcessing}
-                  className="text-xs text-red-400 hover:text-red-600 disabled:opacity-50"
-                >
-                  {isProcessing ? "..." : "Delete"}
-                </button>
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <span
+                    className={cn(
+                      "truncate text-sm",
+                      industry.isActive
+                        ? "text-foreground"
+                        : "text-muted-foreground line-through",
+                    )}
+                  >
+                    {industry.name}
+                  </span>
+                  <span
+                    className={cn(
+                      "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
+                      industry.isActive
+                        ? "bg-brand-mint-100 text-accent"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {industry.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingId(industry.id);
+                      setEditName(industry.name);
+                    }}
+                    disabled={isProcessing}
+                    className={buttonStyles({
+                      variant: "outline",
+                      size: "sm",
+                    })}
+                  >
+                    {" "}
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleToggle(industry.id, industry.isActive)}
+                    disabled={isProcessing}
+                    className={buttonStyles({ variant: "ghost", size: "sm" })}
+                  >
+                    {isProcessing
+                      ? "..."
+                      : industry.isActive
+                        ? "Deactivate"
+                        : "Activate"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(industry.id)}
+                    disabled={isProcessing}
+                    className={buttonStyles({ variant: "danger", size: "sm" })}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete
+                  </button>
+                </div>
               </>
             )}
           </li>

@@ -62,8 +62,8 @@ export default function ProfileHeader({ user }: { user: Session["user"] }) {
               {user.name || "-"}
             </h1>
             <Badge
-              label={user.role}
-              tone={user.role === "ADMIN" ? "info" : "neutral"}
+              label={user.adminRole ?? user.role}
+              tone={user.adminRole ? "info" : "neutral"}
             />
             {user.companyStatus && (
               <Badge

@@ -6,6 +6,7 @@ import {
   UploadSignatureError,
 } from "@/lib/cloudinary/signature";
 import { authOptions } from "@/lib/auth";
+import { resolveFolderRole } from "@/lib/adminAccess";
 
 export async function POST(req: Request) {
   try {
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
 
     const data = createUploadSignature({
       entityType: parsed.data.entityType,
-      userRole: session.user.role,
+      userRole: resolveFolderRole(session.user),
     });
     return NextResponse.json({ data });
   } catch (err) {

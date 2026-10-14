@@ -37,16 +37,21 @@ export default async function IndustriesPage({ searchParams }: Props) {
   const { industries, totalPages } = await getIndustries(currentPage);
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-900">
-        Manage Industries
-      </h1>
+    <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6 lg:p-8">
+      <div>
+        <h1 className="font-heading text-2xl font-semibold text-foreground">
+          Industries
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Categories used to group events across the platform.
+        </p>
+      </div>
       <CreateIndustryForm />
       <IndustriesList initialData={industries} />
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
-        basePath="?"  
+        basePath="?"
       />
     </div>
   );

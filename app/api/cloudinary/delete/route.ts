@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { cloudinary } from "@/lib/cloudinary/config";
 import { canDestroyPublicId } from "@/lib/cloudinary/asset";
+import { resolveFolderRole } from "@/lib/adminAccess";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Public Id Required" }, { status: 400 });
   }
 
-  if (!canDestroyPublicId(publicId, session.user.role)) {
+  if (!canDestroyPublicId(publicId, resolveFolderRole(session.user))) {
     return NextResponse.json(
       { message: "You cannot delete this asset" },
       { status: 403 },

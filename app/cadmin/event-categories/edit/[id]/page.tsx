@@ -21,7 +21,7 @@ export default async function EditEventCategoryPage({
   const data = await getEventCategory(params.id);
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6 lg:p-8">
       <EventCategoryForm
         id={Number(params.id)}
         defaultValues={data.data}

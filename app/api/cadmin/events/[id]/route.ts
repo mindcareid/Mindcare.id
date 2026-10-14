@@ -1,21 +1,7 @@
-import { authOptions } from "@/lib/auth";
+import { getAdminUser } from "@/lib/adminGuard";
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import slugify from "slugify";
-
-async function checkAdmin() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user.id) return null;
-
-  const user = await prisma.user.findUnique({
-    where: { id: Number(session.user.id) },
-    select: { role: true },
-  });
-
-  if (!user || !["SUPERADMIN", "ADMIN"].includes(user.role)) return null;
-  return user;
-}
 
 export async function GET(
   req: Request,
@@ -38,7 +24,7 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await checkAdmin();
+  const admin = await getAdminUser();
   if (!admin) {
     return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
   }
@@ -82,7 +68,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await checkAdmin();
+  const admin = await getAdminUser();
   if (!admin) {
     return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
   }

@@ -1,25 +1,41 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { AdminRole, UserRole } from "@prisma/client";
+import { getAdminUser, countActiveSuperadmins } from "@/lib/adminGuard";
 import prisma from "@/lib/prisma";
-import { UserRole } from "@prisma/client";
+
+const selectUser = {
+  id: true,
+  email: true,
+  username: true,
+  name: true,
+  phoneNumber: true,
+  bio: true,
+  photo: true,
+  publicId: true,
+  instagram: true,
+  facebook: true,
+  role: true,
+  isActive: true,
+  createdAt: true,
+  adminAccess: { select: { role: true, isActive: true } },
+} as const;
 
 /* =====================================================
-   GET USERS (only active users)
+   GET USERS (only active users) — admin only
 ===================================================== */
 export async function GET(request: NextRequest) {
+  const admin = await getAdminUser();
+  if (!admin) {
+    return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
 
   const username = searchParams.get("username") ?? undefined;
   const userId = searchParams.get("userId");
   const role = searchParams.get("role") as UserRole | null;
-
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
 
   const whereClause: {
     id?: number;
@@ -33,22 +49,6 @@ export async function GET(request: NextRequest) {
   if (username) whereClause.username = username;
   if (userId) whereClause.id = Number(userId);
   if (role) whereClause.role = role;
-
-  const selectUser = {
-    id: true,
-    email: true,
-    username: true,
-    name: true,
-    phoneNumber: true,
-    bio: true,
-    photo: true,
-    publicId: true,
-    instagram: true,
-    facebook: true,
-    role: true,
-    isActive: true,
-    createdAt: true,
-  };
 
   if (username || userId) {
     const user = await prisma.user.findFirst({
@@ -72,9 +72,16 @@ export async function GET(request: NextRequest) {
 }
 
 /* =====================================================
-   CREATE USER
+   CREATE USER — admin only
+   Role user tidak lagi ditentukan di sini; akses admin
+   diatur terpisah lewat /api/cadmin/admin-access.
 ===================================================== */
 export async function POST(request: NextRequest) {
+  const admin = await getAdminUser();
+  if (!admin) {
+    return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
+  }
+
   const generateRandomString = (length: number): string => {
     const chars =
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -108,9 +115,7 @@ export async function POST(request: NextRequest) {
     };
   } = body;
 
-  const passwordHash = password
-    ? bcrypt.hashSync(password, 10)
-    : null;
+  const passwordHash = password ? bcrypt.hashSync(password, 10) : null;
 
   const user = await prisma.user.create({
     data: {
@@ -136,10 +141,17 @@ export async function POST(request: NextRequest) {
 }
 
 /* =====================================================
-   UPDATE USER
+   UPDATE USER — admin only
+   Field `role` sengaja diabaikan: hak admin bukan lagi
+   kolom User.
 ===================================================== */
 export async function PUT(request: NextRequest) {
   try {
+    const admin = await getAdminUser();
+    if (!admin) {
+      return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
+    }
+
     const id = Number(new URL(request.url).searchParams.get("id"));
     if (!id) {
       return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
@@ -151,7 +163,6 @@ export async function PUT(request: NextRequest) {
       name,
       email,
       username,
-      role,
       phoneNumber,
       bio,
       facebook,
@@ -161,7 +172,6 @@ export async function PUT(request: NextRequest) {
       name?: string;
       email?: string;
       username?: string;
-      role?: UserRole;
       phoneNumber?: string;
       bio?: string;
       facebook?: string;
@@ -185,13 +195,31 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    // Akun yang masih memegang akses admin tidak boleh diubah admin biasa:
+    // mengganti email/username akun berlevel lebih tinggi adalah jalur
+    // pengambilalihan. Superadmin dikecualikan.
+    const target = await prisma.user.findFirst({
+      where: { id, deletedAt: null },
+      select: { adminAccess: { select: { isActive: true } } },
+    });
+
+    if (!target) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    if (target.adminAccess?.isActive && admin.role !== AdminRole.SUPERADMIN) {
+      return NextResponse.json(
+        { message: "Only a superadmin can edit an admin account" },
+        { status: 403 }
+      );
+    }
+
     const user = await prisma.user.update({
       where: { id },
       data: {
         name,
         email,
         username,
-        role,
         phoneNumber,
         bio,
         facebook,
@@ -215,13 +243,49 @@ export async function PUT(request: NextRequest) {
 }
 
 /* =====================================================
-   SOFT DELETE USER
+   SOFT DELETE USER — admin only.
+   Menghapus akun yang masih memegang akses admin hanya
+   boleh superadmin, dan tidak boleh menghabiskan
+   superadmin terakhir.
 ===================================================== */
 export async function DELETE(request: NextRequest) {
+  const admin = await getAdminUser();
+  if (!admin) {
+    return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
+  }
+
   const id = Number(new URL(request.url).searchParams.get("id"));
 
   if (!id) {
     return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
+  }
+
+  const target = await prisma.user.findFirst({
+    where: { id, deletedAt: null },
+    select: { adminAccess: { select: { role: true, isActive: true } } },
+  });
+
+  if (!target) {
+    return NextResponse.json({ message: "User not found" }, { status: 404 });
+  }
+
+  if (target.adminAccess?.isActive) {
+    if (admin.role !== AdminRole.SUPERADMIN) {
+      return NextResponse.json(
+        { message: "Only a superadmin can remove an admin account" },
+        { status: 403 }
+      );
+    }
+
+    if (
+      target.adminAccess.role === AdminRole.SUPERADMIN &&
+      (await countActiveSuperadmins(id)) === 0
+    ) {
+      return NextResponse.json(
+        { message: "Cannot remove the last active superadmin" },
+        { status: 400 }
+      );
+    }
   }
 
   const user = await prisma.user.update({

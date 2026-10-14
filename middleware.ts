@@ -18,15 +18,10 @@ export async function middleware(request: NextRequest) {
     );
     return NextResponse.redirect(loginUrl);
   }
-  if (pathname.startsWith("/cadmin")) {
-    const role = token.role?.toString().toLowerCase();
-    const allowedRoles = ["admin", "superadmin"];
 
-    if (!allowedRoles.includes(role ?? "")) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-  }
-
+  // Gerbang ini hanya memastikan sudah login. Otorisasi admin dibaca dari
+  // database di `app/cadmin/layout.tsx` dan tiap route API, karena token di
+  // sini bisa basi setelah akses admin dicabut.
   return NextResponse.next();
 }
 

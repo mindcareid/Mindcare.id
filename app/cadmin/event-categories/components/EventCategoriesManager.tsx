@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import slugify from "slugify";
 import { toast } from "sonner";
-import { Plus, Save, Trash2 } from "lucide-react";
+import { Pencil, Plus, Save, Trash2 } from "lucide-react";
 import Button from "@/app/components/reusable/Button";
+import { buttonStyles } from "@/app/components/reusable/buttonStyles";
+import { cn } from "@/lib/utils";
 
 type EventCategory = {
   id: number;
@@ -13,12 +15,16 @@ type EventCategory = {
   isActive: boolean;
 };
 
+const inputClass =
+  "w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
+
 export default function EventCategoriesManager() {
   const [categories, setCategories] = useState<EventCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [saving, setSaving] = useState(false);
+  const [processingId, setProcessingId] = useState<number | null>(null);
   const [editing, setEditing] = useState<
     Record<number, { name: string; slug: string }>
   >({});
@@ -26,18 +32,17 @@ export default function EventCategoriesManager() {
 
   useEffect(() => {
     let cancelled = false;
-    const run = async () => {
-      try {
-        const res = await fetch("/api/event-categories");
-        const json = await res.json();
+    fetch("/api/event-categories")
+      .then((res) => res.json())
+      .then((json) => {
         if (!cancelled) setCategories(json.data ?? []);
-      } catch {
+      })
+      .catch(() => {
         if (!cancelled) toast.error("Could not load categories");
-      } finally {
+      })
+      .finally(() => {
         if (!cancelled) setLoading(false);
-      }
-    };
-    run();
+      });
     return () => {
       cancelled = true;
     };
@@ -78,6 +83,7 @@ export default function EventCategoriesManager() {
     id: number,
     patch: Partial<{ name: string; slug: string; isActive: boolean }>,
   ) {
+    setProcessingId(id);
     try {
       const res = await fetch(`/api/event-categories?id=${id}`, {
         method: "PUT",
@@ -87,14 +93,22 @@ export default function EventCategoriesManager() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "Failed to update");
       toast.success("Category updated");
+      setEditing((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update");
+    } finally {
+      setProcessingId(null);
     }
   }
 
   async function handleDelete(category: EventCategory) {
     if (!confirm(`Delete "${category.name}"?`)) return;
+    setProcessingId(category.id);
     try {
       const res = await fetch(`/api/event-categories?id=${category.id}`, {
         method: "DELETE",
@@ -106,16 +120,19 @@ export default function EventCategoriesManager() {
     } catch (err) {
       // Kategori yang masih dipakai event tidak bisa dihapus — beri tahu.
       toast.error(err instanceof Error ? err.message : "Failed to delete");
+    } finally {
+      setProcessingId(null);
     }
   }
 
   return (
     <div className="space-y-6">
+      {/* Add form */}
       <div className="rounded-xl border border-border bg-card p-5 shadow-card">
         <h2 className="font-heading text-lg font-semibold text-foreground">
           Add a category
         </h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
           <label className="space-y-1.5">
             <span className="block text-sm font-medium text-foreground">
               Name
@@ -123,7 +140,7 @@ export default function EventCategoriesManager() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className={inputClass}
               placeholder="Webinar"
             />
           </label>
@@ -134,7 +151,7 @@ export default function EventCategoriesManager() {
             <input
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className={inputClass}
               placeholder="auto from name"
             />
           </label>
@@ -143,13 +160,15 @@ export default function EventCategoriesManager() {
             icon={Plus}
             disabled={saving}
             onClick={handleCreate}
+            className="w-full lg:w-auto"
           >
             Add
           </Button>
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card shadow-card">
+      {/* List */}
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
         {loading ? (
           <p className="p-5 text-sm text-muted-foreground">Loading…</p>
         ) : categories.length === 0 ? (
@@ -160,79 +179,151 @@ export default function EventCategoriesManager() {
           <ul className="divide-y divide-border">
             {categories.map((category) => {
               const draft = editing[category.id];
-              return (
-                <li
-                  key={category.id}
-                  className="flex flex-wrap items-center gap-3 p-4"
-                >
-                  <div className="min-w-0 flex-1 grid gap-3 sm:grid-cols-2">
-                    <input
-                      value={draft?.name ?? category.name}
-                      onChange={(e) =>
-                        setEditing((prev) => ({
-                          ...prev,
-                          [category.id]: {
-                            name: e.target.value,
-                            slug: prev[category.id]?.slug ?? category.slug,
-                          },
-                        }))
-                      }
-                      className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                    <input
-                      value={draft?.slug ?? category.slug}
-                      onChange={(e) =>
-                        setEditing((prev) => ({
-                          ...prev,
-                          [category.id]: {
-                            name: prev[category.id]?.name ?? category.name,
-                            slug: e.target.value,
-                          },
-                        }))
-                      }
-                      className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-xs text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                  </div>
+              const isProcessing = processingId === category.id;
 
-                  <label className="flex items-center gap-2 text-sm text-foreground">
-                    <input
-                      type="checkbox"
-                      checked={category.isActive}
-                      onChange={(e) =>
-                        handleUpdate(category.id, {
-                          isActive: e.target.checked,
-                        })
-                      }
-                      className="h-4 w-4 rounded border-border accent-primary"
-                    />
-                    Active
-                  </label>
-
-                  <div className="flex gap-2">
-                    {draft ? (
-                      <button
-                        type="button"
-                        onClick={() => {
+              if (draft) {
+                return (
+                  <li key={category.id} className="space-y-3 p-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="space-y-1.5">
+                        <span className="block text-xs font-medium text-muted-foreground">
+                          Name
+                        </span>
+                        <input
+                          autoFocus
+                          value={draft.name}
+                          onChange={(e) =>
+                            setEditing((prev) => ({
+                              ...prev,
+                              [category.id]: {
+                                name: e.target.value,
+                                slug: prev[category.id]?.slug ?? category.slug,
+                              },
+                            }))
+                          }
+                          className={inputClass}
+                        />
+                      </label>
+                      <label className="space-y-1.5">
+                        <span className="block text-xs font-medium text-muted-foreground">
+                          Slug
+                        </span>
+                        <input
+                          value={draft.slug}
+                          onChange={(e) =>
+                            setEditing((prev) => ({
+                              ...prev,
+                              [category.id]: {
+                                name: prev[category.id]?.name ?? category.name,
+                                slug: e.target.value,
+                              },
+                            }))
+                          }
+                          className={cn(inputClass, "font-mono text-xs")}
+                        />
+                      </label>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        icon={Save}
+                        isLoading={isProcessing}
+                        onClick={() =>
                           handleUpdate(category.id, {
                             name: draft.name,
                             slug: draft.slug,
-                          });
+                          })
+                        }
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={isProcessing}
+                        onClick={() =>
                           setEditing((prev) => {
                             const next = { ...prev };
                             delete next[category.id];
                             return next;
-                          });
-                        }}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
+                          })
+                        }
                       >
-                        <Save className="h-3.5 w-3.5" />
-                        Save
-                      </button>
-                    ) : null}
+                        Cancel
+                      </Button>
+                    </div>
+                  </li>
+                );
+              }
+
+              return (
+                <li
+                  key={category.id}
+                  className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <div className="min-w-0">
+                      <p
+                        className={cn(
+                          "truncate text-sm font-medium",
+                          category.isActive
+                            ? "text-foreground"
+                            : "text-muted-foreground line-through",
+                        )}
+                      >
+                        {category.name}
+                      </p>
+                      <p className="truncate font-mono text-xs text-muted-foreground">
+                        /{category.slug}
+                      </p>
+                    </div>
+                    <span
+                      className={cn(
+                        "shrink-0 rounded-md px-2 py-0.5 text-[11px] font-medium",
+                        category.isActive
+                          ? "bg-brand-mint-100 text-accent"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {category.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
+                      disabled={isProcessing}
+                      onClick={() =>
+                        setEditing((prev) => ({
+                          ...prev,
+                          [category.id]: {
+                            name: category.name,
+                            slug: category.slug,
+                          },
+                        }))
+                      }
+                      className={buttonStyles({ variant: "outline", size: "sm" })}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isProcessing}
+                      onClick={() =>
+                        handleUpdate(category.id, {
+                          isActive: !category.isActive,
+                        })
+                      }
+                      className={buttonStyles({ variant: "ghost", size: "sm" })}
+                    >
+                      {category.isActive ? "Deactivate" : "Activate"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isProcessing}
                       onClick={() => handleDelete(category)}
-                      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-destructive"
+                      className={buttonStyles({ variant: "danger", size: "sm" })}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       Delete

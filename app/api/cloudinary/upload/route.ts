@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { cloudinary } from "@/lib/cloudinary/config";
 import { FolderImage, isRoleAllowed } from "@/lib/cloudinary/folders";
+import { resolveFolderRole } from "@/lib/adminAccess";
 import {
   UPLOAD_FOLDER_ENTITIES,
   UploadFolderImage,
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
     }
 
     const entity = entityType as UploadFolderImage;
-    if (!isRoleAllowed(entity, session.user.role)) {
+    if (!isRoleAllowed(entity, resolveFolderRole(session.user))) {
       return NextResponse.json(
         { message: "You cannot upload to this folder" },
         { status: 403 },

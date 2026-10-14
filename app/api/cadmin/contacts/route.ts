@@ -1,20 +1,10 @@
-import { authOptions } from "@/lib/auth";
+import { getAdminUser } from "@/lib/adminGuard";
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user.id) {
-    return NextResponse.json({ message: "Unauthorized!" }, { status: 401 });
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: Number(session.user.id) },
-    select: { role: true },
-  });
-
-  if (!user || !["SUPERADMIN", "ADMIN"].includes(user.role)) {
+  const admin = await getAdminUser();
+  if (!admin) {
     return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
   }
 
