@@ -10,7 +10,17 @@ on:
 jobs:
   expire:
     runs-on: ubuntu-latest
+    # WAJIB: secret (APP_BASE_URL & CRON_SECRET) tersimpan di dalam environment
+    # bernama "APP_BASE_URL". Job harus menyebut environment ini, kalau tidak
+    # secrets.* resolve jadi string kosong -> curl "No host part in the URL".
+    # (Kalau environment-nya kelak di-rename ke "production", ubah baris ini.)
+    environment: APP_BASE_URL
     steps:
+      - name: Check secrets are present
+        run: |
+          test -n "${{ secrets.APP_BASE_URL }}" || { echo "::error::Secret APP_BASE_URL is empty (cek scope/environment)"; exit 1; }
+          test -n "${{ secrets.CRON_SECRET }}" || { echo "::error::Secret CRON_SECRET is empty (cek scope/environment)"; exit 1; }
+
       - name: Call expire endpoint
         run: |
           curl -fsS -X GET "${{ secrets.APP_BASE_URL }}/api/transaction/expire" \
