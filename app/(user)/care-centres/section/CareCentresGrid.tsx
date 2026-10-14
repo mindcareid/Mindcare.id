@@ -1,4 +1,4 @@
-import { Clock, MapPin, Users } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import EntityCard, {
   type EntityCardTag,
 } from "@/app/components/reusable/EntityCard";
@@ -10,15 +10,9 @@ import { verificationLabelOf } from "../../data/verification";
 import type { CareCentre } from "../type/careCentre";
 
 function metaOf(centre: CareCentre, now: string): MetaItem[] {
-  const listed = centre.professionalSlugs.length;
-
   return [
     { icon: MapPin, text: centre.address.city },
     { icon: Clock, text: summariseTodayHours(centre, now) },
-    {
-      icon: Users,
-      text: `${listed} ${listed === 1 ? "professional" : "professionals"} listed`,
-    },
   ];
 }
 

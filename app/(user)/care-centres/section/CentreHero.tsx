@@ -1,4 +1,4 @@
-import { Building2, MapPin, Users } from "lucide-react";
+import { Building2, MapPin } from "lucide-react";
 import MetaRow from "@/app/components/reusable/MetaRow";
 import PageHero from "@/app/components/reusable/PageHero";
 import StatusDot from "@/app/components/reusable/StatusDot";
@@ -19,7 +19,6 @@ type CentreHeroProps = {
 };
 
 export default function CentreHero({ centre, now }: CentreHeroProps) {
-  const listed = centre.professionalSlugs.length;
   const open = isOpenAt(centre, now);
   const verifiedLabel = verificationLabelOf(
     centre.verification,
@@ -71,10 +70,6 @@ export default function CentreHero({ centre, now }: CentreHeroProps) {
               text: `${centre.address.city}, ${centre.address.province}`,
             },
             { icon: Building2, text: summariseTodayHours(centre, now) },
-            {
-              icon: Users,
-              text: `${listed} ${listed === 1 ? "professional" : "professionals"} listed`,
-            },
           ]}
         />
         {centre.acceptsBpjs && (

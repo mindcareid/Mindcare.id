@@ -12,7 +12,6 @@ import FilterBar, {
 import PageHero from "@/app/components/reusable/PageHero";
 import SearchBar from "@/app/components/reusable/SearchBar";
 import CareCentresGrid from "./section/CareCentresGrid";
-import CentresMapPlaceholder from "./section/CentresMapPlaceholder";
 import { isOpenAt } from "./data/centreHours";
 import type { CareCentre, CareCentreFacets } from "./type/careCentre";
 const ALL = "all";
@@ -136,15 +135,12 @@ export default function CareCentres({
     },
   ];
 
-  const mapCaption = `${visibleCentres.length} of ${centres.length} centres shown`;
-
   return (
     <div className="min-h-screen">
       <PageHero
         eyebrow="Care Centres"
         title="Find a centre near you"
         subtitle="Clinics, hospitals, community health centres, and counselling centres that treat mental health — with the services they offer and the hours they keep."
-        media={<CentresMapPlaceholder caption={mapCaption} />}
       >
         <SearchBar
           value={query}
