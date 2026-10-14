@@ -253,6 +253,31 @@ model AdminAccess {
   @@index([role, isActive])
 }
 
+model AuditLog {
+  id Int @id @default(autoincrement())
+
+  actorId   Int?
+  actorName String?  @db.VarChar(255)
+  actorRole String?  @db.VarChar(20)
+
+  action   String  @db.VarChar(20)
+  entity   String  @db.VarChar(100)
+  entityId String? @db.VarChar(64)
+
+  before Json?
+  after  Json?
+
+  ip        String? @db.VarChar(64)
+  userAgent String? @db.VarChar(500)
+  requestId String? @db.VarChar(64)
+
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([actorId, createdAt])
+  @@index([createdAt])
+}
+
 model User {
   id Int @id @default(autoincrement())
 

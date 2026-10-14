@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
@@ -22,6 +22,7 @@ import {
   faBriefcase,
   faLayerGroup,
   faUserGroup,
+  faClockRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,7 @@ const NAV_LINKS: {
   label: string;
   icon: IconProp;
   section: string;
+  superadminOnly?: boolean;
 }[] = [
   { href: "/cadmin", label: "Dashboard", icon: faGauge, section: "Overview" },
   {
@@ -81,12 +83,25 @@ const NAV_LINKS: {
     icon: faUserGroup,
     section: "Reference",
   },
+  // {
+  //   href: "/cadmin/audit-logs",
+  //   label: "Audit Logs",
+  //   icon: faClockRotateLeft,
+  //   section: "Security",
+  //   superadminOnly: true,
+  // },
 ];
 
 export default function SideMenuAdmin() {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [open, setOpen] = useState(false);
   const [eventToggle, setEventToggle] = useState<boolean | null>(null);
+
+  const isSuperadmin = session?.user?.adminRole === "SUPERADMIN";
+  const navLinks = NAV_LINKS.filter(
+    (item) => !item.superadminOnly || isSuperadmin,
+  );
 
   const isActive = (href: string) =>
     href === "/cadmin"
@@ -120,7 +135,7 @@ export default function SideMenuAdmin() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const sections = Array.from(new Set(NAV_LINKS.map((item) => item.section)));
+  const sections = Array.from(new Set(navLinks.map((item) => item.section)));
 
   return (
     <>
@@ -181,15 +196,16 @@ export default function SideMenuAdmin() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-5 overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-4 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-track]:bg-transparent">
+        <nav className="flex-1 space-y-5 overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-4 scrollbar-thin [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-track]:bg-transparent">
           {sections.map((section) => (
             <div key={section} className="space-y-1">
               <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-lavender-200/50">
                 {section}
               </p>
 
-              {NAV_LINKS.filter((item) => item.section === section).map(
-                (item) => (
+              {navLinks
+                .filter((item) => item.section === section)
+                .map((item) => (
                   <NavLink
                     key={item.href}
                     href={item.href}
@@ -198,8 +214,7 @@ export default function SideMenuAdmin() {
                     active={isActive(item.href)}
                     onNavigate={() => setOpen(false)}
                   />
-                ),
-              )}
+                ))}
             </div>
           ))}
 
