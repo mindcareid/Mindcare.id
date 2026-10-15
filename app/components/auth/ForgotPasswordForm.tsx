@@ -9,7 +9,8 @@ import {
   ForgotPasswordFormData,
 } from "@/lib/validations/auth";
 import Link from "next/link";
-import { FaCheck } from "react-icons/fa";
+import { cn } from "@/lib/utils";
+import { LuCheck } from "react-icons/lu";
 
 interface ForgotPasswordFormProps {
   className?: string;
@@ -58,46 +59,47 @@ export default function ForgotPasswordForm({
 
   if (emailSent) {
     return (
-      <div className="text-center space-y-4">
-        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-          <FaCheck className="w-8 h-8 text-green-600" />
+      <div className="text-center space-y-5">
+        <div className="mx-auto w-16 h-16 rounded-2xl bg-brand-emerald-600/10 flex items-center justify-center">
+          <LuCheck className="w-8 h-8 text-brand-emerald-600" />
         </div>
 
-        <h3 className="text-xl font-semibold text-gray-900">
+        <h3 className="text-xl font-semibold text-foreground">
           Check Your Email
         </h3>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           If an account exists for{" "}
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             {getValues("email")}
           </span>
           , you will receive a password reset link shortly.
         </p>
 
-        <div className="pt-4 space-y-3">
+        <div className="pt-2 space-y-3">
           <Link
             href="/auth/login"
-            className="block w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            className="block w-full bg-brand-navy-700 hover:bg-brand-navy-800 text-white py-3 rounded-xl font-semibold transition-colors"
           >
             Back to Login
           </Link>
           <button
             onClick={() => setEmailSent(false)}
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm text-brand-purple-600 hover:text-brand-purple-700 transition-colors font-medium"
           >
-            Didn't receive the email? Try again
+            Did not receive the email? Try again
           </button>
         </div>
       </div>
     );
   }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={className}>
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="block text-sm font-medium text-gray-700 mb-1.5"
           >
             Email Address
           </label>
@@ -106,46 +108,37 @@ export default function ForgotPasswordForm({
             type="email"
             autoComplete="email"
             {...register("email")}
-            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-              errors.email
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 focus:ring-blue-500"
-            }`}
+            className={cn(
+              "w-full px-4 py-3 rounded-xl border border-border bg-card transition-all duration-200",
+              "placeholder:text-muted-foreground/60",
+              "focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring",
+              errors.email && "border-destructive focus:ring-destructive/30 focus:border-destructive",
+            )}
             placeholder="example@email.com"
           />
           {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+            <p className="mt-1.5 text-sm text-destructive">{errors.email.message}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">
-            We'll send you a link to reset your password
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            We will send you a link to reset your password
           </p>
         </div>
+
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          className="w-full bg-brand-navy-700 hover:bg-brand-navy-800 active:scale-[0.98] text-white py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-2"
         >
           {isLoading ? (
             <>
               <svg
-                className="animate-spin h-5 w-5 text-white"
+                className="animate-spin h-4 w-4"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
               >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
               <span>Sending...</span>
             </>

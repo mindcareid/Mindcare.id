@@ -13,6 +13,8 @@ import { LuEye, LuEyeClosed } from "react-icons/lu";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { GoXCircleFill } from "react-icons/go";
 import GoogleButton from "../../auth/component/GoogleButton";
+import { cn } from "@/lib/utils";
+
 interface RegisterFormProps {
   className?: string;
   callbackUrl?: string | null;
@@ -45,6 +47,14 @@ export default function RegisterForm({
 
   const isConfirmTouched = confirmPasswordValue?.length > 0;
   const isPasswordMatch = passwordValue === confirmPasswordValue;
+
+  const inputClasses = (hasError?: boolean) =>
+    cn(
+      "w-full px-4 py-3 rounded-xl border border-border bg-card transition-all duration-200",
+      "placeholder:text-muted-foreground/60",
+      "focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring",
+      hasError && "border-destructive focus:ring-destructive/30 focus:border-destructive",
+    );
 
   const onSubmit = async (data: RegisterFormData) => {
     if (!agree) {
@@ -90,45 +100,38 @@ export default function RegisterForm({
     <form onSubmit={handleSubmit(onSubmit)} className={className}>
       <div className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Full Name
           </label>
           <input
             {...register("name")}
-            className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition ${
-              errors.name
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 focus:ring-blue-500"
-            }`}
+            className={inputClasses(!!errors.name)}
             placeholder="John Doe"
           />
           {errors.name && (
-            <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
+            <p className="text-sm text-destructive mt-1.5">{errors.name.message}</p>
           )}
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Email Address
           </label>
           <input
             {...register("email")}
             type="email"
-            className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition ${
-              errors.email
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 focus:ring-blue-500"
-            }`}
+            className={inputClasses(!!errors.email)}
             placeholder="you@example.com"
           />
           {errors.email && (
-            <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
+            <p className="text-sm text-destructive mt-1.5">{errors.email.message}</p>
           )}
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Phone Number
           </label>
-
           <Controller
             name="phoneNumber"
             control={control}
@@ -137,70 +140,65 @@ export default function RegisterForm({
                 {...field}
                 international
                 defaultCountry="ID"
-                className={`phone-input w-full  ${
-                  errors.phoneNumber ? "phone-error" : ""
-                }`}
+                className={cn("phone-input w-full", errors.phoneNumber && "phone-error")}
               />
             )}
           />
-
           {errors.phoneNumber && (
-            <p className="text-sm text-red-600 mt-1">
+            <p className="text-sm text-destructive mt-1.5">
               {errors.phoneNumber.message}
             </p>
           )}
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Password
           </label>
           <div className="relative">
             <input
               {...register("password")}
               type={showPassword ? "text" : "password"}
-              className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition pr-12 ${
-                errors.password
-                  ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-300 focus:ring-blue-500"
-              }`}
+              className={cn(
+                inputClasses(!!errors.password),
+                "pr-12",
+              )}
               placeholder="••••••••"
             />
-
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <LuEyeClosed size={20} /> : <LuEye size={20} />}
             </button>
           </div>
           {errors.password && (
-            <p className="text-sm text-red-600 mt-1">
+            <p className="text-sm text-destructive mt-1.5">
               {errors.password.message}
             </p>
           )}
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted-foreground mt-1.5">
             Minimum 8 characters, 1 uppercase & 1 special character
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Confirm Password
           </label>
           <div className="relative">
             <input
               {...register("confirmPassword")}
               type={showConfirmPass ? "text" : "password"}
-              className={`w-full px-4 py-3 rounded-xl border focus:ring-2 transition pr-12 ${
-                errors.confirmPassword
-                  ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-300 focus:ring-blue-500"
-              }`}
+              className={cn(
+                inputClasses(!!errors.confirmPassword),
+                "pr-12",
+              )}
               placeholder="••••••••"
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
               {isConfirmTouched &&
                 (isPasswordMatch ? (
                   <FaRegCheckCircle size={18} className="text-green-500" />
@@ -210,7 +208,7 @@ export default function RegisterForm({
               <button
                 type="button"
                 onClick={() => setShowConfirmPass((prev) => !prev)}
-                className="text-gray-400 hover:text-gray-600 transition"
+                className="text-muted-foreground hover:text-foreground transition-colors"
                 aria-label={showConfirmPass ? "Hide password" : "Show password"}
               >
                 {showConfirmPass ? (
@@ -222,16 +220,36 @@ export default function RegisterForm({
             </div>
           </div>
         </div>
+
         <TermsUser checked={agree} onChange={setAgree} />
+
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full mt-2 bg-blue-600 hover:bg-blue-700 active:scale-[0.98]
-                 text-white py-3 rounded-xl font-semibold transition
-                 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="w-full bg-brand-navy-700 hover:bg-brand-navy-800 active:scale-[0.98] text-white py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
         >
-          {isLoading ? "Creating account..." : "Create Account"}
+          {isLoading ? (
+            <span className="inline-flex items-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Creating account...
+            </span>
+          ) : (
+            "Create Account"
+          )}
         </button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-3 text-muted-foreground">or continue with</span>
+          </div>
+        </div>
+
         <GoogleButton />
       </div>
     </form>

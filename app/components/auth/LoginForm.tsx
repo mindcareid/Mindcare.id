@@ -7,6 +7,8 @@ import GoogleButton from "../../auth/component/GoogleButton";
 import { loginSchema, LoginFormData } from "@/lib/validations/auth";
 import { useState } from "react";
 import { LuEye, LuEyeClosed } from "react-icons/lu";
+import { cn } from "@/lib/utils";
+
 interface LoginFormProps {
   onSubmit: (data: LoginFormData) => Promise<void>;
   isLoading?: boolean;
@@ -33,85 +35,98 @@ export default function LoginForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={className} noValidate>
       <div className="space-y-5">
-        {/* ERROR */}
         {error && (
           <p className="rounded-lg bg-red-50 text-red-600 text-sm px-4 py-2">
             {error}
           </p>
         )}
 
-        {/* EMAIL */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Email Address
           </label>
           <input
             {...register("email")}
             type="email"
-            className={`w-full px-4 py-3 rounded-xl border focus:ring-2 ${
-              errors.email
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 focus:ring-blue-500"
-            }`}
+            className={cn(
+              "w-full px-4 py-3 rounded-xl border border-border bg-card transition-all duration-200",
+              "placeholder:text-muted-foreground/60",
+              "focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring",
+              errors.email && "border-destructive focus:ring-destructive/30 focus:border-destructive",
+            )}
             placeholder="you@example.com"
           />
           {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+            <p className="mt-1.5 text-sm text-destructive">{errors.email.message}</p>
           )}
         </div>
 
-        {/* PASSWORD */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Password
           </label>
           <div className="relative">
             <input
               {...register("password")}
               type={showPassword ? "text" : "password"}
-              className={`w-full px-4 py-3 rounded-xl border focus:ring-2 pr-12 ${
-                errors.password
-                  ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-300 focus:ring-blue-500"
-              }`}
+              className={cn(
+                "w-full px-4 py-3 rounded-xl border border-border bg-card pr-12 transition-all duration-200",
+                "placeholder:text-muted-foreground/60",
+                "focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring",
+                errors.password && "border-destructive focus:ring-destructive/30 focus:border-destructive",
+              )}
               placeholder="••••••••"
             />
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <LuEyeClosed size={20} /> : <LuEye size={20} />}
             </button>
           </div>
-
           {errors.password && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.password.message}
-            </p>
+            <p className="mt-1.5 text-sm text-destructive">{errors.password.message}</p>
           )}
         </div>
 
-        <div className="text-right">
+        <div className="flex items-center justify-end">
           <Link
             href="/auth/forgot-password"
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm font-medium text-brand-purple-600 hover:text-brand-purple-700 transition-colors"
           >
             Forgot password?
           </Link>
         </div>
 
-        {/* SUBMIT */}
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-700
-                     text-white py-3 rounded-xl font-semibold
-                     disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="w-full bg-brand-navy-700 hover:bg-brand-navy-800 active:scale-[0.98] text-white py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
         >
-          {isLoading ? "Signing in..." : "Login"}
+          {isLoading ? (
+            <span className="inline-flex items-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Signing in...
+            </span>
+          ) : (
+            "Sign in"
+          )}
         </button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-3 text-muted-foreground">or continue with</span>
+          </div>
+        </div>
+
         <GoogleButton />
       </div>
     </form>

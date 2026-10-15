@@ -9,19 +9,19 @@ type Props = {
 
 export default function AuthTabs({ tab, setTab }: Props) {
   return (
-    <div className="relative flex bg-gray-100/80 backdrop-blur-md rounded-2xl p-1.5 mb-6 border border-gray-200">
+    <div className="relative flex bg-muted rounded-2xl p-1 mb-6 border border-border">
       <motion.div
         layoutId="tab-indicator"
         transition={{ type: "spring", stiffness: 400, damping: 35 }}
-        className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] rounded-xl bg-white shadow-sm border border-gray-200"
+        className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-xl bg-card shadow-sm border border-border"
         style={{
-          left: tab === "login" ? "6px" : "calc(50%)",
+          left: tab === "login" ? "4px" : "calc(50%)",
         }}
       />
       <button
         onClick={() => setTab("login")}
         className={`relative z-10 flex-1 py-2.5 text-sm font-medium rounded-xl transition-all duration-200
-          ${tab === "login" ? "text-gray-900" : "text-gray-500 hover:text-gray-700"}
+          ${tab === "login" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
         `}
       >
         Sign in
@@ -29,7 +29,7 @@ export default function AuthTabs({ tab, setTab }: Props) {
       <button
         onClick={() => setTab("register")}
         className={`relative z-10 flex-1 py-2.5 text-sm font-medium rounded-xl transition-all duration-200
-          ${tab === "register" ? "text-gray-900" : "text-gray-500 hover:text-gray-700"}
+          ${tab === "register" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
         `}
       >
         Create account
