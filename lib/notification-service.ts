@@ -109,6 +109,8 @@ export async function createNotification(
       const response = await fetch(url, {
         method: "POST",
 
+        signal: AbortSignal.timeout(5_000),
+
         headers: {
           "Content-Type": "application/json",
 

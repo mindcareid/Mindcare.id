@@ -1,5 +1,6 @@
 import { SendCompanyInviteEmailParams } from "../types";
 import { emailLayout } from "./layout";
+import { escapeHtml } from "../escape";
 
 import { Alert } from "../components/Alert";
 import { Button } from "../components/Button";
@@ -23,12 +24,12 @@ export function companyInviteTemplate({
 
       ${Paragraph({
         children: `
-          Hi <strong>${inviteeName}</strong>,
+          Hi <strong>${escapeHtml(inviteeName)}</strong>,
           <br /><br />
 
-          <strong>${inviterName}</strong> has invited you to join
-          <strong>${companyName}</strong> as
-          <strong>${role}</strong>.
+          <strong>${escapeHtml(inviterName)}</strong> has invited you to join
+          <strong>${escapeHtml(companyName)}</strong> as
+          <strong>${escapeHtml(role)}</strong>.
         `,
       })}
 

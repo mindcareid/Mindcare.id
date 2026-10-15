@@ -7,6 +7,8 @@ import {
   EditProfessionalSchema,
   photoAssetIssues,
 } from "@/lib/validations/apply";
+import { mailConfig, sendListingReviewEmail } from "@/lib/mail";
+import { runAfterResponse } from "@/lib/afterResponse";
 import z from "zod";
 
 export const dynamic = "force-dynamic";
@@ -155,6 +157,23 @@ export async function PATCH(req: NextRequest) {
       } catch (err) {
         console.error("[PROFESSIONAL_PHOTO_DESTROY_OLD]", err);
       }
+    }
+
+    if (
+      requiresReview &&
+      current.listingStatus !== "PENDING" &&
+      session.user.email
+    ) {
+      runAfterResponse(
+        sendListingReviewEmail({
+          to: session.user.email,
+          name: session.user.name ?? "there",
+          listingName: data.fullName,
+          kind: "professional",
+          state: "under_review",
+          dashboardUrl: `${mailConfig.appUrl}/dashboard/professional`,
+        }),
+      );
     }
 
     return NextResponse.json({

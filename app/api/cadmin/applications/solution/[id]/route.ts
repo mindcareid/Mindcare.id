@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminUser, parseDateOnly } from "@/lib/adminGuard";
+import { createNotification } from "@/lib/notification-service";
+import { mailConfig, sendListingReviewEmail } from "@/lib/mail";
+import { runAfterResponse } from "@/lib/afterResponse";
 import z from "zod";
 import { Prisma } from "@prisma/client";
 
@@ -49,6 +52,7 @@ export async function PATCH(
         name: true,
         listingStatus: true,
         ownerUserId: true,
+        owner: { select: { name: true, email: true } },
       },
     });
     if (!solution) {
@@ -92,23 +96,40 @@ export async function PATCH(
     }
 
     if (solution.ownerUserId) {
-      try {
-        await prisma.notification.create({
+      const approved = action === "APPROVE";
+      const ownerName = solution.owner?.name ?? "there";
+      const ownerEmail = solution.owner?.email ?? null;
+
+      runAfterResponse(
+        createNotification({
+          userId: solution.ownerUserId,
+          type: "GENERAL",
+          title: approved
+            ? "Solution application approved"
+            : "Solution application rejected",
+          message: approved
+            ? `Your solution "${solution.name}" has been approved and is now live in the directory.`
+            : `Your solution "${solution.name}" was not approved. Reason: ${reason}`,
           data: {
-            userId: solution.ownerUserId,
-            type: "GENERAL",
-            title:
-              action === "APPROVE"
-                ? "Solution application approved"
-                : "Solution application rejected",
-            message:
-              action === "APPROVE"
-                ? `Your solution "${solution.name}" has been approved and is now live in the directory.`
-                : `Your solution "${solution.name}" was not approved. Reason: ${reason}`,
+            kind: "solution",
+            id: solution.id,
+            listingStatus: approved ? "LISTED" : "REJECTED",
           },
-        });
-      } catch (err) {
-        console.error("[NOTIFY SOLUTION REVIEW] failed:", err);
+        }),
+      );
+
+      if (ownerEmail) {
+        runAfterResponse(
+          sendListingReviewEmail({
+            to: ownerEmail,
+            name: ownerName,
+            listingName: solution.name,
+            kind: "solution",
+            state: approved ? "approved" : "rejected",
+            reason: approved ? undefined : reason,
+            dashboardUrl: `${mailConfig.appUrl}/dashboard/solution`,
+          }),
+        );
       }
     }
 

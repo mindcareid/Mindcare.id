@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminUser, parseDateOnly } from "@/lib/adminGuard";
+import { createNotification } from "@/lib/notification-service";
+import { mailConfig, sendListingReviewEmail } from "@/lib/mail";
+import { runAfterResponse } from "@/lib/afterResponse";
 import z from "zod";
 import { Prisma } from "@prisma/client";
 
@@ -67,7 +70,12 @@ export async function PATCH(
         listingStatus: true,
         users: {
           where: { role: "OWNER" },
-          select: { id: true, userId: true, activeUserId: true },
+          select: {
+            id: true,
+            userId: true,
+            activeUserId: true,
+            user: { select: { name: true, email: true } },
+          },
         },
       },
     });
@@ -119,23 +127,39 @@ export async function PATCH(
             : { status: "DECLINED", activeUserId: null },
       });
 
-      try {
-        await prisma.notification.create({
+      runAfterResponse(
+        createNotification({
+          userId: owner.userId,
+          type: "GENERAL",
+          title:
+            action === "APPROVE"
+              ? "Care centre application approved"
+              : "Care centre application rejected",
+          message:
+            action === "APPROVE"
+              ? `Your care centre "${centre.name}" has been approved and is now live in the directory.`
+              : `Your care centre "${centre.name}" was not approved. Reason: ${reason}`,
           data: {
-            userId: owner.userId,
-            type: "GENERAL",
-            title:
-              action === "APPROVE"
-                ? "Care centre application approved"
-                : "Care centre application rejected",
-            message:
-              action === "APPROVE"
-                ? `Your care centre "${centre.name}" has been approved and is now live in the directory.`
-                : `Your care centre "${centre.name}" was not approved. Reason: ${reason}`,
+            kind: "care-centre",
+            id: centre.id,
+            listingStatus: action === "APPROVE" ? "LISTED" : "REJECTED",
           },
-        });
-      } catch (err) {
-        console.error("[NOTIFY CENTRE REVIEW] failed:", err);
+        }),
+      );
+
+      const ownerEmail = owner.user?.email ?? null;
+      if (ownerEmail) {
+        runAfterResponse(
+          sendListingReviewEmail({
+            to: ownerEmail,
+            name: owner.user?.name ?? "there",
+            listingName: centre.name,
+            kind: "care-centre",
+            state: action === "APPROVE" ? "approved" : "rejected",
+            reason: action === "APPROVE" ? undefined : reason,
+            dashboardUrl: `${mailConfig.appUrl}/dashboard/care-centre`,
+          }),
+        );
       }
     }
 

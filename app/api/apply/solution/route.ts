@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ApplySolutionSchema } from "@/lib/validations/apply";
 import { generateUniqueSlug } from "@/lib/slug";
+import { mailConfig, sendListingReviewEmail } from "@/lib/mail";
+import { runAfterResponse } from "@/lib/afterResponse";
 import z from "zod";
 
 export async function POST(req: Request) {
@@ -112,6 +114,19 @@ export async function POST(req: Request) {
       },
       select: { slug: true },
     });
+
+    if (session.user.email) {
+      runAfterResponse(
+        sendListingReviewEmail({
+          to: session.user.email,
+          name: session.user.name ?? "there",
+          listingName: data.name,
+          kind: "solution",
+          state: "under_review",
+          dashboardUrl: `${mailConfig.appUrl}/dashboard/solution`,
+        }),
+      );
+    }
 
     return NextResponse.json({
       success: true,

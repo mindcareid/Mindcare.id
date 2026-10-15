@@ -1,19 +1,16 @@
 export const mailTheme = {
-
-    primary:"#0F172A",
-    
-    light : "#F4F6F9",
-
-    secondary:"#64748B",
-
-    text:"#111827",
-
-    border:"#E5E7EB",
-
-    background:"#F4F6F9",
-
-    radius:"12px",
-
-    maxWidth:"600"
-
-}
+  primary: "#154375",
+  primaryDark: "#113763",
+  secondary: "#63509E",
+  accent: "#157768",
+  light: "#F4F6F9",
+  lightLavender: "#EFECF8",
+  lightMint: "#EFF6F5",
+  text: "#1e293b",
+  textMuted: "#64748b",
+  border: "#E5E7EB",
+  background: "#F4F6F9",
+  white: "#ffffff",
+  radius: "12px",
+  maxWidth: "600",
+};

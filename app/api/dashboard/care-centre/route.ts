@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { EditCareCentreSchema } from "@/lib/validations/apply";
+import { mailConfig, sendListingReviewEmail } from "@/lib/mail";
+import { runAfterResponse } from "@/lib/afterResponse";
 import z from "zod";
 import { Prisma } from "@prisma/client";
 
@@ -146,6 +148,23 @@ export async function PATCH(req: NextRequest) {
         });
       }
     });
+
+    if (
+      requiresReview &&
+      current.listingStatus !== "PENDING" &&
+      session.user.email
+    ) {
+      runAfterResponse(
+        sendListingReviewEmail({
+          to: session.user.email,
+          name: session.user.name ?? "there",
+          listingName: data.name,
+          kind: "care-centre",
+          state: "under_review",
+          dashboardUrl: `${mailConfig.appUrl}/dashboard/care-centre`,
+        }),
+      );
+    }
 
     return NextResponse.json({
       success: true,

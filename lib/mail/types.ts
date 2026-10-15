@@ -46,6 +46,20 @@ export interface SendCompanySubmittedEmailParams {
   companyName: string;
 }
 
+export type ListingKind = "professional" | "care-centre" | "solution";
+
+export type ListingReviewState = "under_review" | "approved" | "rejected";
+
+export interface SendListingReviewEmailParams {
+  to: string;
+  name: string;
+  listingName: string;
+  kind: ListingKind;
+  state: ListingReviewState;
+  reason?: string;
+  dashboardUrl?: string;
+}
+
 export type CompanyStatus = "approved" | "rejected";
 
 export type SendCompanyStatusEmailParams = {

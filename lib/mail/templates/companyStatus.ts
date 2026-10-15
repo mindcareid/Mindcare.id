@@ -1,6 +1,7 @@
 import { SendCompanyStatusEmailParams } from "../types";
 
 import { emailLayout } from "./layout";
+import { escapeHtml } from "../escape";
 
 import { Heading } from "../components/Heading";
 import { Paragraph } from "../components/Paragraph";
@@ -30,11 +31,11 @@ export function companyStatusTemplate({
       ${Paragraph({
         children: approved
           ? `
-            Hi <strong>${ownerName}</strong>,
+            Hi <strong>${escapeHtml(ownerName)}</strong>,
             <br><br>
 
             Great news! Your company
-            <strong>${companyName}</strong>
+            <strong>${escapeHtml(companyName)}</strong>
             has been
             <strong style="color:#16A34A;">approved</strong>.
 
@@ -43,11 +44,11 @@ export function companyStatusTemplate({
             You can now start publishing events on Executive Corner.
           `
           : `
-            Hi <strong>${ownerName}</strong>,
+            Hi <strong>${escapeHtml(ownerName)}</strong>,
             <br><br>
 
             Unfortunately your company
-            <strong>${companyName}</strong>
+            <strong>${escapeHtml(companyName)}</strong>
             was
             <strong style="color:#DC2626;">not approved</strong>
             during our review.

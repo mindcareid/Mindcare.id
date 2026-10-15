@@ -1,3 +1,5 @@
+import { mailTheme } from "../theme";
+
 type TextProps = {
   children: string;
   align?: "left" | "center" | "right";
@@ -17,7 +19,7 @@ export function Text({
   marginTop = 18,
   muted = false,
 }: TextProps) {
-  const textColor = muted ? "#9CA3AF" : (color ?? "#64748B");
+  const textColor = muted ? mailTheme.textMuted : (color ?? mailTheme.textMuted);
 
   return `
     <p
@@ -25,8 +27,9 @@ export function Text({
         margin:${marginTop}px 0 0;
         color:${textColor};
         font-size:${size}px;
+        font-family:Arial,Helvetica,sans-serif;
         font-weight:${weight};
-        line-height:22px;
+        line-height:24px;
         text-align:${align};
       "
     >

@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { EditSolutionSchema } from "@/lib/validations/apply";
+import { mailConfig, sendListingReviewEmail } from "@/lib/mail";
+import { runAfterResponse } from "@/lib/afterResponse";
 import z from "zod";
 
 export const dynamic = "force-dynamic";
@@ -138,6 +140,23 @@ export async function PATCH(
         },
       });
     });
+
+    if (
+      requiresReview &&
+      current.listingStatus !== "PENDING" &&
+      session.user.email
+    ) {
+      runAfterResponse(
+        sendListingReviewEmail({
+          to: session.user.email,
+          name: session.user.name ?? "there",
+          listingName: data.name,
+          kind: "solution",
+          state: "under_review",
+          dashboardUrl: `${mailConfig.appUrl}/dashboard/solution`,
+        }),
+      );
+    }
 
     return NextResponse.json({
       success: true,

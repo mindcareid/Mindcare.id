@@ -6,6 +6,7 @@ export * from "./senders/verification";
 export * from "./senders/companyInvite";
 export * from "./senders/companySubmitted";
 export * from "./senders/companyStatus";
+export * from "./senders/listingReview";
 
 // core
 export * from "./config";

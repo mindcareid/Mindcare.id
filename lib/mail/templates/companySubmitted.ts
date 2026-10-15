@@ -1,5 +1,6 @@
 import { SendCompanySubmittedEmailParams } from "../types";
 import { emailLayout } from "./layout";
+import { escapeHtml } from "../escape";
 
 import { Alert } from "../components/Alert";
 import { InfoBox } from "../components/InfoBox";
@@ -20,9 +21,9 @@ export function companySubmittedTemplate({
 
       ${Paragraph({
         children: `
-          Hi <strong>${ownerName}</strong>,
+          Hi <strong>${escapeHtml(ownerName)}</strong>,
           <br /><br />
-          Your company <strong>${companyName}</strong> has been submitted successfully
+          Your company <strong>${escapeHtml(companyName)}</strong> has been submitted successfully
           and is currently under review by our team.
         `,
       })}

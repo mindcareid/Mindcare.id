@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminUser, parseDateOnly } from "@/lib/adminGuard";
+import { createNotification } from "@/lib/notification-service";
+import { mailConfig, sendListingReviewEmail } from "@/lib/mail";
+import { runAfterResponse } from "@/lib/afterResponse";
 import z from "zod";
 import { Prisma } from "@prisma/client";
 
@@ -60,6 +63,7 @@ export async function PATCH(
         verificationReview: true,
         licenceValidUntil: true,
         userId: true,
+        user: { select: { name: true, email: true } },
       },
     });
     if (!professional) {
@@ -101,23 +105,40 @@ export async function PATCH(
     }
 
     if (professional.userId) {
-      try {
-        await prisma.notification.create({
+      const approved = action === "APPROVE";
+      const ownerName = professional.user?.name ?? "there";
+      const ownerEmail = professional.user?.email ?? null;
+
+      runAfterResponse(
+        createNotification({
+          userId: professional.userId,
+          type: "GENERAL",
+          title: approved
+            ? "Professional application approved"
+            : "Professional application rejected",
+          message: approved
+            ? `Your professional listing "${professional.fullName}" has been approved and is now live in the directory.`
+            : `Your professional listing "${professional.fullName}" was not approved. Reason: ${reason}`,
           data: {
-            userId: professional.userId,
-            type: "GENERAL",
-            title:
-              action === "APPROVE"
-                ? "Professional application approved"
-                : "Professional application rejected",
-            message:
-              action === "APPROVE"
-                ? `Your professional listing "${professional.fullName}" has been approved and is now live in the directory.`
-                : `Your professional listing "${professional.fullName}" was not approved. Reason: ${reason}`,
+            kind: "professional",
+            id: professional.id,
+            listingStatus: approved ? "LISTED" : "REJECTED",
           },
-        });
-      } catch (err) {
-        console.error("[NOTIFY PROFESSIONAL REVIEW] failed:", err);
+        }),
+      );
+
+      if (ownerEmail) {
+        runAfterResponse(
+          sendListingReviewEmail({
+            to: ownerEmail,
+            name: ownerName,
+            listingName: professional.fullName,
+            kind: "professional",
+            state: approved ? "approved" : "rejected",
+            reason: approved ? undefined : reason,
+            dashboardUrl: `${mailConfig.appUrl}/dashboard/professional`,
+          }),
+        );
       }
     }
 

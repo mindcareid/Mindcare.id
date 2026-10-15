@@ -1,3 +1,5 @@
+import { mailTheme } from "../theme";
+
 type ParagraphProps = {
   children: string;
   align?: "left" | "center";
@@ -9,7 +11,7 @@ type ParagraphProps = {
 export function Paragraph({
   children,
   align = "center",
-  color = "#64748B",
+  color = mailTheme.textMuted,
   size = 15,
   marginTop = 14,
 }: ParagraphProps) {
@@ -19,7 +21,8 @@ export function Paragraph({
         margin:${marginTop}px 0 0;
         color:${color};
         font-size:${size}px;
-        line-height:24px;
+        font-family:Arial,Helvetica,sans-serif;
+        line-height:26px;
         text-align:${align};
       "
     >
