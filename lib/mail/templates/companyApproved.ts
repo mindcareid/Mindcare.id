@@ -1,5 +1,6 @@
-import { SendCompanyStatusEmailParams } from "../types";
+import { SendCompanyDecisionEmailParams } from "../types";
 import { emailLayout } from "./layout";
+import { escapeHtml } from "../escape";
 
 import { Alert } from "../components/Alert";
 import { Button } from "../components/Button";
@@ -10,7 +11,7 @@ export function companyApprovedTemplate({
   ownerName,
   companyName,
   dashboardUrl,
-}: SendCompanyStatusEmailParams) {
+}: SendCompanyDecisionEmailParams) {
   return emailLayout({
     title: "Company Approved",
 
@@ -21,11 +22,11 @@ export function companyApprovedTemplate({
 
       ${Paragraph({
         children: `
-          Hi <strong>${ownerName}</strong>,
+          Hi <strong>${escapeHtml(ownerName)}</strong>,
           <br /><br />
 
           Great news! Your company
-          <strong>${companyName}</strong>
+          <strong>${escapeHtml(companyName)}</strong>
           has been <strong>approved</strong>.
 
           <br /><br />

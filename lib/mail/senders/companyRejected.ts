@@ -1,10 +1,10 @@
 import { EmailService } from "../service";
 import { mailConfig } from "../config";
-import { SendCompanyStatusEmailParams } from "../types";
+import { SendCompanyDecisionEmailParams } from "../types";
 import { companyRejectedTemplate } from "../templates/companyRejected";
 
 export async function sendCompanyRejectedEmail(
-  data: SendCompanyStatusEmailParams,
+  data: SendCompanyDecisionEmailParams,
 ) {
   return EmailService.send({
     from: mailConfig.from,

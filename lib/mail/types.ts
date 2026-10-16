@@ -62,6 +62,13 @@ export interface SendListingReviewEmailParams {
 
 export type CompanyStatus = "approved" | "rejected";
 
+export interface SendCompanyDecisionEmailParams {
+  to: string;
+  ownerName: string;
+  companyName: string;
+  dashboardUrl?: string;
+}
+
 export type SendCompanyStatusEmailParams = {
   to: string;
   ownerName: string;

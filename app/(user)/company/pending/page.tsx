@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSocket } from "@/providers/SocketProvider";
+import type { Notification } from "@/types/notification";
 import { AnimatePresence, motion, cubicBezier } from "framer-motion";
 import { FaHourglassStart, FaHourglassEnd } from "react-icons/fa";
 import { MdMarkEmailRead, MdRateReview } from "react-icons/md";
@@ -16,6 +18,7 @@ type infoType = {
 export default function CompanyPendingPage() {
   const { update } = useSession();
   const router = useRouter();
+  const socket = useSocket();
   const [mounted, setMounted] = useState(false);
   const easeCustom = cubicBezier(0.22, 1, 0.36, 1);
   const [refId] = useState(
@@ -38,10 +41,26 @@ export default function CompanyPendingPage() {
         router.replace("/company/create");
       }
     };
-    const interval = setInterval(refreshStatus, 40_000);
 
-    return () => clearInterval(interval);
-  }, []);
+    refreshStatus();
+
+    if (!socket) return;
+
+    const onNotification = (notification: Notification) => {
+      if (
+        notification.type === "COMPANY_ACCEPTED" ||
+        notification.type === "COMPANY_DECLINED"
+      ) {
+        refreshStatus();
+      }
+    };
+
+    socket.on("notification:new", onNotification);
+
+    return () => {
+      socket.off("notification:new", onNotification);
+    };
+  }, [socket, update, router]);
 
   const containerVariants = {
     hidden: {},

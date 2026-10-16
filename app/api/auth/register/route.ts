@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations/auth";
 import { generateUniqueUsername } from "@/lib/utils/generateUsername";
 import crypto from "crypto";
-import { sendVerificationEmail } from "@/lib/email";
+import { sendVerificationEmail } from "@/lib/mail";
 import z from "zod";
 
 export async function POST(req: Request) {

@@ -1,7 +1,7 @@
 import {
   sendCompanyApprovedEmail,
   sendCompanyRejectedEmail,
-} from "@/lib/email";
+} from "@/lib/mail";
 import { getAdminUser } from "@/lib/adminGuard";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";

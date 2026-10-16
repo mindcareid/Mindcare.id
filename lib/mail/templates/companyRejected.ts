@@ -1,5 +1,6 @@
-import { SendCompanyStatusEmailParams } from "../types";
+import { SendCompanyDecisionEmailParams } from "../types";
 import { emailLayout } from "./layout";
+import { escapeHtml } from "../escape";
 
 import { Alert } from "../components/Alert";
 import { Heading } from "../components/Heading";
@@ -8,7 +9,7 @@ import { Paragraph } from "../components/Paragraph";
 export function companyRejectedTemplate({
   ownerName,
   companyName,
-}: SendCompanyStatusEmailParams) {
+}: SendCompanyDecisionEmailParams) {
   return emailLayout({
     title: "Company Review Update",
 
@@ -19,11 +20,11 @@ export function companyRejectedTemplate({
 
       ${Paragraph({
         children: `
-          Hi <strong>${ownerName}</strong>,
+          Hi <strong>${escapeHtml(ownerName)}</strong>,
           <br /><br />
 
           Thank you for submitting
-          <strong>${companyName}</strong>.
+          <strong>${escapeHtml(companyName)}</strong>.
 
           After reviewing your submission, we're unable to approve your company at this time.
         `,

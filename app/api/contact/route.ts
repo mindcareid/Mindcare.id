@@ -1,4 +1,4 @@
-import { sendContactNotification } from "@/lib/email";
+import { sendContactNotification } from "@/lib/mail";
 import prisma from "@/lib/prisma";
 import { contactUserSchema } from "@/lib/validations/auth";
 import { NextResponse } from "next/server";

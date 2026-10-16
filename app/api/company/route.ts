@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { CreateCompanySchema } from "@/lib/validations/auth";
 import z from "zod";
-import { sendCompanySubmittedEmail } from "@/lib/email";
+import { sendCompanySubmittedEmail } from "@/lib/mail";
 
 async function getCurrentUserId(): Promise<number | null> {
   const session = await getServerSession(authOptions);

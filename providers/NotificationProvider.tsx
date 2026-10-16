@@ -1,10 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSocket } from "@/providers/SocketProvider";
+import { MY_LISTINGS_QUERY_KEY } from "@/lib/queryKeys";
 import type { Notification } from "@/types/notification";
+
+const LISTING_KINDS = new Set(["professional", "care-centre", "solution"]);
+
+type ListingNotificationData = { kind?: string };
 
 export default function NotificationProvider({
   children,
@@ -13,6 +19,7 @@ export default function NotificationProvider({
 }) {
   const socket = useSocket();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   useEffect(() => {
     if (!socket) return;
@@ -36,6 +43,15 @@ export default function NotificationProvider({
       toast.success(notification.title, {
         description: notification.message,
       });
+
+      // Perubahan status listing dikirim sebagai notifikasi GENERAL dengan
+      // data.kind. Segarkan status listing dan server component dashboard
+      // tanpa polling.
+      const data = notification.data as ListingNotificationData | null;
+      if (data?.kind && LISTING_KINDS.has(data.kind)) {
+        queryClient.invalidateQueries({ queryKey: [MY_LISTINGS_QUERY_KEY] });
+        router.refresh();
+      }
     };
 
     /**
@@ -86,7 +102,7 @@ export default function NotificationProvider({
       socket.off("notification:delete", onDelete);
       socket.off("notification:read-all", onReadAll);
     };
-  }, [socket, queryClient]);
+  }, [socket, queryClient, router]);
 
   return children;
 }

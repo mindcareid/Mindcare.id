@@ -1,5 +1,5 @@
 import { authOptions } from "@/lib/auth";
-import { sendCompanyInviteEmail } from "@/lib/email";
+import { sendCompanyInviteEmail } from "@/lib/mail";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
