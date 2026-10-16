@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 
 type LogoItem =
   | { type: "image"; src: string; alt: string }
@@ -84,14 +83,6 @@ export default function LogoMarquee() {
           <LogoSet />
           <LogoSet />
         </div>
-      </div>
-      <div className="flex justify-center my-6">
-        <Link
-          href="/partners"
-          className=" inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-linear-to-r from-blue-600 to-cyan-600 text-white font-semibold transition-all duration-300 hover:from-blue-700 hover:to-cyan-700 shadow-lg shadow-blue-600/30 hover:scale-105"
-        >
-          See all partners
-        </Link>
       </div>
     </div>
   );

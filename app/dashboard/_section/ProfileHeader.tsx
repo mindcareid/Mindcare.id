@@ -65,12 +65,6 @@ export default function ProfileHeader({ user }: { user: Session["user"] }) {
               label={user.adminRole ?? user.role}
               tone={user.adminRole ? "info" : "neutral"}
             />
-            {user.companyStatus && (
-              <Badge
-                label={user.companyStatus}
-                tone={user.companyStatus === "ACTIVE" ? "success" : "neutral"}
-              />
-            )}
           </div>
           <p className="text-sm text-muted-foreground">
             {user.jobTitle || "No job title available"}

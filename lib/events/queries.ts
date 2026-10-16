@@ -63,16 +63,9 @@ export async function getEventBySlug(slug: string) {
     return null;
   }
 
-  const [totalCompanyEvents, soldCount] = await Promise.all([
-    prisma.event.count({
-      where: {
-        deletedAt: null,
-        isPublished: true,
-      },
-    }),
-
+  const soldCount =
     event.quota !== null
-      ? prisma.ticket.count({
+      ? await prisma.ticket.count({
           where: {
             order: {
               eventId: event.id,
@@ -82,8 +75,7 @@ export async function getEventBySlug(slug: string) {
             },
           },
         })
-      : Promise.resolve(0),
-  ]);
+      : 0;
 
   const remaining =
     event.quota !== null
@@ -95,13 +87,7 @@ export async function getEventBySlug(slug: string) {
     remaining !== null &&
     remaining <= 0;
 
-  return serializeEventDetail(
-    event,
-    soldCount,
-    totalCompanyEvents,
-    remaining,
-    soldOut,
-  );
+  return serializeEventDetail(event, soldCount, remaining, soldOut);
 }
 
 export async function getEventCategories() {

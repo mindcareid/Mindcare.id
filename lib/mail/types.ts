@@ -31,21 +31,6 @@ export interface SendVerificationEmailParams {
   verifyUrl: string;
 }
 
-export interface SendCompanyInviteEmailParams {
-  to: string;
-  inviteeName: string;
-  inviterName: string;
-  companyName: string;
-  role: string;
-  acceptUrl: string;
-}
-
-export interface SendCompanySubmittedEmailParams {
-  to: string;
-  ownerName: string;
-  companyName: string;
-}
-
 export type ListingKind = "professional" | "care-centre" | "solution";
 
 export type ListingReviewState = "under_review" | "approved" | "rejected";
@@ -59,20 +44,3 @@ export interface SendListingReviewEmailParams {
   reason?: string;
   dashboardUrl?: string;
 }
-
-export type CompanyStatus = "approved" | "rejected";
-
-export interface SendCompanyDecisionEmailParams {
-  to: string;
-  ownerName: string;
-  companyName: string;
-  dashboardUrl?: string;
-}
-
-export type SendCompanyStatusEmailParams = {
-  to: string;
-  ownerName: string;
-  companyName: string;
-  dashboardUrl?: string;
-  status: CompanyStatus;
-};

@@ -55,7 +55,6 @@ export async function PUT(
       price: Number(body.price),
       quota: body.quota ? Number(body.quota) : null,
       categoryId: Number(body.categoryId),
-      // companyId: Number(body.companyId),
       isPublished: Boolean(body.isPublished),
       coverImage: body.coverImage,
       publicId: body.publicId,

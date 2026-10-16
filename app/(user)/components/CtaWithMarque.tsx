@@ -74,10 +74,10 @@ function VerticalMarquee({
 export default function CTAWithVerticalMarquee({
   industries,
 }: CTAWithVerticalMarqueeProps) {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const isLoggedIn = status === "authenticated";
   const exploreHref = isLoggedIn ? "/events" : "/auth/login";
-  const hostHref = isLoggedIn ? "/company/create" : "/auth/register";
+  const hostHref = isLoggedIn ? "/apply" : "/auth/register";
   const marqueeRef = useRef<HTMLDivElement>(null);
 
   const marqueeItems = industries.map((industry) => industry.name);

@@ -17,7 +17,6 @@ import "react-quill/dist/quill.snow.css";
 type EventFormProps = {
     id?: number;
     defaultValues?: Partial<EventFormFields>;
-    companies: { id: number; name: string }[];
     categories: { id: number; name: string }[];
 };
 
@@ -33,7 +32,6 @@ type EventFormFields = {
     coverImage?: string;
     publicId?: string;
     isPublished: boolean;
-    companyId: number;
     categoryId: number;
 };
 
@@ -42,7 +40,6 @@ type EventFormFields = {
 export default function EventForm({
     id,
     defaultValues,
-    companies,
     categories,
 }: EventFormProps) {
     const router = useRouter();
@@ -62,7 +59,6 @@ export default function EventForm({
         coverImage: "",
         publicId: "",
         isPublished: false,
-        companyId: 0,
         categoryId: 0,
     });
 
@@ -103,20 +99,18 @@ export default function EventForm({
                 coverImage: defaultValues.coverImage ?? "",
                 publicId: defaultValues.publicId ?? "",
                 isPublished: defaultValues.isPublished ?? false,
-                companyId: Number(defaultValues.companyId ?? companies[0]?.id ?? 0),
                 categoryId: Number(defaultValues.categoryId ?? categories[0]?.id ?? 0),
             });
             return;
         }
 
-        if (companies.length && categories.length) {
+        if (categories.length) {
             setForm((prev) => ({
                 ...prev,
-                companyId: companies[0].id,
                 categoryId: categories[0].id,
             }));
         }
-    }, [defaultValues, companies, categories]);
+    }, [defaultValues, categories]);
 
     /* ================= HANDLERS ================= */
 
@@ -130,7 +124,7 @@ export default function EventForm({
             [name]:
                 type === "checkbox"
                     ? (e.target as HTMLInputElement).checked
-                    : ["price", "quota", "companyId", "categoryId"].includes(name)
+                    : ["price", "quota", "categoryId"].includes(name)
                         ? Number(value)
                         : value,
         }));
@@ -277,42 +271,22 @@ export default function EventForm({
                     </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium mb-1">
-                            Company
-                        </label>
-                        <select
-                            name="companyId"
-                            value={form.companyId}
-                            onChange={handleChange}
-                            className="w-full border px-3 py-2 rounded"
-                        >
-                            {companies.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium mb-1">
-                            Category
-                        </label>
-                        <select
-                            name="categoryId"
-                            value={form.categoryId}
-                            onChange={handleChange}
-                            className="w-full border px-3 py-2 rounded"
-                        >
-                            {categories.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                <div>
+                    <label className="block text-sm font-medium mb-1">
+                        Category
+                    </label>
+                    <select
+                        name="categoryId"
+                        value={form.categoryId}
+                        onChange={handleChange}
+                        className="w-full border px-3 py-2 rounded"
+                    >
+                        {categories.map((c) => (
+                            <option key={c.id} value={c.id}>
+                                {c.name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div>

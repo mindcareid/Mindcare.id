@@ -34,14 +34,6 @@ export interface Industry {
   slug: string;
 }
 
-export interface CompanySummary {
-  name: string;
-  slug: string;
-  logo: string | null;
-  location: string | null;
-  createdAt: Date;
-}
-
 export interface EventCategorySummary {
   name: string;
   slug: string;
@@ -76,8 +68,6 @@ export interface EventCardItem {
 export interface EventItem extends EventCardItem {
   description: string;
 
-  company: CompanySummary;
-  totalCompanyEvents: number | null;
   industries: {
     industry: Industry;
   }[];

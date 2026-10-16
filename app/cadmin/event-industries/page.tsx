@@ -2,7 +2,7 @@
 import prisma from "@/lib/prisma";
 import IndustriesList from "./_components/IndustriesList";
 import CreateIndustryForm from "./_components/CreateIndustryForm";
-import { Pagination } from "@/app/(company)/company/components/Pagination";
+import { Pagination } from "@/app/cadmin/_components/Pagination";
 
 const PER_PAGE = 10;
 

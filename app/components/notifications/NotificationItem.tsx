@@ -1,9 +1,6 @@
 "use client";
 
-import NotificationActions from "./NotificationActions";
-
 import type { Notification } from "@/types/notification";
-import { NotificationStatus, NotificationType } from "@prisma/client";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -12,14 +9,7 @@ interface NotificationItemProps {
 export default function NotificationItem({
   notification,
 }: NotificationItemProps) {
-  const {
-    title,
-    message,
-    createdAt,
-    isRead,
-    type,
-    status,
-  } = notification;
+  const { title, message, createdAt, isRead } = notification;
 
   return (
     <div
@@ -40,27 +30,6 @@ export default function NotificationItem({
           <p className="mt-1 text-xs leading-relaxed text-white/70">
             {message}
           </p>
-
-          {type === NotificationType.COMPANY_INVITE && 
-            status === NotificationStatus.PENDING && (
-            <NotificationActions
-              notification={notification}
-            />
-          )}
-
-          {type === NotificationType.COMPANY_INVITE &&
-            status === NotificationStatus.ACTIVE && (
-              <span className="mt-2 inline-block text-xs font-medium text-green-400">
-                ✓ Invitation Accepted
-              </span>
-            )}
-
-          {type === NotificationType.COMPANY_INVITE &&
-            status === NotificationStatus.DECLINED && (
-              <span className="mt-2 inline-block text-xs font-medium text-red-400">
-                ✕ Invitation Declined
-              </span>
-            )}
 
           <p className="mt-2 text-[11px] text-white/70">
             {new Intl.DateTimeFormat("id-ID", {

@@ -1,6 +1,4 @@
-import { cookies } from "next/headers";
 import EventForm from "../../components/EventForm";
-cookies;
 
 /* ================= FETCHERS ================= */
 
@@ -15,23 +13,6 @@ async function getEvent(id: string) {
   }
 
   return res.json();
-}
-
-async function getCompanies() {
-  const cookieStore = cookies();
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/cadmin/companies`, {
-    cache: "no-store",
-    headers: {
-      Cookie: cookieStore.toString(),
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch companies");
-  }
-
-  const json = await res.json();
-  return json.data;
 }
 
 async function getCategories() {
@@ -54,9 +35,8 @@ export default async function EditEventPage({
 }: {
   params: { id: string };
 }) {
-  const [event, companies, categories] = await Promise.all([
+  const [event, categories] = await Promise.all([
     getEvent(params.id),
-    getCompanies(),
     getCategories(),
   ]);
 
@@ -65,7 +45,6 @@ export default async function EditEventPage({
       <EventForm
         id={event.data.id}
         defaultValues={event.data}
-        companies={companies}
         categories={categories}
       />
     </div>

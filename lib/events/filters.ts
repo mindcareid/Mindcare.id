@@ -1,18 +1,12 @@
 import { Prisma } from "@prisma/client";
 import { GetEventsParams } from "./types";
 
-/* const ACTIVE_COMPANY_FILTER = {
-  deletedAt: null,
-  isActive: true,
-} as const; */
-
 export function buildEventWhere(
   params: GetEventsParams,
 ): Prisma.EventWhereInput {
   const where: Prisma.EventWhereInput = {
     deletedAt: null,
     //isPublished: true,
-    //company: ACTIVE_COMPANY_FILTER,
   };
 
   if (params.search?.trim()) {

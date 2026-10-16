@@ -264,41 +264,6 @@ export const UpdateEventSchema = z
   )
   .transform(stripQuotaWhenExternal);
 
-export const CreateCompanySchema = z.object({
-  name: z.string().min(1, "Name company is required"),
-  description: z.string().min(50, "min 50 Character Description Company"),
-  location: z.string().optional(),
-  email: z.email("invalid format email").optional().or(z.literal("")),
-  phone: z.string().optional(),
-  website: z.string().optional(),
-  instagram: z.string().optional(),
-  linkedin: z.string().optional(),
-  logo: z.string().nullable().optional(),
-  publicId: z.string().nullable().optional(),
-});
-
-export const UpdateCompanyScehma = z.object({
-  name: z.string().min(1, "Name company is required"),
-  description: z.string().min(50, "Min 50 Character Description Company"),
-  logo: z.string().nullable().optional(),
-  publicId: z.string().nullable().optional(),
-  location: z.string().optional(),
-  email: z.email("invalid format email").optional().or(z.literal("")),
-  phone: z.string().optional(),
-  website: z.string().optional(),
-  instagram: z.string().optional(),
-  linkedin: z.string().optional(),
-});
-
-export const AttendeeFieldSchema = z.object({
-  label: z.string().min(1, "Label is required."),
-  key: z.string().min(1, "Key is required"),
-  type: z.enum(["TEXT", "EMAIL", "PHONE", "NUMBER", "DATE", "SELECT"]),
-  required: z.boolean().default(false),
-  options: z.array(z.string()).optional().nullable(),
-  order: z.number().int().default(0),
-});
-
 type AttendeeFieldInput = {
   key: string;
   label: string;
@@ -386,9 +351,6 @@ export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export type ProfileFormData = z.infer<typeof profileSchema>;
 export type CreateEventFormData = z.infer<typeof CreateEventSchema>;
 export type UpdateEventFormData = z.infer<typeof UpdateEventSchema>;
-export type CreateCompanyFormData = z.infer<typeof CreateCompanySchema>;
-export type UpdateCompanyFormData = z.infer<typeof UpdateCompanyScehma>;
-export type AttendeeFieldFormDataCompany = z.infer<typeof AttendeeFieldSchema>;
 export type CreateArticleFormData = z.infer<typeof CreateArticleNewsSchema>;
 export type UpdateArticleFormData = z.infer<typeof UpdateArticleSchema>;
 export type GetParticipantsQuery = z.infer<typeof getParticipantsQuerySchema>;

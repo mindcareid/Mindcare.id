@@ -7,10 +7,8 @@ type EventDetail = {
 export function serializeEventDetail<T extends EventDetail>(
   event: T,
   soldCount: number,
-  totalCompanyEvents: number,
   remaining: number | null,
   soldOut: boolean,
-  
 ) {
   return {
     ...event,
@@ -18,6 +16,5 @@ export function serializeEventDetail<T extends EventDetail>(
     soldCount,
     remaining,
     soldOut,
-    totalCompanyEvents,
   };
 }

@@ -50,7 +50,7 @@ export default function Footer() {
                 {group.items?.map((item) => {
                   const href =
                     item.isAuthRedirect && session?.user
-                      ? "/company/create"
+                      ? "/apply"
                       : item.path;
 
                   return (
