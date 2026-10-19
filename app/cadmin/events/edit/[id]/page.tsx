@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import EventForm from "../../components/EventForm";
 
 /* ================= FETCHERS ================= */
@@ -5,7 +6,7 @@ import EventForm from "../../components/EventForm";
 async function getEvent(id: string) {
   const res = await fetch(
     `${process.env.NEXTAUTH_URL}/api/cadmin/events?id=${id}`,
-    { cache: "no-store" },
+    { cache: "no-store", headers: { cookie: cookies().toString() } },
   );
 
   if (!res.ok) {

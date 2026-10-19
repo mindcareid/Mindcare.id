@@ -105,7 +105,6 @@ export default function EventHostCard({ event }: EventHostCardProps) {
             <p id="event-host-title" className="font-heading text-lg font-semibold text-foreground">
               {event.host.name}
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">MindCare</p>
           </div>
         </div>
       )}

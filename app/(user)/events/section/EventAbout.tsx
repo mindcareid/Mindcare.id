@@ -1,4 +1,5 @@
 import SectionHeader from "@/app/components/reusable/SectionHeader";
+import { toEventPlainText } from "@/lib/events/serializers";
 
 import type { EventDetail, EventListItem } from "../data/events";
 
@@ -7,7 +8,7 @@ type EventAboutProps = {
 };
 
 export default function EventAbout({ event }: EventAboutProps) {
-  const paragraphs = event.description
+  const paragraphs = toEventPlainText(event.description)
     .split(/\n\s*\n/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);

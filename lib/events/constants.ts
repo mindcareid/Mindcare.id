@@ -9,6 +9,8 @@ export function isExternalEvent(event: {
 export const EVENTS_PAGE_LIMIT = 9;
 
 export const HOME_EVENTS_LIMIT = 6;
+export const PLATFORM_SLUG = "mindcare";
+export const PLATFORM_NAME = "MindCare.id";
 
 export const MAX_EVENTS_LIMIT = 50;
 
@@ -68,7 +70,6 @@ export function resolveEventFilters(
     page: clampEventPage(input.page),
   };
 }
-
 
 export function filtersToQueryParams(filters: EventFilters) {
   return {

@@ -112,6 +112,28 @@ export default function EventList() {
     toast.error(data?.message || "Failed to delete event");
   };
 
+  const handleTogglePublish = async (event: Event) => {
+    const next = !isPublished(event);
+    const res = await fetch(`/api/cadmin/events/${event.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isPublished: next }),
+    });
+    if (res.ok) {
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === event.id
+            ? { ...e, isPublished: next, status: next ? "PUBLISHED" : "DRAFT" }
+            : e,
+        ),
+      );
+      toast.success(next ? "Event published" : "Event moved to draft");
+      return;
+    }
+    const data = await res.json().catch(() => null);
+    toast.error(data?.message || "Failed to update event");
+  };
+
   return (
     <div className="mx-auto max-w-6xl p-4 sm:p-6 lg:p-8">
       {/* Header */}
@@ -124,6 +146,12 @@ export default function EventList() {
             Manage events published on the public site.
           </p>
         </div>
+        <Link
+          href="/cadmin/events/create"
+          className={buttonStyles({ variant: "primary", size: "md" })}
+        >
+          Create event
+        </Link>
       </div>
 
       {/* Search */}
@@ -191,7 +219,7 @@ export default function EventList() {
                   {event.price === 0 ? "Free" : formatIdr(event.price)}
                 </p>
 
-                <div className="mt-3 grid grid-cols-3 gap-2">
+                <div className="mt-3 grid grid-cols-2 gap-2">
                   <Link
                     href={`/cadmin/events/edit/${event.id}`}
                     className={buttonStyles({
@@ -212,6 +240,17 @@ export default function EventList() {
                   >
                     Fields
                   </Link>
+                  <button
+                    type="button"
+                    onClick={() => handleTogglePublish(event)}
+                    className={buttonStyles({
+                      variant: "ghost",
+                      size: "sm",
+                      className: "w-full",
+                    })}
+                  >
+                    {isPublished(event) ? "Hide" : "Publish"}
+                  </button>
                   <button
                     type="button"
                     onClick={() => handleDelete(event)}
@@ -299,6 +338,16 @@ export default function EventList() {
                           >
                             Fields
                           </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleTogglePublish(event)}
+                            className={buttonStyles({
+                              variant: "ghost",
+                              size: "sm",
+                            })}
+                          >
+                            {isPublished(event) ? "Hide" : "Publish"}
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleDelete(event)}

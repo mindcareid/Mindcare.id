@@ -749,6 +749,18 @@ model AboutSection {
   @@index([isActive, orderIndex])
 }
 
+model Platform {
+  id       Int     @id @default(autoincrement())
+  name     String  @db.VarChar(255)
+  slug     String  @unique @db.VarChar(255)
+  isActive Boolean @default(true)
+
+  events Event[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Event {
   id Int @id @default(autoincrement())
 
@@ -781,8 +793,10 @@ model Event {
 
   professionalId Int?
   careCentreId   Int?
+  platformId     Int?
   careCentre     CareCentre?   @relation(fields: [careCentreId], references: [id], onDelete: Restrict)
   professional   Professional? @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  platform       Platform?     @relation(fields: [platformId], references: [id], onDelete: SetNull)
 
   status EventStatus @default(DRAFT)
 
@@ -804,6 +818,7 @@ model Event {
 
   @@index([professionalId, status, startDate])
   @@index([careCentreId, status, startDate])
+  @@index([platformId, status, startDate])
   @@index([categoryId, status])
   @@index([status, startDate])
   @@index([deletedAt])

@@ -9,6 +9,7 @@ import {
 } from "../data/events";
 
 import EventDetail from "./EventDetail";
+import { toEventPlainText } from "@/lib/events/serializers";
 
 type EventPageProps = {
   params: {
@@ -69,10 +70,12 @@ export async function generateMetadata({
     };
   }
 
+  const plainDescription = toEventPlainText(event.description);
+
   const description =
-    event.description.length > 160
-      ? `${event.description.slice(0, 157)}...`
-      : event.description;
+    plainDescription.length > 160
+      ? `${plainDescription.slice(0, 157)}...`
+      : plainDescription;
 
   return {
     title: `${event.title} | MindCare`,

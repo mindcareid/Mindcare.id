@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { EventStatus, Prisma } from "@prisma/client";
 import { GetEventsParams } from "./types";
 
 export function buildEventWhere(
@@ -6,7 +6,7 @@ export function buildEventWhere(
 ): Prisma.EventWhereInput {
   const where: Prisma.EventWhereInput = {
     deletedAt: null,
-    //isPublished: true,
+    status: EventStatus.PUBLISHED,
   };
 
   if (params.search?.trim()) {

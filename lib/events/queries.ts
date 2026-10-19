@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { EventStatus } from "@prisma/client";
 
 import { buildEventWhere } from "./filters";
 import { EVENTS_PAGE_LIMIT } from "./constants";
@@ -51,7 +52,7 @@ export async function getEventBySlug(slug: string) {
     where: {
       slug,
       deletedAt: null,
-      isPublished: true,
+      status: EventStatus.PUBLISHED,
     },
 
     select: {

@@ -2,11 +2,17 @@ import { getAdminUser } from "@/lib/adminGuard";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import slugify from "slugify";
+import { EventStatus } from "@prisma/client";
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const admin = await getAdminUser();
+  if (!admin) {
+    return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
+  }
+
   const { id } = await params;
 
   const event = await prisma.event.findFirst({
@@ -17,6 +23,33 @@ export async function GET(
   if (!event) {
     return NextResponse.json({ message: "Event not found!" }, { status: 404 });
   }
+  return NextResponse.json({ success: true, data: event });
+}
+
+/* Toggle sembunyikan/tampilkan. Draft = status DRAFT + isPublished false,
+   dipakai tombol Hide/Publish di daftar event admin. */
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const admin = await getAdminUser();
+  if (!admin) {
+    return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
+  }
+
+  const { id } = await params;
+  const body = await req.json().catch(() => ({}));
+  const isPublished = body?.isPublished === true;
+
+  const event = await prisma.event.update({
+    where: { id: Number(id) },
+    data: {
+      isPublished,
+      status: isPublished ? EventStatus.PUBLISHED : EventStatus.DRAFT,
+    },
+    select: { id: true, isPublished: true, status: true },
+  });
+
   return NextResponse.json({ success: true, data: event });
 }
 

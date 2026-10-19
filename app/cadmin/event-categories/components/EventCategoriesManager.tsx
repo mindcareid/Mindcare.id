@@ -32,7 +32,7 @@ export default function EventCategoriesManager() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/event-categories")
+    fetch("/api/event-categories?includeInactive=1")
       .then((res) => res.json())
       .then((json) => {
         if (!cancelled) setCategories(json.data ?? []);

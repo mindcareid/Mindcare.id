@@ -1,16 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import Image from "next/image";
-import Cropper, { Area } from "react-easy-crop";
 import { autoSlug } from "@/lib/utils/autoSlug";
-import { getCroppedImage } from "@/lib/cropImage";
-import { uploadToCloudinary } from "@/lib/cloudinary/upload";
-
-const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
-import "react-quill/dist/quill.snow.css";
+import { toEventPlainText } from "@/lib/events/serializers";
+import ImageUploadField from "@/app/components/reusable/ImageUploadField";
 
 /* ================= TYPES ================= */
 
@@ -62,16 +56,6 @@ export default function EventForm({
         categoryId: 0,
     });
 
-    /* ================= CROP STATES ================= */
-
-    const [imageSrc, setImageSrc] = useState<string | null>(null);
-    const [crop, setCrop] = useState({ x: 0, y: 0 });
-    const [zoom, setZoom] = useState(1);
-    const [croppedAreaPixels, setCroppedAreaPixels] =
-        useState<Area | null>(null);
-    const [showCropper, setShowCropper] = useState(false);
-    const [uploadingImage, setUploadingImage] = useState(false);
-
     function toLocalDateTimeString(date: string | Date): string {
         const d = new Date(date);
         const offset = d.getTimezoneOffset(); // dalam menit
@@ -86,7 +70,7 @@ export default function EventForm({
             setForm({
                 title: defaultValues.title ?? "",
                 slug: defaultValues.slug ?? "",
-                description: defaultValues.description ?? "",
+                description: toEventPlainText(defaultValues.description ?? ""),
                 location: defaultValues.location ?? "",
                 startDate: defaultValues.startDate
                     ? toLocalDateTimeString(defaultValues.startDate)
@@ -115,7 +99,9 @@ export default function EventForm({
     /* ================= HANDLERS ================= */
 
     const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+        e: React.ChangeEvent<
+            HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+        >
     ) => {
         const { name, value, type } = e.target;
 
@@ -143,61 +129,6 @@ export default function EventForm({
             }),
         }));
     };
-
-    /* ================= IMAGE PICK ================= */
-
-    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = () => {
-            setImageSrc(reader.result as string);
-            setShowCropper(true);
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const onCropComplete = useCallback(
-        (_: Area, pixels: Area) => {
-            setCroppedAreaPixels(pixels);
-        },
-        []
-    );
-
-    /* ================= UPLOAD CROPPED ================= */
-
-    const handleCropUpload = async () => {
-        if (!imageSrc || !croppedAreaPixels || uploadingImage) return;
-
-        setUploadingImage(true);
-
-        try {
-            const croppedBlob = await getCroppedImage(
-                imageSrc,
-                croppedAreaPixels
-            );
-
-            // Hanya upload; gambar lama TIDAK dihapus di sini agar tidak rusak
-            // bila user membatalkan form sebelum submit.
-            const data = await uploadToCloudinary(croppedBlob, "events");
-
-            setForm((prev) => ({
-                ...prev,
-                coverImage: data.secure_url,
-                publicId: data.public_id,
-            }));
-
-            setShowCropper(false);
-            setImageSrc(null);
-        } catch (err) {
-            console.error("Upload error:", err);
-            alert(err instanceof Error ? err.message : "Image upload failed");
-        } finally {
-            setUploadingImage(false);
-        }
-    };
-
 
     /* ================= SUBMIT ================= */
 
@@ -375,50 +306,47 @@ export default function EventForm({
 
             {/* ================= CONTENT ================= */}
             <section className="space-y-3">
-                <h2 className="font-medium text-lg">Description</h2>
-                <ReactQuill
+                <label
+                    htmlFor="event-description"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Description
+                </label>
+                <textarea
+                    id="event-description"
+                    name="description"
+                    rows={8}
                     value={form.description}
-                    onChange={(v) =>
-                        setForm((prev) => ({ ...prev, description: v }))
-                    }
+                    onChange={handleChange}
+                    placeholder="Describe the event. Leave a blank line between paragraphs."
+                    className="w-full border px-3 py-2 rounded"
                 />
+                <p className="text-xs text-gray-500">
+                    Plain text. Blank lines separate paragraphs.
+                </p>
             </section>
 
             {/* COVER IMAGE */}
-            {/* COVER IMAGE */}
-            <div className="space-y-2">
-                <label className="block text-sm font-medium mb-1">
-                    Cover Image
-                </label>
-
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageSelect}
-                    disabled={uploadingImage}
-                />
-
-                {/* PREVIEW IMAGE (OLD / NEW) */}
-                {form.coverImage && (
-                    <div className="relative w-[320px]">
-                        <Image
-                            src={form.coverImage}
-                            alt="Event Cover"
-                            width={320}
-                            height={180}
-                            className="mt-2 rounded object-cover border"
-                        />
-
-                        <span className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                            {id ? "Current Cover" : "New Cover"}
-                        </span>
-                    </div>
-                )}
-
-                <p className="text-xs text-gray-500">
-                    Upload gambar baru untuk mengganti cover lama
-                </p>
-            </div>
+            <ImageUploadField
+                label="Cover Image"
+                hint="16:9 image (1600x900 max), WebP, normally under 100 KB."
+                entityType="events"
+                aspect={16 / 9}
+                shape="wide"
+                maxWidth={1600}
+                maxHeight={900}
+                value={{
+                    url: form.coverImage || null,
+                    publicId: form.publicId || null,
+                }}
+                onChange={({ url, publicId }) =>
+                    setForm((prev) => ({
+                        ...prev,
+                        coverImage: url ?? "",
+                        publicId: publicId ?? "",
+                    }))
+                }
+            />
 
 
             {/* ================= PUBLISH ================= */}
@@ -457,48 +385,6 @@ export default function EventForm({
                     Cancel
                 </button>
             </div>
-
-            {/* CROP MODAL */}
-            {showCropper && imageSrc && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-                    <div className="bg-white p-4 rounded w-[90vw] max-w-md">
-                        <div className="relative w-full h-75">
-                            <Cropper
-                                image={imageSrc}
-                                crop={crop}
-                                zoom={zoom}
-                                aspect={16 / 9}
-                                onCropChange={setCrop}
-                                onZoomChange={setZoom}
-                                onCropComplete={onCropComplete}
-                            />
-                        </div>
-
-                        <div className="flex justify-end gap-2 mt-4">
-                            <button
-                                type="button"
-                                disabled={uploadingImage}
-                                onClick={() => setShowCropper(false)}
-                                className="px-4 py-2 rounded border"
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                type="button"
-                                disabled={uploadingImage}
-                                onClick={handleCropUpload}
-                                className="bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2"
-                            >
-                                {uploadingImage && (
-                                    <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                )}
-                                {uploadingImage ? "Uploading..." : "Crop & Upload"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </form>
     );
 }

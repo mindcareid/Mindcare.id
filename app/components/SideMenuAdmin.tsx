@@ -22,6 +22,7 @@ import {
   faBriefcase,
   faLayerGroup,
   faUserGroup,
+  faBuilding,
   faClockRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import { cn } from "@/lib/utils";
@@ -82,6 +83,12 @@ const NAV_LINKS: {
     label: "Solution Audiences",
     icon: faUserGroup,
     section: "Reference",
+  },
+  {
+    href: "/cadmin/platform",
+    label: "Platform Account",
+    icon: faBuilding,
+    section: "Settings",
   },
   // {
   //   href: "/cadmin/audit-logs",

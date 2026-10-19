@@ -1,6 +1,7 @@
 import { EventStatus, OrderStatus, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { PLATFORM_NAME, PLATFORM_SLUG } from "@/lib/events/constants";
 
 const eventListInclude = {
   category: true,
@@ -8,6 +9,8 @@ const eventListInclude = {
   professional: true,
 
   careCentre: true,
+
+  platform: true,
 
   agenda: {
     orderBy: {
@@ -28,6 +31,8 @@ const eventDetailInclude = {
   professional: true,
 
   careCentre: true,
+
+  platform: true,
 
   agenda: {
     orderBy: {
@@ -133,7 +138,7 @@ const publicEventWhere = {
 } satisfies Prisma.EventWhereInput;
 
 function resolveEventHost(
-  event: Pick<EventListPayload, "professional" | "careCentre">,
+  event: Pick<EventListPayload, "professional" | "careCentre" | "platform">,
 ): EventHost {
   if (event.professional) {
     return {
@@ -152,8 +157,8 @@ function resolveEventHost(
   }
 
   return {
-    name: "MindCare",
-    slug: "mindcare",
+    name: event.platform?.name ?? PLATFORM_NAME,
+    slug: event.platform?.slug ?? PLATFORM_SLUG,
     type: "PLATFORM",
   };
 }

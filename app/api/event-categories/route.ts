@@ -6,6 +6,17 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
+    const includeInactive = searchParams.get("includeInactive") === "1";
+
+    // Daftar lengkap (termasuk nonaktif) hanya untuk panel admin, supaya
+    // kategori yang di-deactivate tetap terlihat dan bisa diaktifkan lagi.
+    if (includeInactive) {
+      const admin = await getAdminUser();
+      if (!admin) {
+        return NextResponse.json({ message: "Forbidden!" }, { status: 403 });
+      }
+    }
+
     if (id) {
       const category = await prisma.eventCategory.findFirst({
         where: {
@@ -28,9 +39,7 @@ export async function GET(req: NextRequest) {
 
     // GET all
     const categories = await prisma.eventCategory.findMany({
-      where: {
-        isActive: true,
-      },
+      where: includeInactive ? {} : { isActive: true },
       orderBy: {
         createdAt: "desc",
       },
