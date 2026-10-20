@@ -113,6 +113,8 @@ export async function PATCH(req: NextRequest) {
           : {}),
         baseCity: data.baseCity,
         baseProvince: data.baseProvince,
+        baseCityCode: data.baseCityCode,
+        baseProvinceCode: data.baseProvinceCode,
         languages: data.languages,
         yearsOfExperience: data.yearsOfExperience,
         startingPriceIdr,

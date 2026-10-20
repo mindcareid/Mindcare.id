@@ -15,6 +15,8 @@ import {
 } from "@/lib/validations/apply";
 import Button from "@/app/components/reusable/Button";
 import ApplicationNotice from "../component/ApplicationNotice";
+import WilayahSelect from "../component/WilayahSelect";
+import type { ProvinceOption, RegencyOption } from "@/lib/wilayah";
 import {
   CloudinaryUploadError,
   CloudinaryUploadResult,
@@ -42,6 +44,9 @@ type FormValues = {
   photoPublicId: string;
   baseCity: string;
   baseProvince: string;
+  /** Kode BPS pasangan `baseCity`/`baseProvince`, diisi dari dropdown wilayah. */
+  baseCityCode: string;
+  baseProvinceCode: string;
   languagesText: string;
   yearsOfExperience: number;
   areaSlugs: string[];
@@ -62,6 +67,8 @@ const defaultValues: FormValues = {
   photoPublicId: "",
   baseCity: "",
   baseProvince: "",
+  baseCityCode: "",
+  baseProvinceCode: "",
   languagesText: "",
   yearsOfExperience: 0,
   areaSlugs: [],
@@ -92,9 +99,13 @@ const APPLY_ERROR_TARGETS: Record<string, string> = {
 
 export default function ProfessionalForm({
   areas,
+  provinces,
+  regencies,
   existing,
 }: {
   areas: AreaOption[];
+  provinces: ProvinceOption[];
+  regencies: RegencyOption[];
   existing: ExistingApplication | null;
 }) {
   const router = useRouter();
@@ -202,6 +213,8 @@ export default function ProfessionalForm({
       publicId: values.photoPublicId === "" ? null : values.photoPublicId,
       baseCity: values.baseCity,
       baseProvince: values.baseProvince,
+      baseCityCode: values.baseCityCode,
+      baseProvinceCode: values.baseProvinceCode,
       languages: values.languagesText
         .split(",")
         .map((lang) => lang.trim())
@@ -382,33 +395,26 @@ export default function ProfessionalForm({
           description="Where you are based and how you practise."
         >
           <div className="grid gap-5 md:grid-cols-2">
-            <ApplyField
-              label="City"
-              htmlFor="baseCity"
-              required
-              error={errors.baseCity?.message}
-            >
-              <input
-                id="baseCity"
-                {...register("baseCity")}
-                placeholder="Jakarta Selatan"
-                className={applyInputClassName(Boolean(errors.baseCity))}
-              />
-            </ApplyField>
-
-            <ApplyField
-              label="Province"
-              htmlFor="baseProvince"
-              required
-              error={errors.baseProvince?.message}
-            >
-              <input
-                id="baseProvince"
-                {...register("baseProvince")}
-                placeholder="DKI Jakarta"
-                className={applyInputClassName(Boolean(errors.baseProvince))}
-              />
-            </ApplyField>
+            <WilayahSelect
+              provinces={provinces}
+              regencies={regencies}
+              provinceId="baseProvince"
+              cityId="baseCity"
+              provinceCode={watch("baseProvinceCode")}
+              cityCode={watch("baseCityCode")}
+              provinceError={errors.baseProvince?.message}
+              cityError={errors.baseCity?.message}
+              onChange={({ provinceCode, provinceName, cityCode, cityName }) => {
+                setValue("baseProvinceCode", provinceCode, {
+                  shouldValidate: true,
+                });
+                setValue("baseProvince", provinceName, {
+                  shouldValidate: true,
+                });
+                setValue("baseCityCode", cityCode, { shouldValidate: true });
+                setValue("baseCity", cityName, { shouldValidate: true });
+              }}
+            />
 
             <ApplyField
               label="Years of experience"

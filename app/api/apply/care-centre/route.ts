@@ -92,6 +92,8 @@ export async function POST(req: Request) {
         street: data.street,
         city: data.city,
         province: data.province,
+        cityCode: data.cityCode,
+        provinceCode: data.provinceCode,
         postalCode: data.postalCode,
         phone: data.phone,
         website: data.website || null,

@@ -13,6 +13,8 @@ import {
 } from "@/lib/validations/apply";
 import Button from "@/app/components/reusable/Button";
 import ImageUploadField from "@/app/components/reusable/ImageUploadField";
+import WilayahSelect from "@/app/apply/component/WilayahSelect";
+import type { ProvinceOption, RegencyOption } from "@/lib/wilayah";
 import {
   ApplyField,
   ApplySection,
@@ -48,6 +50,8 @@ type FormValues = {
   street: string;
   city: string;
   province: string;
+  cityCode: string;
+  provinceCode: string;
   postalCode: string;
   phone: string;
   website: string;
@@ -69,9 +73,13 @@ type FormValues = {
 
 export default function EditCareCentreForm({
   services,
+  provinces,
+  regencies,
   initialValues,
 }: {
   services: ServiceOption[];
+  provinces: ProvinceOption[];
+  regencies: RegencyOption[];
   initialValues: FormValues;
 }) {
   const router = useRouter();
@@ -380,31 +388,22 @@ export default function EditCareCentreForm({
         </ApplyField>
 
         <div className="grid gap-5 md:grid-cols-2">
-          <ApplyField
-            label="City"
-            htmlFor="city"
-            required
-            error={errors.city?.message}
-          >
-            <input
-              id="city"
-              {...register("city")}
-              className={applyInputClassName(Boolean(errors.city))}
-            />
-          </ApplyField>
-
-          <ApplyField
-            label="Province"
-            htmlFor="province"
-            required
-            error={errors.province?.message}
-          >
-            <input
-              id="province"
-              {...register("province")}
-              className={applyInputClassName(Boolean(errors.province))}
-            />
-          </ApplyField>
+          <WilayahSelect
+            provinces={provinces}
+            regencies={regencies}
+            provinceId="province"
+            cityId="city"
+            provinceCode={watch("provinceCode")}
+            cityCode={watch("cityCode")}
+            provinceError={errors.province?.message}
+            cityError={errors.city?.message}
+            onChange={({ provinceCode, provinceName, cityCode, cityName }) => {
+              setValue("provinceCode", provinceCode, { shouldValidate: true });
+              setValue("province", provinceName, { shouldValidate: true });
+              setValue("cityCode", cityCode, { shouldValidate: true });
+              setValue("city", cityName, { shouldValidate: true });
+            }}
+          />
 
           <ApplyField
             label="Postal code"

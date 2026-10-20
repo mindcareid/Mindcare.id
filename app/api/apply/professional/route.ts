@@ -101,6 +101,8 @@ export async function POST(req: Request) {
         publicId: data.publicId ?? null,
         baseCity: data.baseCity,
         baseProvince: data.baseProvince,
+        baseCityCode: data.baseCityCode,
+        baseProvinceCode: data.baseProvinceCode,
         languages: data.languages,
         yearsOfExperience: data.yearsOfExperience,
         startingPriceIdr,

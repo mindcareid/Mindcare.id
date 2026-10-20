@@ -135,7 +135,10 @@ export function photoAssetIssues(
   return {};
 }
 
-export const ApplyProfessionalSchema = z.object({
+const cityBelongsToProvince = (provinceCode: string, cityCode: string) =>
+  cityCode.startsWith(`${provinceCode}.`);
+
+const professionalBaseSchema = z.object({
   fullName: z
     .string()
     .min(3, "Full name must be at least 3 characters")
@@ -163,6 +166,8 @@ export const ApplyProfessionalSchema = z.object({
     .string()
     .min(2, "Province is required")
     .max(100, "Province cannot exceed 100 characters"),
+  baseCityCode: z.string().min(1, "Pick a city"),
+  baseProvinceCode: z.string().min(1, "Pick a province"),
   languages: z
     .array(
       z
@@ -197,6 +202,24 @@ export const ApplyProfessionalSchema = z.object({
   acceptTerms: termsSchema,
 });
 
+export const ApplyProfessionalSchema = professionalBaseSchema.refine(
+  (data) => cityBelongsToProvince(data.baseProvinceCode, data.baseCityCode),
+  {
+    message: "Pick a city inside the selected province",
+    path: ["baseCityCode"],
+  },
+);
+
+export const EditProfessionalSchema = professionalBaseSchema
+  .omit({ acceptTerms: true })
+  .refine(
+    (data) => cityBelongsToProvince(data.baseProvinceCode, data.baseCityCode),
+    {
+      message: "Pick a city inside the selected province",
+      path: ["baseCityCode"],
+    },
+  );
+
 const optionalHttpsUrlSchema = z
   .string()
   .trim()
@@ -207,8 +230,12 @@ const optionalHttpsUrlSchema = z
   )
   .optional();
 
-const optionalImageUrl = z.string().trim().max(500).refine(v=>v===""||v.startsWith("https://")).optional()
-
+const optionalImageUrl = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((v) => v === "" || v.startsWith("https://"))
+  .optional();
 
 const optionalImageUrlSchema = z
   .string()
@@ -226,7 +253,7 @@ const optionalPublicIdSchema = z
   .max(255, "public_id is too long")
   .optional();
 
-export const ApplyCareCentreSchema = z.object({
+const careCentreBaseSchema = z.object({
   name: z
     .string()
     .min(3, "Centre name must be at least 3 characters")
@@ -248,6 +275,8 @@ export const ApplyCareCentreSchema = z.object({
     .string()
     .min(2, "Province is required")
     .max(100, "Province cannot exceed 100 characters"),
+  cityCode: z.string().min(1, "Pick a city"),
+  provinceCode: z.string().min(1, "Pick a province"),
   postalCode: z.string().regex(/^\d{5}$/, "Postal code is 5 digits"),
   phone: z
     .string()
@@ -281,21 +310,32 @@ export const ApplyCareCentreSchema = z.object({
   acceptTerms: termsSchema,
 });
 
+export const ApplyCareCentreSchema = careCentreBaseSchema.refine(
+  (data) => cityBelongsToProvince(data.provinceCode, data.cityCode),
+  { message: "Pick a city inside the selected province", path: ["cityCode"] },
+);
+
+export const EditCareCentreSchema = careCentreBaseSchema
+  .omit({ acceptTerms: true })
+  .refine((data) => cityBelongsToProvince(data.provinceCode, data.cityCode), {
+    message: "Pick a city inside the selected province",
+    path: ["cityCode"],
+  });
+
 export type ApplyProfessionalFormData = z.infer<typeof ApplyProfessionalSchema>;
 export type ApplyCareCentreFormData = z.infer<typeof ApplyCareCentreSchema>;
 export type ProfessionalServiceFormData = z.infer<
   typeof professionalServiceSchema
 >;
 export type OpeningHourFormData = z.infer<typeof openingHourSchema>;
-export const EditProfessionalSchema = ApplyProfessionalSchema.omit({
-  acceptTerms: true,
-});
 
-const optionalHttpsLink = (label: string) => z.string().trim().max(500).refine((v) => v === "" || v.startsWith("https://")).optional()
-
-export const EditCareCentreSchema = ApplyCareCentreSchema.omit({
-  acceptTerms: true,
-});
+const optionalHttpsLink = (label: string) =>
+  z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => v === "" || v.startsWith("https://"))
+    .optional();
 
 export type EditProfessionalFormData = z.infer<typeof EditProfessionalSchema>;
 export type EditCareCentreFormData = z.infer<typeof EditCareCentreSchema>;

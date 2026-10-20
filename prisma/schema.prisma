@@ -410,13 +410,15 @@ model CareCentre {
   publicId    String?    @db.VarChar(255)
   description String?    @db.Text
 
-  street     String  @db.VarChar(255)
-  city       String  @db.VarChar(100)
-  province   String  @db.VarChar(100)
-  postalCode String  @db.VarChar(10)
-  phone      String  @db.VarChar(25)
-  website    String? @db.VarChar(255)
-  country    String? @db.VarChar(100)
+  street       String  @db.VarChar(255)
+  city         String  @db.VarChar(100)
+  province     String  @db.VarChar(100)
+  cityCode     String? @db.VarChar(10)
+  provinceCode String? @db.VarChar(10)
+  postalCode   String  @db.VarChar(10)
+  phone        String  @db.VarChar(25)
+  website      String? @db.VarChar(255)
+  country      String? @db.VarChar(100)
 
   acceptsBpjs          Boolean @default(false)
   timeZone             String  @default("Asia/Jakarta") @db.VarChar(50)
@@ -1079,9 +1081,11 @@ model Professional {
   bio          String?    @db.Text
   photoUrl     String?    @db.VarChar(500)
   publicId     String?    @db.VarChar(255)
-  baseCity     String     @db.VarChar(100)
-  baseProvince String     @db.VarChar(100)
-  languages    Json?
+  baseCity         String     @db.VarChar(100)
+  baseProvince     String     @db.VarChar(100)
+  baseCityCode     String?    @db.VarChar(10)
+  baseProvinceCode String?    @db.VarChar(10)
+  languages        Json?
 
   yearsOfExperience Int  @default(0)
   startingPriceIdr  Int?
@@ -1148,4 +1152,30 @@ model ProfessionalAreaOfSupport {
 
   @@id([professionalId, areaId])
   @@index([areaId])
+}
+
+// Data referensi wilayah administratif Indonesia (BPS): provinsi dan
+// kabupaten/kota. Dipakai untuk dropdown di form pendaftaran. `id` adalah
+// kode BPS (mis. "32", "32.73"). Sumber: EMSIFA static API, disimpan lokal
+// lewat scripts/fetch-wilayah.mjs dan di-seed lewat prisma/seed.ts.
+model Province {
+  id   String @id @db.VarChar(10)
+  name String @db.VarChar(100)
+
+  regencies Regency[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Regency {
+  id         String   @id @db.VarChar(10)
+  name       String   @db.VarChar(100)
+  provinceId String   @db.VarChar(10)
+  province   Province @relation(fields: [provinceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([provinceId])
 }

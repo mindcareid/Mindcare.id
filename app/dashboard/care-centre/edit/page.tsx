@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { redirect, notFound } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { getWilayahOptions } from "@/lib/wilayah";
 import EditCareCentreForm from "./EditCareCentreForm";
 
 export const metadata: Metadata = {
@@ -45,6 +46,8 @@ export default async function EditCareCentrePage() {
     orderBy: { name: "asc" },
   });
 
+  const { provinces, regencies } = await getWilayahOptions();
+
   const hoursByDay = new Map(centre.openingHours.map((h) => [h.day, h]));
 
   return (
@@ -65,6 +68,8 @@ export default async function EditCareCentrePage() {
 
       <EditCareCentreForm
         services={serviceOptions}
+        provinces={provinces}
+        regencies={regencies}
         initialValues={{
           name: centre.name,
           kind: KIND_FROM_ENUM[centre.kind],
@@ -72,6 +77,8 @@ export default async function EditCareCentrePage() {
           street: centre.street,
           city: centre.city,
           province: centre.province,
+          cityCode: centre.cityCode ?? "",
+          provinceCode: centre.provinceCode ?? "",
           postalCode: centre.postalCode,
           phone: centre.phone,
           website: centre.website ?? "",

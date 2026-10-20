@@ -14,6 +14,8 @@ import {
 import Button from "@/app/components/reusable/Button";
 import ImageUploadField from "@/app/components/reusable/ImageUploadField";
 import ApplicationNotice from "../component/ApplicationNotice";
+import WilayahSelect from "../component/WilayahSelect";
+import type { ProvinceOption, RegencyOption } from "@/lib/wilayah";
 import {
   ApplyField,
   ApplySection,
@@ -49,6 +51,9 @@ type FormValues = {
   street: string;
   city: string;
   province: string;
+  /** Kode BPS pasangan `city`/`province`, diisi dari dropdown wilayah. */
+  cityCode: string;
+  provinceCode: string;
   postalCode: string;
   phone: string;
   website: string;
@@ -73,6 +78,8 @@ const defaultValues: FormValues = {
   street: "",
   city: "",
   province: "",
+  cityCode: "",
+  provinceCode: "",
   postalCode: "",
   phone: "",
   website: "",
@@ -101,9 +108,13 @@ type ExistingApplication = {
 
 export default function CareCentreForm({
   services,
+  provinces,
+  regencies,
   existing,
 }: {
   services: ServiceOption[];
+  provinces: ProvinceOption[];
+  regencies: RegencyOption[];
   existing: ExistingApplication | null;
 }) {
   const router = useRouter();
@@ -293,33 +304,22 @@ export default function CareCentreForm({
           </ApplyField>
 
           <div className="grid gap-5 md:grid-cols-2">
-            <ApplyField
-              label="City"
-              htmlFor="city"
-              required
-              error={errors.city?.message}
-            >
-              <input
-                id="city"
-                {...register("city")}
-                placeholder="Jakarta Selatan"
-                className={applyInputClassName(Boolean(errors.city))}
-              />
-            </ApplyField>
-
-            <ApplyField
-              label="Province"
-              htmlFor="province"
-              required
-              error={errors.province?.message}
-            >
-              <input
-                id="province"
-                {...register("province")}
-                placeholder="DKI Jakarta"
-                className={applyInputClassName(Boolean(errors.province))}
-              />
-            </ApplyField>
+            <WilayahSelect
+              provinces={provinces}
+              regencies={regencies}
+              provinceId="province"
+              cityId="city"
+              provinceCode={watch("provinceCode")}
+              cityCode={watch("cityCode")}
+              provinceError={errors.province?.message}
+              cityError={errors.city?.message}
+              onChange={({ provinceCode, provinceName, cityCode, cityName }) => {
+                setValue("provinceCode", provinceCode, { shouldValidate: true });
+                setValue("province", provinceName, { shouldValidate: true });
+                setValue("cityCode", cityCode, { shouldValidate: true });
+                setValue("city", cityName, { shouldValidate: true });
+              }}
+            />
 
             <ApplyField
               label="Postal code"

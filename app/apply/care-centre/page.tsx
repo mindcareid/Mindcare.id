@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { getWilayahOptions } from "@/lib/wilayah";
 import Container from "@/app/components/reusable/Container";
 import CareCentreForm from "./CareCentreForm";
 
@@ -21,7 +22,7 @@ export default async function ApplyCareCentrePage() {
   }
 
   const userId = Number(session.user.id);
-  const [services, membership] = await Promise.all([
+  const [services, membership, wilayah] = await Promise.all([
     prisma.service.findMany({
       where: { isActive: true },
       select: { slug: true, name: true },
@@ -36,6 +37,7 @@ export default async function ApplyCareCentrePage() {
         },
       },
     }),
+    getWilayahOptions(),
   ]);
 
   return (
@@ -54,7 +56,12 @@ export default async function ApplyCareCentrePage() {
             your operating permit and your role at the centre.
           </p>
         </header>
-        <CareCentreForm services={services} existing={membership?.centre ?? null} />
+        <CareCentreForm
+          services={services}
+          provinces={wilayah.provinces}
+          regencies={wilayah.regencies}
+          existing={membership?.centre ?? null}
+        />
       </div>
     </Container>
   );

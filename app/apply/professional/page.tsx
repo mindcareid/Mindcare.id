@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { getWilayahOptions } from "@/lib/wilayah";
 import Container from "@/app/components/reusable/Container";
 import ProfessionalForm from "./ProfessionalForm";
 
@@ -21,7 +22,7 @@ export default async function ApplyProfessionalPage() {
   }
 
   const userId = Number(session.user.id);
-  const [areas, existing] = await Promise.all([
+  const [areas, existing, wilayah] = await Promise.all([
     prisma.areaOfSupport.findMany({
       where: { isActive: true },
       select: { slug: true, name: true },
@@ -31,6 +32,7 @@ export default async function ApplyProfessionalPage() {
       where: { userId },
       select: { slug: true, fullName: true, listingStatus: true },
     }),
+    getWilayahOptions(),
   ]);
 
   return (
@@ -49,7 +51,12 @@ export default async function ApplyProfessionalPage() {
             checked your practice licence.
           </p>
         </header>
-        <ProfessionalForm areas={areas} existing={existing} />
+        <ProfessionalForm
+          areas={areas}
+          provinces={wilayah.provinces}
+          regencies={wilayah.regencies}
+          existing={existing}
+        />
       </div>
     </Container>
   );

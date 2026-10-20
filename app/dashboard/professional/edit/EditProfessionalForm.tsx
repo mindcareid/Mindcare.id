@@ -12,6 +12,8 @@ import {
 } from "@/lib/validations/apply";
 import Button from "@/app/components/reusable/Button";
 import ImageUploadField from "@/app/components/reusable/ImageUploadField";
+import WilayahSelect from "@/app/apply/component/WilayahSelect";
+import type { ProvinceOption, RegencyOption } from "@/lib/wilayah";
 import {
   ApplyField,
   ApplySection,
@@ -29,6 +31,8 @@ type FormValues = {
   bio: string;
   baseCity: string;
   baseProvince: string;
+  baseCityCode: string;
+  baseProvinceCode: string;
   languagesText: string;
   yearsOfExperience: number;
   areaSlugs: string[];
@@ -47,9 +51,13 @@ type FormValues = {
 
 export default function EditProfessionalForm({
   areas,
+  provinces,
+  regencies,
   initialValues,
 }: {
   areas: AreaOption[];
+  provinces: ProvinceOption[];
+  regencies: RegencyOption[];
   initialValues: {
     fullName: string;
     credentials: string;
@@ -58,6 +66,8 @@ export default function EditProfessionalForm({
     bio: string;
     baseCity: string;
     baseProvince: string;
+    baseCityCode: string;
+    baseProvinceCode: string;
     languages: string[];
     yearsOfExperience: number;
     areaSlugs: string[];
@@ -105,6 +115,8 @@ export default function EditProfessionalForm({
       bio: values.bio,
       baseCity: values.baseCity,
       baseProvince: values.baseProvince,
+      baseCityCode: values.baseCityCode,
+      baseProvinceCode: values.baseProvinceCode,
       languages: values.languagesText
         .split(",")
         .map((lang) => lang.trim())
@@ -193,31 +205,24 @@ export default function EditProfessionalForm({
         </ApplyField>
 
         <div className="grid gap-5 md:grid-cols-2">
-          <ApplyField
-            label="City"
-            htmlFor="baseCity"
-            required
-            error={errors.baseCity?.message}
-          >
-            <input
-              id="baseCity"
-              {...register("baseCity")}
-              className={applyInputClassName(Boolean(errors.baseCity))}
-            />
-          </ApplyField>
-
-          <ApplyField
-            label="Province"
-            htmlFor="baseProvince"
-            required
-            error={errors.baseProvince?.message}
-          >
-            <input
-              id="baseProvince"
-              {...register("baseProvince")}
-              className={applyInputClassName(Boolean(errors.baseProvince))}
-            />
-          </ApplyField>
+          <WilayahSelect
+            provinces={provinces}
+            regencies={regencies}
+            provinceId="baseProvince"
+            cityId="baseCity"
+            provinceCode={watch("baseProvinceCode")}
+            cityCode={watch("baseCityCode")}
+            provinceError={errors.baseProvince?.message}
+            cityError={errors.baseCity?.message}
+            onChange={({ provinceCode, provinceName, cityCode, cityName }) => {
+              setValue("baseProvinceCode", provinceCode, {
+                shouldValidate: true,
+              });
+              setValue("baseProvince", provinceName, { shouldValidate: true });
+              setValue("baseCityCode", cityCode, { shouldValidate: true });
+              setValue("baseCity", cityName, { shouldValidate: true });
+            }}
+          />
 
           <ApplyField
             label="Years of experience"

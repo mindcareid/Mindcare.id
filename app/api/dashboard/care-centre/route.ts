@@ -80,6 +80,8 @@ export async function PATCH(req: NextRequest) {
       current.street !== data.street ||
       current.city !== data.city ||
       current.province !== data.province ||
+      current.cityCode !== data.cityCode ||
+      current.provinceCode !== data.provinceCode ||
       current.postalCode !== data.postalCode ||
       (current.permitType ?? "") !== data.permitType ||
       (current.permitNumber ?? "") !== data.permitNumber ||
@@ -123,6 +125,8 @@ export async function PATCH(req: NextRequest) {
           street: data.street,
           city: data.city,
           province: data.province,
+          cityCode: data.cityCode,
+          provinceCode: data.provinceCode,
           postalCode: data.postalCode,
           permitType: data.permitType,
           permitNumber: data.permitNumber,

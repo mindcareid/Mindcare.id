@@ -68,8 +68,8 @@ export default function Home({
       </HomeSection>
 
       <HomeSection
-        title="Programmes and solutions"
-        description="Structured programmes for individuals, workplaces, and communities."
+        title="solutions"
+        description="Structured solutions for individuals, workplaces, and communities."
         href="/solutions"
       >
         <SolutionsGrid solutions={solutions} />

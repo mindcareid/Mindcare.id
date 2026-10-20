@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { redirect, notFound } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { getWilayahOptions } from "@/lib/wilayah";
 import EditProfessionalForm from "./EditProfessionalForm";
 
 export const metadata: Metadata = {
@@ -37,6 +38,8 @@ export default async function EditProfessionalPage() {
     orderBy: { name: "asc" },
   });
 
+  const { provinces, regencies } = await getWilayahOptions();
+
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-4 md:p-8">
       <header className="space-y-2">
@@ -55,6 +58,8 @@ export default async function EditProfessionalPage() {
 
       <EditProfessionalForm
         areas={areas}
+        provinces={provinces}
+        regencies={regencies}
         initialValues={{
           fullName: professional.fullName,
           credentials: professional.credentials,
@@ -64,6 +69,8 @@ export default async function EditProfessionalPage() {
           bio: professional.bio ?? "",
           baseCity: professional.baseCity,
           baseProvince: professional.baseProvince,
+          baseCityCode: professional.baseCityCode ?? "",
+          baseProvinceCode: professional.baseProvinceCode ?? "",
           languages: Array.isArray(professional.languages)
             ? (professional.languages as string[])
             : [],
