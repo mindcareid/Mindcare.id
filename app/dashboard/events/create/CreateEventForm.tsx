@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm, type Path } from "react-hook-form";
 import { toast } from "sonner";
 import { CreateEventSchema } from "@/lib/validations/auth";
+import { fromUtcFormat } from "@/lib/date";
 import Button from "@/app/components/reusable/Button";
 import ImageUploadField from "@/app/components/reusable/ImageUploadField";
 import {
@@ -48,13 +49,6 @@ type EventData = {
   industries: { industryId: number }[];
 };
 
-function toDatetimeLocal(value: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(
-    value.getDate(),
-  )}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
-}
-
 export default function CreateEventForm({
   type,
   listingId,
@@ -77,8 +71,8 @@ export default function CreateEventForm({
         title: event.title,
         description: event.description,
         location: event.location ?? "",
-        startDate: toDatetimeLocal(event.startDate),
-        endDate: toDatetimeLocal(event.endDate),
+        startDate: fromUtcFormat(event.startDate, event.timeZone),
+        endDate: fromUtcFormat(event.endDate, event.timeZone),
         timeZone: event.timeZone,
         price: event.price,
         quota: event.quota?.toString() ?? "",
@@ -124,8 +118,8 @@ export default function CreateEventForm({
       title: values.title,
       description: values.description,
       location: values.location || null,
-      startDate: new Date(values.startDate).toISOString(),
-      endDate: new Date(values.endDate).toISOString(),
+      startDate: values.startDate,
+      endDate: values.endDate,
       timeZone: values.timeZone,
       price: values.price,
       quota: values.quota === "" ? null : Number(values.quota),

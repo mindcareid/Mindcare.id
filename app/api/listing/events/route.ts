@@ -127,6 +127,7 @@ export async function POST(req: Request) {
         location: location || null,
         startDate: startDateUtc,
         endDate: endDateUtc,
+        timeZone,
         price: price ?? 0,
         quota: quota ?? null,
         externalUrl: externalUrl ?? null,

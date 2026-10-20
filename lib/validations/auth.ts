@@ -165,13 +165,13 @@ export const CreateEventSchema = z
 
     location: z.string().max(100).optional().nullable(),
 
-    startDate: z.coerce.date({
-      error: "Start date is required",
-    }),
+    startDate: z
+      .string()
+      .refine((val) => !isNaN(Date.parse(val)), "Invalid start date format"),
 
-    endDate: z.coerce.date({
-      error: "End date is required",
-    }),
+    endDate: z
+      .string()
+      .refine((val) => !isNaN(Date.parse(val)), "Invalid end date format"),
 
     timeZone: z.string().default("Asia/Jakarta"),
 
@@ -190,7 +190,7 @@ export const CreateEventSchema = z
     isPublished: z.boolean().optional().default(false),
     industryIds: z.array(z.number().int().positive()).optional().default([]),
   })
-  .refine((data) => data.endDate > data.startDate, {
+  .refine((data) => new Date(data.endDate) > new Date(data.startDate), {
     message: "End date must be after the start date",
     path: ["endDate"],
   })

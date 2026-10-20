@@ -4,6 +4,13 @@ import slugify from "slugify";
 import { EventPublisherType, EventStatus } from "@prisma/client";
 import { getAdminUser } from "@/lib/adminGuard";
 import { PLATFORM_SLUG } from "@/lib/events/constants";
+import { toUtc } from "@/lib/date";
+
+function resolveTimeZone(body: Record<string, unknown>): string {
+  return typeof body.timeZone === "string" && body.timeZone
+    ? body.timeZone
+    : "Asia/Jakarta";
+}
 
 async function getPlatformId(): Promise<number | null> {
   const platform = await prisma.platform.findUnique({
@@ -110,6 +117,7 @@ export async function POST(req: Request) {
     }
 
     const status = resolveStatus(body);
+    const timeZone = resolveTimeZone(body);
 
     const event = await prisma.event.create({
       data: {
@@ -117,8 +125,9 @@ export async function POST(req: Request) {
         slug: slugify(body.title, { lower: true }),
         description: body.description,
         location: body.location,
-        startDate: new Date(body.startDate),
-        endDate: new Date(body.endDate),
+        startDate: toUtc(body.startDate, timeZone),
+        endDate: toUtc(body.endDate, timeZone),
+        timeZone,
         price: Number(body.price),
         quota: body.quota ? Number(body.quota) : null,
         categoryId: Number(body.categoryId),
@@ -190,6 +199,7 @@ export async function PUT(req: Request) {
     // Draft = disembunyikan dari publik. status & isPublished selalu
     // disimpan bersama supaya kedua jalur pembacaan publik konsisten.
     const status = resolveStatus(body);
+    const timeZone = resolveTimeZone(body);
 
     const event = await prisma.event.update({
       where: { id: Number(id) },
@@ -198,8 +208,9 @@ export async function PUT(req: Request) {
         slug,
         description: body.description,
         location: body.location,
-        startDate: new Date(body.startDate),
-        endDate: new Date(body.endDate),
+        startDate: toUtc(body.startDate, timeZone),
+        endDate: toUtc(body.endDate, timeZone),
+        timeZone,
         price: Number(body.price),
         quota: body.quota ? Number(body.quota) : null,
         categoryId: Number(body.categoryId),

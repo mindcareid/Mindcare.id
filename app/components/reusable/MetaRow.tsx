@@ -29,11 +29,6 @@ export default function MetaRow({ items, className }: MetaRowProps) {
             key={`${item.text}-${index}`}
             className="inline-flex items-center gap-2"
           >
-            {index > 0 && (
-              <span aria-hidden="true" className="text-border">
-                &middot;
-              </span>
-            )}
             <span className="inline-flex items-center gap-1">
               {Icon && <Icon className="size-3.5 shrink-0" />}
               {item.text}

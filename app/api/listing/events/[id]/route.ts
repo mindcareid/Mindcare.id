@@ -56,6 +56,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
     const data = parsed.data;
     const updateData: Record<string, unknown> = {};
+    const targetTimeZone = data.timeZone ?? event.timeZone;
 
     if (data.title !== undefined) updateData.title = data.title;
     if (data.description !== undefined)
@@ -63,9 +64,9 @@ export async function PATCH(req: Request, { params }: Params) {
     if (data.location !== undefined)
       updateData.location = data.location || null;
     if (data.startDate !== undefined)
-      updateData.startDate = toUtc(data.startDate, event.timeZone);
+      updateData.startDate = toUtc(data.startDate, targetTimeZone);
     if (data.endDate !== undefined)
-      updateData.endDate = toUtc(data.endDate, event.timeZone);
+      updateData.endDate = toUtc(data.endDate, targetTimeZone);
     if (data.timeZone !== undefined) updateData.timeZone = data.timeZone;
     if (data.price !== undefined) updateData.price = data.price;
     if (data.quota !== undefined) updateData.quota = data.quota ?? null;

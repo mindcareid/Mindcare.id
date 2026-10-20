@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { autoSlug } from "@/lib/utils/autoSlug";
 import { toEventPlainText } from "@/lib/events/serializers";
+import { fromUtcFormat } from "@/lib/date";
 import ImageUploadField from "@/app/components/reusable/ImageUploadField";
 
 /* ================= TYPES ================= */
@@ -21,6 +22,7 @@ type EventFormFields = {
     location?: string;
     startDate: string;
     endDate: string;
+    timeZone: string;
     price: number;
     quota?: number;
     coverImage?: string;
@@ -48,6 +50,7 @@ export default function EventForm({
         location: "",
         startDate: "",
         endDate: "",
+        timeZone: "Asia/Jakarta",
         price: 0,
         quota: undefined,
         coverImage: "",
@@ -55,13 +58,6 @@ export default function EventForm({
         isPublished: false,
         categoryId: 0,
     });
-
-    function toLocalDateTimeString(date: string | Date): string {
-        const d = new Date(date);
-        const offset = d.getTimezoneOffset(); // dalam menit
-        const local = new Date(d.getTime() - offset * 60 * 1000); // koreksi timezone
-        return local.toISOString().slice(0, 16);
-    }
 
     /* ================= SYNC CREATE / EDIT ================= */
 
@@ -73,11 +69,12 @@ export default function EventForm({
                 description: toEventPlainText(defaultValues.description ?? ""),
                 location: defaultValues.location ?? "",
                 startDate: defaultValues.startDate
-                    ? toLocalDateTimeString(defaultValues.startDate)
+                    ? fromUtcFormat(defaultValues.startDate, defaultValues.timeZone ?? "Asia/Jakarta")
                     : "",
                 endDate: defaultValues.endDate
-                    ? toLocalDateTimeString(defaultValues.endDate)
+                    ? fromUtcFormat(defaultValues.endDate, defaultValues.timeZone ?? "Asia/Jakarta")
                     : "",
+                timeZone: defaultValues.timeZone ?? "Asia/Jakarta",
                 price: defaultValues.price ?? 0,
                 quota: defaultValues.quota ?? undefined,
                 coverImage: defaultValues.coverImage ?? "",
@@ -266,6 +263,22 @@ export default function EventForm({
                             className="w-full border px-3 py-2 rounded"
                         />
                     </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium mb-1">
+                        Time Zone
+                    </label>
+                    <select
+                        name="timeZone"
+                        value={form.timeZone}
+                        onChange={handleChange}
+                        className="w-full border px-3 py-2 rounded"
+                    >
+                        <option value="Asia/Jakarta">WIB (Asia/Jakarta)</option>
+                        <option value="Asia/Makassar">WITA (Asia/Makassar)</option>
+                        <option value="Asia/Jayapura">WIT (Asia/Jayapura)</option>
+                    </select>
                 </div>
             </section>
 
