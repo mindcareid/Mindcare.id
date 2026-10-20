@@ -45,7 +45,7 @@ type FormValues = {
   videoUrl: string;
   contactEmail: string;
   contactPhone: string;
-  /** Logo persegi + cover 16:9, dengan public_id pendamping. */
+  /** Logo persegi + cover 4:3, dengan public_id pendamping. */
   logo: string;
   logoPublicId: string;
   coverImage: string;
@@ -414,12 +414,12 @@ export default function SolutionForm({
 
         <ImageUploadField
           label="Cover image"
-          hint="Wide 16:9 image (1600x900 max). Shown on the detail page."
+          hint="Landscape 4:3 image (1600x1200 max). Shown on the detail page."
           entityType="solutions"
-          aspect={16 / 9}
+          aspect={4 / 3}
           shape="wide"
           maxWidth={1600}
-          maxHeight={900}
+          maxHeight={1200}
           value={{
             url: watch("coverImage") || null,
             publicId: watch("coverPublicId") || null,

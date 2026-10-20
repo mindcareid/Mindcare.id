@@ -1,17 +1,12 @@
 import Link from "next/link";
-import {
-  CalendarDays,
-  Clock,
-  MapPin,
-  Video,
-} from "lucide-react";
+import { CalendarDays, Clock, MapPin, Video } from "lucide-react";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 
 import {
   formatEventDateLong,
   formatEventTimeRange,
   hasEnded,
-} from "../data/eventTime"
+} from "../data/eventTime";
 import RegisterEventButton from "./RegisterEventButton";
 
 import type { EventDetail } from "../data/events";
@@ -27,20 +22,15 @@ const priceFormatter = new Intl.NumberFormat("id-ID", {
   maximumFractionDigits: 0,
 });
 
-export default function EventDetailRail({
-  event,
-  now,
-}: EventDetailRailProps) {
+export default function EventDetailRail({ event, now }: EventDetailRailProps) {
   const ended = hasEnded(event, now);
   const soldOut = !ended && event.soldOut;
-  const remaining = !ended && event.remaining !== null
-    ? Math.max(event.remaining, 0)
-    : null;
+  const remaining =
+    !ended && event.remaining !== null ? Math.max(event.remaining, 0) : null;
 
-  const location = event.location ??
-    (event.format === "ONLINE" || event.format === "HYBRID"
-      ? "Online"
-      : null);
+  const location =
+    event.location ??
+    (event.format === "ONLINE" || event.format === "HYBRID" ? "Online" : null);
 
   const isFree = event.price <= 0;
   const hasExternal = event.externalUrl;
@@ -68,11 +58,7 @@ export default function EventDetailRail({
               value={location}
             />
           )}
-          <PriceRow
-            label="Price"
-            isFree={isFree}
-            price={event.price}
-          />
+          <PriceRow label="Price" isFree={isFree} price={event.price} />
           {!ended && remaining !== null && (
             <MetaRow
               icon={null}
@@ -137,7 +123,10 @@ function DateRow({
 }) {
   return (
     <div className="flex items-start gap-3 pt-4 first:pt-0">
-      <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <Icon
+        className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+        aria-hidden="true"
+      />
       <div>
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="text-sm font-medium text-foreground">{value}</p>
@@ -166,12 +155,13 @@ function TimeRow({
 
   return (
     <div className="flex items-start gap-3 pt-4 first:pt-0">
-      <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <Icon
+        className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+        aria-hidden="true"
+      />
       <div>
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm font-medium text-foreground">
-          {value} {tzAbbr}
-        </p>
+        <p className="text-sm font-medium text-foreground">{value}</p>
       </div>
     </div>
   );
@@ -189,7 +179,10 @@ function MetaRow({
   return (
     <div className="flex items-start gap-3 pt-4 first:pt-0">
       {Icon && (
-        <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <Icon
+          className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+          aria-hidden="true"
+        />
       )}
       <div>
         <p className="text-xs text-muted-foreground">{label}</p>

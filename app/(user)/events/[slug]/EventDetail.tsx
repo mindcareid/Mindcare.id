@@ -21,11 +21,7 @@ type EventDetailProps = {
   now: string;
 };
 
-export default function EventDetail({
-  event,
-  related,
-  now,
-}: EventDetailProps) {
+export default function EventDetail({ event, related, now }: EventDetailProps) {
   const ended = hasEnded(event, now);
 
   return (
@@ -33,7 +29,7 @@ export default function EventDetail({
       <EventHero event={event} now={now} />
 
       <Container className="pb-24">
-        <div className="mt-10 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="mt-10 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] ">
           <div className="space-y-16">
             <EventAbout event={event} />
             <EventAgenda event={event} />
@@ -77,11 +73,7 @@ export default function EventDetail({
             >
               More events
             </h2>
-            <EventsCardGrid
-              events={related}
-              now={now}
-              className="mt-8"
-            />
+            <EventsCardGrid events={related} now={now} className="mt-8" />
           </section>
         )}
       </Container>

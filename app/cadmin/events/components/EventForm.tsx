@@ -329,12 +329,12 @@ export default function EventForm({
             {/* COVER IMAGE */}
             <ImageUploadField
                 label="Cover Image"
-                hint="16:9 image (1600x900 max), WebP, normally under 100 KB."
+                hint="4:3 image (1600x1200 max), WebP, normally under 100 KB."
                 entityType="events"
-                aspect={16 / 9}
+                aspect={4 / 3}
                 shape="wide"
                 maxWidth={1600}
-                maxHeight={900}
+                maxHeight={1200}
                 value={{
                     url: form.coverImage || null,
                     publicId: form.publicId || null,

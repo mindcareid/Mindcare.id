@@ -266,12 +266,12 @@ export default function CareCentreForm({
 
           <ImageUploadField
             label="Centre photo or logo"
-            hint="Square image. Cropped and compressed automatically — JPG/PNG up to 10 MB."
+            hint="4:3 landscape image (800x600 max). JPG/PNG up to 10 MB, cropped and compressed automatically."
             entityType="care-centre"
-            aspect={1}
+            aspect={4 / 3}
             shape="wide"
-            maxWidth={512}
-            maxHeight={512}
+            maxWidth={800}
+            maxHeight={600}
             value={{
               url: watch("photo") || null,
               publicId: watch("photoPublicId") || null,

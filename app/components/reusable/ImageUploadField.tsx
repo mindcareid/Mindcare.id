@@ -133,7 +133,7 @@ export default function ImageUploadField({
   const previewClass =
     shape === "square"
       ? "h-32 w-32 rounded-xl"
-      : "aspect-video w-full max-w-sm rounded-xl";
+      : "w-full max-w-sm rounded-xl";
 
   return (
     <div className="space-y-1.5">
@@ -157,6 +157,7 @@ export default function ImageUploadField({
               "relative overflow-hidden border border-border bg-muted",
               previewClass,
             )}
+            style={{ aspectRatio: aspect }}
           >
             <Image
               src={value.url}
@@ -193,8 +194,9 @@ export default function ImageUploadField({
           disabled={disabled || busy}
           className={cn(
             "flex w-full max-w-sm flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card px-6 py-8 text-center transition-colors hover:bg-muted disabled:opacity-50",
-            shape === "square" ? "h-32 w-32" : "aspect-video",
+            shape === "square" ? "h-32 w-32" : "",
           )}
+          style={{ aspectRatio: shape === "square" ? undefined : aspect }}
         >
           {busy ? (
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

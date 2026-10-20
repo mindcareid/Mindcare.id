@@ -301,16 +301,16 @@ export default function CreateEventForm({
 
       <ApplySection
         title="Cover image"
-        description="Optional — wide 16:9 image for the event card and detail page."
+        description="Optional, landscape 4:3 image for the event card and detail page."
       >
         <ImageUploadField
           label="Cover"
-          hint="16:9 image (1600×900 max), WebP — normally under 100 KB."
+          hint="4:3 image (1600x1200 max), WebP, normally under 100 KB."
           entityType="events"
-          aspect={16 / 9}
+          aspect={4 / 3}
           shape="wide"
           maxWidth={1600}
-          maxHeight={900}
+          maxHeight={1200}
           value={{ url: coverUrl || null, publicId: coverPublicId || null }}
           onChange={({ url, publicId }) => {
             setValue("coverUrl", url ?? "", { shouldValidate: true });
