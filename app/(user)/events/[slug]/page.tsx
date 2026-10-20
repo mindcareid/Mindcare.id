@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 
 import { notFound } from "next/navigation";
 
-import {
-  getEventBySlug,
-  getEvents,
-  getRelatedEvents,
-} from "../data/events";
+import { getEventBySlug, getRelatedEvents } from "../data/events";
 
 import EventDetail from "./EventDetail";
 import { toEventPlainText } from "@/lib/events/serializers";
@@ -19,37 +15,15 @@ type EventPageProps = {
 
 /*
  * ============================================================
- * PAGE REVALIDATION
+ * PAGE RENDERING
  * ============================================================
  *
- * Event page berisi informasi yang bergantung pada waktu:
- *
- * - event sudah berakhir atau belum
- * - availability
- * - tanggal event
- *
- * Revalidate setiap 1 jam untuk public directory.
- *
- * Jika nanti event memiliki ticketing / inventory real-time,
- * status availability jangan bergantung pada halaman yang
- * dicache.
+ * Root layout memakai getServerSession (membaca cookie), jadi
+ * route ini tidak boleh dipaksa statis. Dibiarkan dinamis agar
+ * tidak muncul DYNAMIC_SERVER_USAGE di production.
  */
 
-export const revalidate = 3600;
-
-/*
- * ============================================================
- * STATIC PARAMS
- * ============================================================
- */
-
-export async function generateStaticParams() {
-  const events = await getEvents();
-
-  return events.map((event) => ({
-    slug: event.slug,
-  }));
-}
+export const dynamic = "force-dynamic";
 
 /*
  * ============================================================
