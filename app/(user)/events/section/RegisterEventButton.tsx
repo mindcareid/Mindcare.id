@@ -2,9 +2,10 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoClose } from "react-icons/io5";
-import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, Mail } from "lucide-react";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 
 export type AttendeeFieldInput = {
@@ -43,9 +44,27 @@ const priceFormatter = new Intl.NumberFormat("id-ID", {
 });
 
 const BASE_FIELDS: FieldDef[] = [
-  { key: "name", label: "Full name", type: "TEXT", required: true, options: null },
-  { key: "email", label: "Email", type: "EMAIL", required: true, options: null },
-  { key: "phone", label: "Phone (optional)", type: "PHONE", required: false, options: null },
+  {
+    key: "name",
+    label: "Full name",
+    type: "TEXT",
+    required: true,
+    options: null,
+  },
+  {
+    key: "email",
+    label: "Email",
+    type: "EMAIL",
+    required: true,
+    options: null,
+  },
+  {
+    key: "phone",
+    label: "Phone (optional)",
+    type: "PHONE",
+    required: false,
+    options: null,
+  },
 ];
 
 const MAX_TICKETS = 10;
@@ -78,7 +97,9 @@ function parseOptions(options: unknown): { label: string; value: string }[] {
 
       return null;
     })
-    .filter((option): option is { label: string; value: string } => option !== null);
+    .filter(
+      (option): option is { label: string; value: string } => option !== null,
+    );
 }
 
 export default function RegisterEventButton({
@@ -96,6 +117,9 @@ export default function RegisterEventButton({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const { status: sessionStatus } = useSession();
+  const isAuthenticated = sessionStatus === "authenticated";
 
   // Satu key per percobaan pendaftaran. Dipakai ulang kalau submit
   // diulang karena jaringan, supaya backend tidak membuat order ganda.
@@ -303,12 +327,19 @@ export default function RegisterEventButton({
                     <br />
                     Your e-ticket has been sent to your email.
                   </p>
-                  <Link
-                    href="/dashboard/my-ticket"
-                    className={buttonStyles({ className: "mt-6 w-full" })}
-                  >
-                    View my tickets
-                  </Link>
+                  {isAuthenticated ? (
+                    <Link
+                      href="/dashboard/my-ticket"
+                      className={buttonStyles({ className: "mt-6 w-full" })}
+                    >
+                      View my tickets
+                    </Link>
+                  ) : (
+                    <p className="mt-6 text-xs text-muted-foreground">
+                      Keep that email, it contains your ticket and a link to
+                      open it anytime.
+                    </p>
+                  )}
                 </div>
               ) : (
                 <>
@@ -329,7 +360,9 @@ export default function RegisterEventButton({
                     </span>
                     <select
                       value={quantity}
-                      onChange={(e) => handleQuantityChange(Number(e.target.value))}
+                      onChange={(e) =>
+                        handleQuantityChange(Number(e.target.value))
+                      }
                       className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                     >
                       {Array.from({ length: maxTickets }, (_, i) => i + 1).map(
@@ -341,6 +374,25 @@ export default function RegisterEventButton({
                       )}
                     </select>
                   </label>
+
+                  {isFree && !isAuthenticated && (
+                    <div className="flex items-start gap-3 rounded-lg border border-secondary/20 bg-brand-lavender-100 p-3.5 mb-4">
+                      <Mail
+                        className="mt-0.5 size-4 shrink-0 text-secondary"
+                        aria-hidden="true"
+                      />
+
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-foreground">
+                          Important information
+                        </p>
+                        <p className="text-xs leading-relaxed text-foreground/80">
+                          Your e-ticket and ticket code will be sent to this
+                          email address. Please ensure your email is correct.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-5">
                     {attendees.map((attendee, index) => (
@@ -362,7 +414,11 @@ export default function RegisterEventButton({
                               <select
                                 value={attendee[field.key] ?? ""}
                                 onChange={(e) =>
-                                  updateAttendee(index, field.key, e.target.value)
+                                  updateAttendee(
+                                    index,
+                                    field.key,
+                                    e.target.value,
+                                  )
                                 }
                                 className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                               >
@@ -391,7 +447,11 @@ export default function RegisterEventButton({
                                 }
                                 value={attendee[field.key] ?? ""}
                                 onChange={(e) =>
-                                  updateAttendee(index, field.key, e.target.value)
+                                  updateAttendee(
+                                    index,
+                                    field.key,
+                                    e.target.value,
+                                  )
                                 }
                                 className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                               />

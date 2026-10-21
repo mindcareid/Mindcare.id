@@ -116,12 +116,9 @@ async function replayExistingOrder(
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
+    const userId = session?.user?.id ? Number(session.user.id) : null;
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    if (!session.user.emailVerified) {
+    if (userId && !session?.user.emailVerified) {
       return NextResponse.json(
         {
           message: "Please verify your email first before purchasing tickets.",
@@ -130,9 +127,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const userId = Number(session.user.id);
+    const clientIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip")?.trim() ||
+      "unknown";
 
-    const buyLimit = rateLimit(`buy:${userId}`, 10, 60_000);
+    const buyLimit = userId
+      ? rateLimit(`buy:${userId}`, 10, 60_000)
+      : rateLimit(`buy-ip:${clientIp}`, 5, 60_000);
 
     if (!buyLimit.ok) {
       return NextResponse.json(
@@ -177,6 +179,25 @@ export async function POST(req: Request) {
       );
     }
 
+    const normalizedAttendees = attendees.map((a) => ({
+      ...a,
+      email:
+        typeof a.email === "string" ? a.email.trim().toLowerCase() : a.email,
+    }));
+
+    const guestEmail = userId
+      ? null
+      : typeof normalizedAttendees[0]?.email === "string"
+        ? normalizedAttendees[0].email
+        : null;
+
+    if (!userId && !guestEmail) {
+      return NextResponse.json(
+        { message: "An email is required to register as a guest" },
+        { status: 400 },
+      );
+    }
+
     const idempotencyKey = readIdempotencyKey(req);
 
     if (idempotencyKey) {
@@ -186,7 +207,11 @@ export async function POST(req: Request) {
       });
 
       if (existing) {
-        if (existing.userId !== userId) {
+        const sameOwner = userId
+          ? existing.userId === userId
+          : existing.userId === null && existing.guestEmail === guestEmail;
+
+        if (!sameOwner) {
           return NextResponse.json(
             { message: "Invalid idempotency key" },
             { status: 409 },
@@ -197,17 +222,11 @@ export async function POST(req: Request) {
       }
     }
 
-    const normalizedAttendees = attendees.map((a) => ({
-      ...a,
-      email:
-        typeof a.email === "string" ? a.email.trim().toLowerCase() : a.email,
-    }));
-
     // Guard per user + event: jangan biarkan satu user menumpuk order
     // PENDING untuk event yang sama. Pakai ulang invoice yang sudah ada.
     const existingPending = await prisma.order.findFirst({
       where: {
-        userId,
+        ...(userId ? { userId } : { userId: null, guestEmail }),
         eventId,
         status: "PENDING",
         invoiceUrl: { not: null },
@@ -242,6 +261,14 @@ export async function POST(req: Request) {
             throw new OrderError("Event not found", 404);
           }
 
+          if (!userId && event.price !== 0) {
+            throw new OrderError(
+              "Please sign in to register for this event.",
+              401,
+              { code: "LOGIN_REQUIRED" },
+            );
+          }
+
           if (event.externalUrl) {
             throw new OrderError(
               "Registration for this event is handled on the organizer's website.",
@@ -255,7 +282,7 @@ export async function POST(req: Request) {
           }
           const existingPendingOrder = await tx.order.findFirst({
             where: {
-              userId,
+              ...(userId ? { userId } : { userId: null, guestEmail }),
               eventId: event.id,
               status: "PENDING",
               invoiceUrl: { not: null },
@@ -321,6 +348,7 @@ export async function POST(req: Request) {
             data: {
               eventId: event.id,
               userId,
+              guestEmail,
               amount: totalAmount,
               currency: "IDR",
               status: event.price === 0 ? "PAID" : "PENDING",
@@ -359,7 +387,12 @@ export async function POST(req: Request) {
           include: { event: true },
         });
 
-        if (existing && existing.userId === userId) {
+        if (
+          existing &&
+          (userId
+            ? existing.userId === userId
+            : existing.userId === null && existing.guestEmail === guestEmail)
+        ) {
           return replayExistingOrder(existing);
         }
       }

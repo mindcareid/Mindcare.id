@@ -3,6 +3,7 @@ import { SendTicketEmailParams } from "../types";
 import { emailLayout } from "./layout";
 
 import { Card } from "../components/Card";
+import { Button } from "../components/Button";
 import { Heading } from "../components/Heading";
 import { Image } from "../components/Image";
 import { Paragraph } from "../components/Paragraph";
@@ -10,6 +11,7 @@ import { Paragraph } from "../components/Paragraph";
 export function ticketTemplate({
   eventTitle,
   qrCode,
+  ticketUrl,
 }: SendTicketEmailParams) {
   const qrUrl = `${mailConfig.appUrl}/api/tickets/qr/${qrCode}`;
 
@@ -61,6 +63,19 @@ export function ticketTemplate({
         size: 14,
         marginTop: 32,
       })}
+
+      ${
+        ticketUrl
+          ? Paragraph({
+              children:
+                "You can open your e-ticket anytime with the button below.",
+              size: 14,
+              marginTop: 32,
+            })
+          : ""
+      }
+
+      ${ticketUrl ? Button({ href: ticketUrl, children: "Open your e-ticket" }) : ""}
     `,
   });
 }

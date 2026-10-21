@@ -11,6 +11,7 @@ export interface SendTicketEmailParams {
   description?: string;
   company?: string;
   position?: string;
+  ticketUrl?: string;
 }
 
 export interface SendContactNotificationParams {

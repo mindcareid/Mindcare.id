@@ -3,6 +3,7 @@ import { CalendarDays, Clock, MapPin, Video } from "lucide-react";
 import Container from "@/app/components/reusable/Container";
 import MetaRow from "@/app/components/reusable/MetaRow";
 import Tag from "@/app/components/reusable/Tag";
+import { eventFormatLabel } from "@/lib/events/labels";
 
 import { formatEventDateLong, formatEventTimeRange } from "../data/eventTime";
 
@@ -30,7 +31,7 @@ export default function EventHero({ event, now }: EventHeroProps) {
           <div className={hasCover ? "" : "max-w-3xl"}>
             <div className="flex flex-wrap items-center gap-2">
               <Tag tone="mint">{event.category.name}</Tag>
-              <Tag tone="lavender">{event.format}</Tag>
+              <Tag tone="lavender">{eventFormatLabel(event.format)}</Tag>
             </div>
 
             <h1 className="mt-4 font-heading text-[28px] font-semibold leading-[1.15] tracking-[-0.01em] text-foreground md:text-[36px] lg:text-[42px]">

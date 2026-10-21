@@ -30,6 +30,8 @@ const SELLER = {
 
 export default function Receipt({ order }: Props) {
   const buyer = order.user;
+  const buyerName = buyer?.name ?? "Guest";
+  const buyerEmail = buyer?.email ?? order.guestEmail ?? "-";
 
   const paymentLog = [...order.paymentLogs]
     .reverse()
@@ -141,8 +143,8 @@ export default function Receipt({ order }: Props) {
               Buyer details
             </h2>
             <div className="mt-4 space-y-3">
-              <Info label="Name" value={buyer.name} />
-              <Info label="Email" value={buyer.email} />
+              <Info label="Name" value={buyerName} />
+              <Info label="Email" value={buyerEmail} />
             </div>
           </div>
 

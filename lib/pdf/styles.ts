@@ -5,12 +5,24 @@ import { StyleSheet } from "@react-pdf/renderer";
 //
 
 export const colors = {
-  primary: "#2516D3",
+  primary: "#154375",
 
-  text: "#111827",
+  primaryDark: "#0B2440",
+
+  secondary: "#63509E",
+
+  accent: "#157768",
+
+  lavender: "#EFECF8",
+  lavenderStrong: "#E7E3F2",
+
+  mint: "#EFF6F5",
+  mintStrong: "#E2EFED",
+
+  text: "#0B2440",
   muted: "#6B7280",
 
-  border: "#D1D5DB",
+  border: "#E2E8F0",
 
   background: "#F8FAFC",
 

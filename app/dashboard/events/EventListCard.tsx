@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 import { formatDate } from "@/lib/utils/FormatDate";
+import { eventFormatLabel } from "@/lib/events/labels";
 
 export type EventListCardData = {
   id: number;
@@ -24,12 +25,6 @@ export type EventListCardData = {
   quota: number | null;
   coverImage: string | null;
   registeredCount: number;
-};
-
-const FORMAT_LABELS: Record<string, string> = {
-  ONLINE: "Online",
-  IN_PERSON: "In person",
-  HYBRID: "Hybrid",
 };
 
 function formatPrice(price: number) {
@@ -124,8 +119,7 @@ export default function EventListCard({
               {isOnline
                 ? "Online"
                 : (event.location ??
-                  FORMAT_LABELS[event.format] ??
-                  event.format)}
+                  eventFormatLabel(event.format))}
             </span>
           </li>
           <li className="flex items-center gap-1.5">

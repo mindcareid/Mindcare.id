@@ -951,11 +951,12 @@ model Order {
   id String @id @default(cuid())
 
   eventId Int
-  userId  Int
+  userId  Int?
+  guestEmail String? @db.VarChar(255)
 
   event Event @relation(fields: [eventId], references: [id])
 
-  user User @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   amount   Int
   currency String @default("IDR") @db.VarChar(10)
@@ -975,6 +976,7 @@ model Order {
   tickets     Ticket[]
 
   @@index([userId, status])
+  @@index([guestEmail])
   @@index([eventId, status])
   @@index([status, createdAt])
 }

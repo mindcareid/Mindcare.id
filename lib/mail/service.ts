@@ -33,16 +33,6 @@ export class EmailService {
 
       const duration = Date.now() - startedAt;
 
-      console.log(
-        [
-          "📧 Email Sent",
-          `To       : ${options.to}`,
-          `Subject  : ${options.subject}`,
-          `MessageID: ${info.messageId}`,
-          `Duration : ${duration} ms`,
-        ].join("\n"),
-      );
-
       return info;
     } catch (error) {
       console.error("❌ Email Failed");

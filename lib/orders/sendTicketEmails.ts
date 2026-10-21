@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendTicketEmail } from "@/lib/mail";
+import { mailConfig } from "@/lib/mail/config";
+import { createTicketToken } from "@/lib/tickets/token";
 import { formatTime, formatDate } from "@/lib/utils";
 
 function asString(value: unknown): string | undefined {
@@ -19,6 +21,10 @@ export async function sendOrderTicketEmails(orderId: string): Promise<void> {
     order.tickets.map((t) => {
       const data = (t.attendeeData ?? {}) as Record<string, unknown>;
 
+      const ticketUrl = mailConfig.appUrl
+        ? `${mailConfig.appUrl}/tickets/${createTicketToken(t.id)}`
+        : undefined;
+
       return sendTicketEmail({
         to: t.attendeeEmail,
         eventTitle: order.event.title,
@@ -36,6 +42,8 @@ export async function sendOrderTicketEmails(orderId: string): Promise<void> {
 
         company: asString(data.company),
         position: asString(data.position),
+
+        ticketUrl,
       });
     }),
   );
