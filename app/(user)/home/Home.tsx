@@ -1,6 +1,9 @@
 import Link from "next/link";
 import Container from "@/app/components/reusable/Container";
 import PageHero from "@/app/components/reusable/PageHero";
+import HeroWipeSlideshow, {
+  type HeroSlide,
+} from "@/app/components/reusable/HeroWipeSlideshow";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 import HomeSection from "./section/HomeSection";
 import ContactSection from "./section/ContactSection";
@@ -22,6 +25,7 @@ type HomeProps = {
   events: EventListItem[];
   articles: Article[];
   now: string;
+  heroSlides: HeroSlide[];
 };
 
 export default function Home({
@@ -31,26 +35,41 @@ export default function Home({
   events,
   articles,
   now,
+  heroSlides,
 }: HomeProps) {
+  const heroActions = (
+    <div className="flex flex-wrap gap-3">
+      <Link href="/professionals" className={buttonStyles({ size: "lg" })}>
+        Find a professional
+      </Link>
+      <Link
+        href="/care-centres"
+        className={buttonStyles({ variant: "outline", size: "lg" })}
+      >
+        Browse care centres
+      </Link>
+    </div>
+  );
+
   return (
     <div className="min-h-screen">
-      <PageHero
-        eyebrow="MindCare.id"
-        title="Mental health support, all in one place"
-        subtitle="Psychologists, psychiatrists, and counselling centres across Indonesia — together with the programmes, events, and articles that go with them."
-      >
-        <div className="flex flex-wrap gap-3">
-          <Link href="/professionals" className={buttonStyles({ size: "lg" })}>
-            Find a professional
-          </Link>
-          <Link
-            href="/care-centres"
-            className={buttonStyles({ variant: "outline", size: "lg" })}
-          >
-            Browse care centres
-          </Link>
-        </div>
-      </PageHero>
+      {heroSlides.length > 0 ? (
+        <HeroWipeSlideshow
+          slides={heroSlides}
+          eyebrow="MindCare.id"
+          defaultTitle="Mental health support, all in one place"
+          defaultDescription="Psychologists, psychiatrists, and counselling centres across Indonesia, together with the programmes, events, and articles that go with them."
+          defaultActions={heroActions}
+        />
+      ) : (
+        <PageHero
+          eyebrow="MindCare.id"
+          title="Mental health support, all in one place"
+          subtitle="Psychologists, psychiatrists, and counselling centres across Indonesia — together with the programmes, events, and articles that go with them."
+        >
+          {heroActions}
+        </PageHero>
+      )}
       <HomeSection
         title="Meet the professionals"
         description="Psychologists, psychiatrists, and counsellors with the areas they support and the cities they practise in."

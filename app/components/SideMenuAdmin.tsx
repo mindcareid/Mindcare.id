@@ -23,6 +23,7 @@ import {
   faLayerGroup,
   faUserGroup,
   faBuilding,
+  faImages,
   faClockRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import { cn } from "@/lib/utils";
@@ -59,6 +60,12 @@ const NAV_LINKS: {
     label: "Users",
     icon: faUsers,
     section: "Access",
+  },
+  {
+    href: "/cadmin/hero",
+    label: "Hero Slides",
+    icon: faImages,
+    section: "Content",
   },
   {
     href: "/cadmin/areas-of-support",

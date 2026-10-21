@@ -27,6 +27,16 @@ type ImageUploadFieldProps = {
   disabled?: boolean;
   required?: boolean;
   error?: string;
+  /**
+   * Saat true, komponen tidak menghapus aset lama (replace maupun remove);
+   * aset yang tak lagi terpakai dikembalikan ke pemanggil lewat `onDiscard`
+   * supaya pemanggil menghapusnya setelah data benar-benar tersimpan. Dipakai
+   * form yang punya tombol Cancel: menghapus saat upload membuat gambar yang
+   * tersimpan di DB ikut hilang kalau pengguna batal.
+   */
+  deferDelete?: boolean;
+  /** Aset yang tidak lagi terpakai (hanya saat `deferDelete`). */
+  onDiscard?: (publicIds: string[]) => void;
 };
 
 const MAX_FILE_MB = 10;
@@ -44,6 +54,8 @@ export default function ImageUploadField({
   disabled = false,
   required = false,
   error,
+  deferDelete = false,
+  onDiscard,
 }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -98,8 +110,11 @@ export default function ImageUploadField({
       const uploaded = await uploadToCloudinary(
         blob,
         entityType,
-        value.publicId,
+        deferDelete ? undefined : value.publicId,
       );
+      if (deferDelete && value.publicId && value.publicId !== uploaded.public_id) {
+        onDiscard?.([value.publicId]);
+      }
       onChange({ url: uploaded.secure_url, publicId: uploaded.public_id });
       setImageSrc(null);
     } catch (err) {
@@ -117,12 +132,17 @@ export default function ImageUploadField({
     try {
       // Menghapus aset bersifat best-effort: kalau gagal (mis. sudah tidak
       // ada), tampilan tetap dibersihkan supaya pengguna tidak terjebak.
+      // Saat `deferDelete`, pemanggil yang menghapus setelah data tersimpan.
       if (value.publicId) {
-        await fetch("/api/cloudinary/delete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ publicId: value.publicId }),
-        }).catch(() => undefined);
+        if (deferDelete) {
+          onDiscard?.([value.publicId]);
+        } else {
+          await fetch("/api/cloudinary/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ publicId: value.publicId }),
+          }).catch(() => undefined);
+        }
       }
     } finally {
       onChange({ url: null, publicId: null });
