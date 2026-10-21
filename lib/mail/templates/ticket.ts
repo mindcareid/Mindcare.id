@@ -8,12 +8,15 @@ import { Heading } from "../components/Heading";
 import { Image } from "../components/Image";
 import { Paragraph } from "../components/Paragraph";
 
+const CID_QR_CONTENT_ID = "ticket-qr";
+
 export function ticketTemplate({
   eventTitle,
   qrCode,
+  qrCodeDataUrl,
   ticketUrl,
 }: SendTicketEmailParams) {
-  const qrUrl = `${mailConfig.appUrl}/api/tickets/qr/${qrCode}`;
+  const qrUrl = qrCodeDataUrl ?? `${mailConfig.appUrl}/api/tickets/qr/${qrCode}`;
 
   return emailLayout({
     title: "Your Event Ticket",
@@ -49,9 +52,10 @@ export function ticketTemplate({
             "
           >
             ${Image({
-              src: qrUrl,
+              src: qrCodeDataUrl ? `cid:${CID_QR_CONTENT_ID}` : qrUrl,
               alt: "Event QR Code",
               width: 220,
+              height: 220,
             })}
           </div>
         `,
@@ -79,3 +83,5 @@ export function ticketTemplate({
     `,
   });
 }
+
+export { CID_QR_CONTENT_ID };

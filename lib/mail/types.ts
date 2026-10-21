@@ -2,6 +2,7 @@ export interface SendTicketEmailParams {
   to: string;
   eventTitle: string;
   qrCode: string;
+  qrCodeDataUrl?: string;
   attendeeName: string;
   bookingCode: string;
   date: string;

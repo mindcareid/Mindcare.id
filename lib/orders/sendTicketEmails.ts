@@ -29,6 +29,7 @@ export async function sendOrderTicketEmails(orderId: string): Promise<void> {
         to: t.attendeeEmail,
         eventTitle: order.event.title,
         qrCode: t.code,
+        qrCodeDataUrl: t.qrCode ?? undefined,
 
         attendeeName: t.attendeeName,
         bookingCode: t.code,

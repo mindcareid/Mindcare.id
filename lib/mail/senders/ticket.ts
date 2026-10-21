@@ -2,8 +2,16 @@ import { PdfService } from "@/lib/pdf";
 
 import { mailConfig } from "../config";
 import { EmailService } from "../service";
-import { ticketTemplate } from "../templates/ticket";
+import { CID_QR_CONTENT_ID, ticketTemplate } from "../templates/ticket";
 import { SendTicketEmailParams } from "../types";
+
+function qrDataUrlToBuffer(dataUrl: string): Buffer | null {
+  const base64Data = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+
+  if (!base64Data) return null;
+
+  return Buffer.from(base64Data, "base64");
+}
 
 export async function sendTicketEmail(
   data: SendTicketEmailParams,
@@ -28,6 +36,10 @@ export async function sendTicketEmail(
     description: data.description,
   });
 
+  const qrBuffer = data.qrCodeDataUrl
+    ? qrDataUrlToBuffer(data.qrCodeDataUrl)
+    : null;
+
   return EmailService.send({
     from: mailConfig.from,
 
@@ -43,6 +55,17 @@ export async function sendTicketEmail(
         content: attachment,
         contentType: "application/pdf",
       },
+      ...(qrBuffer
+        ? [
+            {
+              filename: "ticket-qr.png",
+              content: qrBuffer,
+              contentType: "image/png",
+              cid: CID_QR_CONTENT_ID,
+              contentDisposition: "inline" as const,
+            },
+          ]
+        : []),
     ],
   });
 }
