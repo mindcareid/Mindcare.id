@@ -66,7 +66,11 @@ export default function HeroWipeSlideshow({
 
   const transitioning = toIndex !== null;
   const target = toIndex ?? (count > 0 ? (current + 1) % count : 0);
-  const visible = slides[current];
+  // Teks dan indikator mengikuti slide tujuan sejak wipe dimulai supaya klik
+  // langsung terasa, sementara gambar dasar tetap slide lama sampai wipe selesai.
+  const indicatorIndex = toIndex ?? current;
+  const baseSlide = slides[current];
+  const shownSlide = slides[indicatorIndex];
   const incoming = slides[target];
   const canAnimate = count > 1;
 
@@ -77,46 +81,66 @@ export default function HeroWipeSlideshow({
   const imageStart = direction === "rightToLeft" ? "-100%" : "100%";
   const revealDuration = reduceMotion ? 0.2 : Math.max(0.15, duration);
 
-  const heading = visible.title?.trim() || defaultTitle;
-  const description = visible.description?.trim() || defaultDescription;
+  const heading = shownSlide.title?.trim() || defaultTitle;
+  const description = shownSlide.description?.trim() || defaultDescription;
   // Kalau slide menampilkan teksnya sendiri, gambar jadi dekoratif: teksnya
   // sudah dibacakan, jadi `alt` dikosongkan alih-alih menduplikasi.
   const isDecorative = Boolean(
-    visible.title?.trim() || visible.description?.trim(),
+    shownSlide.title?.trim() || shownSlide.description?.trim(),
   );
-  const visibleAlt = isDecorative ? "" : visible.alt;
+  const visibleAlt = isDecorative ? "" : shownSlide.alt;
 
   const goTo = useCallback(
     (raw: number) => {
       if (count <= 1) return;
+      const next = ((raw % count) + count) % count;
+      // Klik saat wipe masih berjalan tidak dibuang: target diganti, lalu wipe
+      // yang sedang berjalan melanjutkan reveal ke slide yang baru dipilih.
       setToIndex((active) => {
-        if (active !== null) return active;
-        const next = ((raw % count) + count) % count;
-        if (next === current) return active;
-        return next;
+        const shown = active ?? current;
+        return next === shown ? active : next;
       });
     },
     [count, current],
   );
 
-  const goNext = useCallback(() => goTo(current + 1), [goTo, current]);
-  const goPrev = useCallback(() => goTo(current - 1), [goTo, current]);
+  const goNext = useCallback(
+    () => goTo((toIndex ?? current) + 1),
+    [goTo, current, toIndex],
+  );
+  const goPrev = useCallback(
+    () => goTo((toIndex ?? current) - 1),
+    [goTo, current, toIndex],
+  );
 
   const settle = useCallback((value: number) => {
     setIndex(value);
     setToIndex(null);
   }, []);
 
+  // Autoplay tidak boleh melompati slide saat transisi sebelumnya belum
+  // selesai, jadi ia hanya maju ketika tidak ada wipe yang berjalan.
+  const autoNext = useCallback(() => {
+    if (toIndex !== null) return;
+    goTo(current + 1);
+  }, [goTo, current, toIndex]);
+
+  const autoNextRef = useRef(autoNext);
+
+  useEffect(() => {
+    autoNextRef.current = autoNext;
+  }, [autoNext]);
+
   useEffect(() => {
     if (!autoplay || paused || !inView || count <= 1) return;
 
     const id = window.setInterval(
-      () => goNext(),
+      () => autoNextRef.current(),
       Math.max(1500, interval * 1000),
     );
 
     return () => window.clearInterval(id);
-  }, [autoplay, paused, inView, count, interval, goNext]);
+  }, [autoplay, paused, inView, count, interval]);
 
   if (count === 0) return null;
 
@@ -142,8 +166,8 @@ export default function HeroWipeSlideshow({
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
       className={cn(
-        "relative isolate w-full overflow-hidden bg-brand-navy-950",
-        "h-105 sm:h-120 lg:h-140",
+        "relative isolate flex w-full flex-col overflow-hidden bg-brand-navy-950",
+        "min-h-[35rem] sm:min-h-[36rem]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
@@ -151,7 +175,7 @@ export default function HeroWipeSlideshow({
       <div className="absolute inset-0">
         <div className="absolute inset-0">
           <Image
-            src={visible.src}
+            src={baseSlide.src}
             alt={visibleAlt}
             fill
             sizes="100vw"
@@ -217,12 +241,21 @@ export default function HeroWipeSlideshow({
       </div>
 
       <div
-        className="pointer-events-none absolute inset-0 bg-linear-to-t from-brand-navy-950/85 via-brand-navy-950/45 to-brand-navy-950/5"
+        className="pointer-events-none absolute inset-0 bg-linear-to-t from-brand-navy-950/90 via-brand-navy-950/55 to-brand-navy-950/15"
         aria-hidden="true"
       />
 
-      <Container className="relative flex h-full flex-col justify-end pb-12">
-        <div className="max-w-2xl text-white">
+      <Container className="relative flex flex-1 flex-col justify-end pt-20 pb-8 sm:pt-28 sm:pb-10 lg:pt-32 lg:pb-12">
+        <motion.div
+          key={indicatorIndex}
+          initial={reduceMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{
+            duration: reduceMotion ? 0 : 0.25,
+            ease: EASE,
+          }}
+          className="max-w-2xl text-white"
+        >
           {eyebrow && (
             <p className="text-sm font-semibold uppercase tracking-[0.08em] text-white/80">
               {eyebrow}
@@ -232,8 +265,8 @@ export default function HeroWipeSlideshow({
           {heading && (
             <h1
               className={cn(
-                "font-heading text-[34px] font-semibold leading-[1.05] tracking-[-0.01em] text-white md:text-[44px] lg:text-[56px]",
-                eyebrow && "mt-3",
+                "text-balance break-words font-heading text-[30px] font-semibold leading-[1.08] tracking-[-0.01em] text-white sm:text-[40px] md:text-[44px] lg:text-[56px]",
+                eyebrow && "mt-2.5 sm:mt-3",
               )}
             >
               {heading}
@@ -241,32 +274,34 @@ export default function HeroWipeSlideshow({
           )}
 
           {description && (
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/90 sm:text-lg">
+            <p className="mt-3 max-w-2xl text-pretty break-words text-[15px] leading-[1.6] text-white/90 sm:mt-5 sm:text-base md:text-lg md:leading-relaxed">
               {description}
             </p>
           )}
 
           {(eyebrow || heading || description) && (
-            <div className="mt-7">
-              {visible.ctaText && visible.ctaHref ? (
+            <div className="mt-6 sm:mt-7">
+              {shownSlide.ctaText && shownSlide.ctaHref ? (
                 <Link
-                  href={visible.ctaHref}
+                  href={shownSlide.ctaHref}
                   className={buttonStyles({ size: "lg" })}
                 >
-                  {visible.ctaText}
+                  {shownSlide.ctaText}
                 </Link>
               ) : (
                 defaultActions
               )}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {showControls && canAnimate && (
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-1">
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 sm:mt-8">
+            <div className="flex flex-wrap items-center gap-1">
               {slides.map((slide, i) => {
-                const active = i === current;
+                const active = i === indicatorIndex;
+                const progressRunning =
+                  active && autoplay && !paused && !reduceMotion;
 
                 return (
                   <button
@@ -279,27 +314,31 @@ export default function HeroWipeSlideshow({
                   >
                     <span
                       className={cn(
-                        "relative block h-1.5 overflow-hidden rounded-full transition-all duration-300",
+                        "relative block h-1.5 overflow-hidden rounded-full duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] transition-[width,background-color]",
                         "group-focus-visible:ring-2 group-focus-visible:ring-white group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-brand-navy-950",
                         active
                           ? "w-10 bg-white/35"
                           : "w-4 bg-white/50 group-hover:bg-white/80",
                       )}
                     >
-                      {active && autoplay && !paused && !reduceMotion && (
+                      {active && (
                         <motion.span
-                          key={`progress-${current}`}
-                          className="absolute inset-y-0 left-0 rounded-full bg-white"
-                          initial={{ width: "0%" }}
-                          animate={{ width: "100%" }}
-                          transition={{
-                            duration: Math.max(1.5, interval),
-                            ease: "linear",
-                          }}
+                          key={`progress-${indicatorIndex}-${progressRunning ? "run" : "idle"}`}
+                          className="absolute inset-y-0 left-0 w-full origin-left rounded-full bg-white"
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: 1 }}
+                          transition={
+                            progressRunning
+                              ? {
+                                  duration: Math.max(1.5, interval),
+                                  ease: "linear",
+                                }
+                              : {
+                                  duration: reduceMotion ? 0 : 0.25,
+                                  ease: EASE,
+                                }
+                          }
                         />
-                      )}
-                      {active && (!autoplay || paused || reduceMotion) && (
-                        <span className="absolute inset-0 rounded-full bg-white" />
                       )}
                     </span>
                   </button>
@@ -357,7 +396,7 @@ export default function HeroWipeSlideshow({
         )}
 
         <p className="sr-only" aria-live="polite">
-          Slide {current + 1} of {count}: {heading ?? visible.alt}
+          Slide {indicatorIndex + 1} of {count}: {heading ?? shownSlide.alt}
         </p>
       </Container>
     </section>

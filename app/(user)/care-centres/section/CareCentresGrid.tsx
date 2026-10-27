@@ -33,18 +33,24 @@ type CareCentresGridProps = {
   centres: CareCentre[];
   now: string;
   className?: string;
+  /** Copy untuk konteks tanpa filter, mis. preview di homepage. */
+  emptyState?: { title: string; description: string };
 };
 
 export default function CareCentresGrid({
   centres,
   now,
   className,
+  emptyState,
 }: CareCentresGridProps) {
   if (centres.length === 0) {
     return (
       <EmptyState
-        title="No centres match your filters"
-        description="Try widening the city or clearing a filter there may be a centre nearby under a different service."
+        title={emptyState?.title ?? "No centres match your filters"}
+        description={
+          emptyState?.description ??
+          "Try widening the city filter, or clear it. There may be a centre nearby under a different service."
+        }
         className={className}
       />
     );

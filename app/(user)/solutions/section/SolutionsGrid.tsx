@@ -30,17 +30,22 @@ function tagsOf(solution: Solution): EntityCardTag[] {
 type SolutionsGridProps = {
   solutions: Solution[];
   className?: string;
+  emptyState?: { title: string; description: string };
 };
 
 export default function SolutionsGrid({
   solutions,
   className,
+  emptyState,
 }: SolutionsGridProps) {
   if (solutions.length === 0) {
     return (
       <EmptyState
-        title="No solutions match your filters"
-        description="Try removing a filter or changing your search terms."
+        title={emptyState?.title ?? "No solutions match your filters"}
+        description={
+          emptyState?.description ?? "Try removing a filter or changing your search terms."
+        }
+        className={className}
       />
     );
   }

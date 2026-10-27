@@ -75,6 +75,8 @@ type EventsCardGridProps = {
   now: string;
   emptyAction?: React.ReactNode;
   className?: string;
+  /** Copy untuk konteks tanpa filter, mis. preview di homepage. */
+  emptyState?: { title: string; description: string };
 };
 
 export default function EventsCardGrid({
@@ -82,12 +84,16 @@ export default function EventsCardGrid({
   now,
   emptyAction,
   className,
+  emptyState,
 }: EventsCardGridProps) {
   if (events.length === 0) {
     return (
       <EmptyState
-        title="No events match your filters"
-        description="Try another category or set When to All dates to see events that may already have passed."
+        title={emptyState?.title ?? "No events match your filters"}
+        description={
+          emptyState?.description ??
+          "Try another category or set When to All dates to see events that may already have passed."
+        }
         action={emptyAction}
         className={className}
       />

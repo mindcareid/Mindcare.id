@@ -60,9 +60,9 @@ const BASE_FIELDS: FieldDef[] = [
   },
   {
     key: "phone",
-    label: "Phone (optional)",
+    label: "Phone",
     type: "PHONE",
-    required: false,
+    required: true,
     options: null,
   },
 ];
@@ -185,9 +185,7 @@ export default function RegisterEventButton({
 
       for (const field of fields) {
         if (field.required && !attendee[field.key]?.trim()) {
-          setError(
-            `Attendee ${i + 1}: "${field.label.replace(" (optional)", "")}" is required.`,
-          );
+          setError(`"${field.label.replace(" (optional)", "")}" is required.`);
           return;
         }
       }

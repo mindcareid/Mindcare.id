@@ -19,7 +19,7 @@ export default function ReportConcernPage() {
           MindCare belum punya saluran pelaporan yang dijaga
         </strong>
         . Kalau ada sesuatu yang perlu ditangani hari ini, jangan menunggu
-        halaman ini — cari bantuan lewat jalur yang memang sudah berjalan di
+        halaman ini, cari bantuan lewat jalur yang memang sudah berjalan di
         sekitar Anda.
       </p>
       <p className="mt-4">

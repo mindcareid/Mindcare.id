@@ -22,10 +22,10 @@ export const Menu: Menudata[] = [
     title: "Events",
     link: "/events",
   },
-  {
-    title: "Insight",
-    link: "/insights",
-  },
+  // {
+  //   title: "Insight",
+  //   link: "/insights",
+  // },
 ];
 
 export const FooterMenu: FooterSection[] = [

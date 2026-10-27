@@ -12,6 +12,7 @@ import FilterBar, {
 import PageHero from "@/app/components/reusable/PageHero";
 import SearchBar from "@/app/components/reusable/SearchBar";
 import CareCentresGrid from "./section/CareCentresGrid";
+import CentreMapPlaceholder from "./section/CentreMapPlaceholder";
 import { isOpenAt } from "./data/centreHours";
 import type { CareCentre, CareCentreFacets } from "./type/careCentre";
 const ALL = "all";
@@ -179,11 +180,21 @@ export default function CareCentres({
               of {centres.length} centres
             </p>
 
-            <CareCentresGrid
-              centres={visibleCentres}
-              now={now}
-              className="mt-6"
-            />
+            <div className="mt-6 grid gap-8 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <CareCentresGrid
+                  centres={visibleCentres}
+                  now={now}
+                  className="lg:grid-cols-2"
+                />
+              </div>
+
+              <aside className="hidden lg:block">
+                <div className="sticky top-24">
+                  <CentreMapPlaceholder />
+                </div>
+              </aside>
+            </div>
           </>
         )}
       </Container>

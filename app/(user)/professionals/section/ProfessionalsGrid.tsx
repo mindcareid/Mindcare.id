@@ -14,19 +14,27 @@ type ProfessionalsGridProps = {
   professionals: Professional[];
   now: string;
   resetAction?: React.ReactNode;
+  className?: string;
+  emptyState?: { title: string; description: string };
 };
 
 export default function ProfessionalsGrid({
   professionals,
   now,
   resetAction,
+  className,
+  emptyState,
 }: ProfessionalsGridProps) {
   if (professionals.length === 0) {
     return (
       <EmptyState
-        title="No professionals match your filters"
-        description="Try removing a filter or searching with a different keyword."
+        title={emptyState?.title ?? "No professionals match your filters"}
+        description={
+          emptyState?.description ??
+          "Try removing a filter or searching with a different keyword."
+        }
         action={resetAction}
+        className={className}
       />
     );
   }

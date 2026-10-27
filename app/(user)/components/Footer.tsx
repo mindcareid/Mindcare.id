@@ -31,13 +31,10 @@ export default function Footer() {
               />
             </Link>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-              MindCare Indonesia will be the nation’s premier Mental Health and
-              Wellness Exhibition and Conference, focusing on mental well-being,
-              holistic healing, and innovative approaches to mental health care.
-              This groundbreaking event aims to bring together professionals,
-              thought leaders, and advocates from across Indonesia and beyond to
-              share insights, solutions, and tools for mental health management
-              and personal wellness.
+              MindCare.id is a directory for mental-health support in Indonesia.
+              It brings together professionals, care centres, and structured
+              solutions, plus the events and articles that come from the people
+              listed here. Every listing is reviewed before it goes live.
             </p>
           </div>
 
@@ -71,7 +68,7 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-col gap-4 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} MindCare.id. All rights reserved.
+            &copy; {new Date().getFullYear()} MindCare.id. All rights reserved.
           </p>
 
           {socialGroup?.social && (

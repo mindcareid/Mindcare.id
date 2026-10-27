@@ -65,7 +65,7 @@ export default function Home({
         <PageHero
           eyebrow="MindCare.id"
           title="Mental health support, all in one place"
-          subtitle="Psychologists, psychiatrists, and counselling centres across Indonesia — together with the programmes, events, and articles that go with them."
+          subtitle="Psychologists, psychiatrists, and counselling centres across Indonesia, together with the programmes, events, and articles that go with them."
         >
           {heroActions}
         </PageHero>
@@ -75,7 +75,15 @@ export default function Home({
         description="Psychologists, psychiatrists, and counsellors with the areas they support and the cities they practise in."
         href="/professionals"
       >
-        <ProfessionalsGrid professionals={professionals} now={now} />
+        <ProfessionalsGrid
+          professionals={professionals}
+          now={now}
+          emptyState={{
+            title: "No professionals listed yet",
+            description:
+              "Profiles appear here after they pass review. You can also browse the full directory.",
+          }}
+        />
       </HomeSection>
 
       <HomeSection
@@ -83,31 +91,54 @@ export default function Home({
         description="Clinics, hospitals, community health centres, and counselling centres that treat mental health."
         href="/care-centres"
       >
-        <CareCentresGrid centres={centres} now={now} />
+        <CareCentresGrid
+          centres={centres}
+          now={now}
+          emptyState={{
+            title: "No care centres listed yet",
+            description:
+              "Centres appear here once their listing is published. You can also browse the full directory.",
+          }}
+        />
       </HomeSection>
 
       <HomeSection
-        title="solutions"
+        title="Solutions"
         description="Structured solutions for individuals, workplaces, and communities."
         href="/solutions"
       >
-        <SolutionsGrid solutions={solutions} />
+        <SolutionsGrid
+          solutions={solutions}
+          emptyState={{
+            title: "No solutions listed yet",
+            description:
+              "Published solutions appear here. You can also browse the full directory.",
+          }}
+        />
       </HomeSection>
       <HomeSection
         title="Upcoming events"
-        description="Webinars, workshops, training, and support groups — online and in person."
+        description="Webinars, workshops, training, and support groups, online and in person."
         href="/events"
       >
-        <EventsCardGrid events={events} now={now} />
+        <EventsCardGrid
+          events={events}
+          now={now}
+          emptyState={{
+            title: "No upcoming events yet",
+            description:
+              "Events appear here as hosts publish them. You can also browse past and upcoming events.",
+          }}
+        />
       </HomeSection>
 
-      <HomeSection
+      {/* <HomeSection
         title="Latest articles"
         description="Written by the professionals listed in this directory."
         href="/insights"
       >
         <InsightsGrid articles={articles} />
-      </HomeSection>
+      </HomeSection> */}
 
       <Container as="section" className="pb-20 pt-4">
         <div className="rounded-xl border border-border bg-brand-lavender-100 px-6 py-10 text-center md:px-10 md:py-14">
