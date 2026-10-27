@@ -12,6 +12,13 @@ Before this file, the repository had no product documentation. The only `README.
 
 This README is now the single reference. It documents the areas that exist in code, with the status of each.
 
+`docs/` holds narrower documents:
+
+| File | Contents |
+|---|---|
+| `docs/hero-carousel.md` | How the homepage hero slideshow works, how to manage it from the admin console, and its image and motion rules |
+| `docs/changelog.md` | Dated record of changes made outside the product's own feature work, with the files touched |
+
 ### How much is covered
 
 Measured from the repository at the time of writing:
@@ -143,6 +150,7 @@ flowchart TB
 | Public: Solutions | Built (database) | List, detail, categories, audiences, focus areas |
 | Public: Events | Built (database) | List, detail, filters, internal and external registration, agenda, attendee fields |
 | Public: Insights | Static (reserved) | Renders seed data from `app/(user)/insights/data/articles.ts`; the authoring workflow is not decided yet |
+| Public: Home hero slideshow | Built | Admin-managed images with an optional per-slide title, description and button; falls back to the default hero when no slide is active. See `docs/hero-carousel.md` |
 | Applications | Built | Separate forms for professional, care centre, and solution, Zod validated, Cloudinary photo handling, status page |
 | Admin console | Built | Applications triage, users and admin access, reference data, events and attendee fields, content, contact messages |
 | Event ticketing | Built | Free and paid flows, Xendit invoices, webhook, quota checks, idempotency keys, duplicate-email guard |
@@ -192,6 +200,7 @@ Directory map:
 | `app/api` | Route handlers (auth, applications, admin, events, orders, tickets, webhooks, uploads) |
 | `lib` | Prisma client, auth, guards, mail, PDF, Cloudinary, orders, events, validations |
 | `prisma` | Schema and migrations |
+| `docs` | Focused documents: hero slideshow, changelog |
 | `.github/workflows` | Order expiry cron |
 
 ---
@@ -505,3 +514,9 @@ These are present in the repository as-is and are worth a decision:
 - `middleware.ts` matches paths such as `/my-classes` and `/order` that no longer have pages.
 - `next.config.js` allows remote images only from Cloudinary, GitHub avatars, and jsDelivr. Any new image host must be added there.
 - Deployment applies migrations during `npm run build`.
+- Roughly 240 source lines contain double-encoded UTF-8, which renders as garbage in the browser (for example a mangled em dash or copyright sign). Three files were repaired by hand; the rest await a file-by-file pass with a UTF-8 safe editor. See `docs/changelog.md`.
+- The public site mixes English and Indonesian. Home, navigation, and footer are English; the Help Centre pages and summaries are Indonesian, sometimes within the same page.
+- `/help/report-concern`, `/help/disclaimer`, and `/help/terms-of-service` are placeholders that render "not published yet". The site therefore has no staffed reporting channel yet, and the homepage does not link to one.
+- The homepage `h1` is the active hero slide's title when that slide has one, so it changes as the slideshow advances. Slide titles read "promo" or "faq" produce a weak `h1` for search.
+- `EventsCardGrid` accepts a `now` prop that the component never uses; the prop is still passed by five callers.
+- `app/(user)/section/` holds unused components from another product (Execorner), including hardcoded statistics and `/images/HRDI.jpg`. Nothing imports them. See `docs/changelog.md`.
