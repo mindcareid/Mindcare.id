@@ -8,10 +8,10 @@ export default function NavbarAuth() {
         <div className="flex items-center justify-between h-20">
           <Link
             href="/"
-            className="relative flex items-center h-16 w-32 md:w-64"
-          >
-            <Image
-              src="/images/logo/logoNew.png"
+              className="relative flex items-center h-12 w-32 md:w-56"
+            >
+              <Image
+                src="/images/logo/mindcare-logo.png"
               alt="Execorner"
               fill
               priority

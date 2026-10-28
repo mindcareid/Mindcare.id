@@ -22,10 +22,9 @@ export default function Footer() {
               className="relative h-12 w-40"
             >
               <Image
-                src="/images/logo/logoNew.png"
+                src="/images/logo/mindcare-logo.png"
                 alt="MindCare.id"
                 fill
-                unoptimized
                 sizes="160px"
                 className="object-contain object-left"
               />

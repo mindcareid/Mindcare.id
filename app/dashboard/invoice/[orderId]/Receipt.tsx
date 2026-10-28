@@ -85,10 +85,10 @@ export default function Receipt({ order }: Props) {
         {/* HEADER */}
         <div className="flex flex-col gap-4 border-b border-border px-5 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <Image
-            src="/images/logo/logoNew.png"
+            src="/images/logo/mindcare-logo.png"
             alt="MindCare.id"
-            width={150}
-            height={48}
+            width={160}
+            height={60}
             priority
             className="h-10 w-auto self-start object-contain"
           />

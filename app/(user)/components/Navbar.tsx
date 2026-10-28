@@ -65,10 +65,10 @@ export default function Navbar() {
           <Link
             href="/"
             aria-label="MindCare.id, ke beranda"
-            className="relative flex h-10 w-36 shrink-0 items-center md:w-44"
+            className="relative flex h-12 w-36 shrink-0 items-center md:w-44"
           >
             <Image
-              src="/images/logo/logoNew.png"
+              src="/images/logo/mindcare-logo.png"
               alt="MindCare.id"
               fill
               sizes="176px"

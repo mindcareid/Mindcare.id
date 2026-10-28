@@ -120,12 +120,11 @@ export default function Sidebar() {
                 />
               </div>
             ) : (
-              <div className="relative w-44 h-14">
+              <div className="relative w-44 h-12">
                 <Image
-                  src="/images/logo/logoNew.png"
+                  src="/images/logo/mindcare-logo.png"
                   alt="MindCare.id"
                   fill
-                  unoptimized
                   sizes="176px"
                   className="object-contain object-left"
                 />

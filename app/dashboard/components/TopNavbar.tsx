@@ -27,10 +27,10 @@ export default function MobileTopbar() {
         <Link
           href="/"
           aria-label="MindCare.id, ke beranda"
-          className="relative flex h-10 w-36 items-center"
+          className="relative flex h-12 w-36 items-center"
         >
           <Image
-            src="/images/logo/logoNew.png"
+            src="/images/logo/mindcare-logo.png"
             alt="MindCare.id"
             fill
             priority

@@ -17,11 +17,11 @@ export default function ApplyLayout({
         <div className="mx-auto flex h-20 w-full max-w-7xl items-center px-6">
           <Link
             href="/"
-            className="relative flex h-14 w-32 items-center md:w-44"
-            aria-label="MindCare.id home"
-          >
-            <Image
-              src="/images/logo/logoNew.png"
+              className="relative flex h-12 w-32 items-center md:w-44"
+              aria-label="MindCare.id home"
+            >
+              <Image
+                src="/images/logo/mindcare-logo.png"
               alt="MindCare.id"
               fill
               priority
