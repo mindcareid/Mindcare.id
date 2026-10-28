@@ -15,7 +15,7 @@ export function Logo({ width = 160 }: LogoProps) {
       }}
     >
       <Image
-        src={`${mailConfig.appUrl}/images/logo/logoNew.png`}
+        src={`${mailConfig.appUrl}/images/logo/MindcareLogo.png`}
         style={{
           width,
         }}

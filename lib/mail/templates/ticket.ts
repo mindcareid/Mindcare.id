@@ -1,4 +1,5 @@
 import { mailConfig } from "../config";
+import { mailTheme } from "../theme";
 import { SendTicketEmailParams } from "../types";
 import { emailLayout } from "./layout";
 
@@ -32,7 +33,7 @@ export function ticketTemplate({
 
       ${Paragraph({
         children: `<strong>${eventTitle}</strong>`,
-        color: "#111827",
+        color: mailTheme.primaryDark,
         size: 22,
         marginTop: 10,
       })}

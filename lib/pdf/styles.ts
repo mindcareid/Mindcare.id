@@ -13,6 +13,11 @@ export const colors = {
 
   accent: "#157768",
 
+  brandPurple: "#5B3791",
+  brandPurpleDark: "#432A6B",
+  brandTeal: "#0D7A7B",
+  brandPurpleWash: "#F7F4FC",
+
   lavender: "#EFECF8",
   lavenderStrong: "#E7E3F2",
 

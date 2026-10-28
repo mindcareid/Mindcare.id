@@ -1,8 +1,16 @@
+// Warna diturunkan dari logo resmi (public/images/logo/MindcareLogo.png)
+// supaya header email dan logo tidak saling menenggelamkan.
 export const mailTheme = {
-  primary: "#154375",
-  primaryDark: "#113763",
-  secondary: "#63509E",
+  // Ungu brand (dari logo) — dipakai header, tombol, heading, dan nama brand.
+  primary: "#5B3791",
+  primaryDark: "#432A6B",
+
+  // Teal brand (aksen hijau-kebiruan di logo) — garis aksen & link.
+  secondary: "#0D7A7B",
+
+  // Aksen status sukses (dipakai Alert "success").
   accent: "#157768",
+
   light: "#F4F6F9",
   lightLavender: "#EFECF8",
   lightMint: "#EFF6F5",

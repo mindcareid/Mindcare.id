@@ -50,8 +50,8 @@ const s = StyleSheet.create({
   },
 
   accentBar: {
-    height: 12,
-    backgroundColor: colors.primary,
+    height: 6,
+    backgroundColor: colors.brandPurple,
   },
 
   header: {
@@ -74,7 +74,7 @@ const s = StyleSheet.create({
   docTypeLabel: {
     fontSize: 15,
     fontWeight: "bold",
-    color: colors.primary,
+    color: colors.brandPurple,
     letterSpacing: 2,
   },
 
@@ -96,7 +96,7 @@ const s = StyleSheet.create({
   rule: {
     height: 2,
     marginHorizontal: 40,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.brandPurple,
   },
 
   body: {
@@ -121,7 +121,7 @@ const s = StyleSheet.create({
   eventTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: colors.primaryDark,
+    color: colors.brandPurpleDark,
     lineHeight: 1.3,
     textAlign: "left",
     marginBottom: 12,
@@ -166,7 +166,9 @@ const s = StyleSheet.create({
   qrPanel: {
     width: "34%",
     borderRadius: radius.lg,
-    backgroundColor: colors.lavender,
+    backgroundColor: colors.brandPurpleWash,
+    borderWidth: 1,
+    borderColor: colors.lavenderStrong,
     paddingVertical: 22,
     paddingHorizontal: 12,
     alignItems: "center",
@@ -177,7 +179,7 @@ const s = StyleSheet.create({
   qrCaption: {
     marginTop: 14,
     fontSize: 8,
-    color: colors.primary,
+    color: colors.brandPurple,
     letterSpacing: 1,
     textTransform: "uppercase",
   },
@@ -186,7 +188,7 @@ const s = StyleSheet.create({
     marginTop: 6,
     fontSize: 13,
     fontWeight: "bold",
-    color: colors.primaryDark,
+    color: colors.brandPurpleDark,
     letterSpacing: 1,
   },
 
@@ -221,7 +223,7 @@ const s = StyleSheet.create({
   participantName: {
     fontSize: 15,
     fontWeight: "bold",
-    color: colors.primaryDark,
+    color: colors.brandPurpleDark,
   },
 
   participantEmail: {
@@ -307,7 +309,7 @@ export function TicketPdf({
 
         <View style={s.header}>
           <Image
-            src={`${mailConfig.appUrl}/images/logo/logoNew.png`}
+            src={`${mailConfig.appUrl}/images/logo/MindcareLogo.png`}
             style={s.logo}
           />
 

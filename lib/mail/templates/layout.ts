@@ -7,7 +7,7 @@ type EmailLayoutProps = {
 };
 
 export function emailLayout({ title, content }: EmailLayoutProps) {
-  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/logoNew.png`;
+  const logoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/images/logo/MindcareLogoLight.png`;
 
   return `
 <!DOCTYPE html>
@@ -57,11 +57,16 @@ export function emailLayout({ title, content }: EmailLayoutProps) {
 
         <!-- ===== HEADER ===== -->
         <tr>
-          <td style="
-            background:linear-gradient(135deg, ${mailTheme.primary}, ${mailTheme.primaryDark});
-            padding:28px 32px;
-            text-align:center;
-          ">
+          <td
+            align="center"
+            bgcolor="${mailTheme.primary}"
+            style="
+              background:${mailTheme.primary};
+              background:linear-gradient(135deg, ${mailTheme.primary}, ${mailTheme.primaryDark});
+              padding:28px 32px;
+              text-align:center;
+            "
+          >
             <img
               src="${logoUrl}"
               width="160"
@@ -70,6 +75,16 @@ export function emailLayout({ title, content }: EmailLayoutProps) {
               style="display:block;margin:0 auto;max-width:160px;height:auto;border:0;outline:none;"
             />
           </td>
+        </tr>
+
+        <!-- ===== AKSEN DIVIDER ===== -->
+        <tr>
+          <td style="
+            background:${mailTheme.secondary};
+            height:4px;
+            line-height:4px;
+            font-size:0;
+          ">&nbsp;</td>
         </tr>
 
         <!-- ===== BODY ===== -->
@@ -101,7 +116,7 @@ export function emailLayout({ title, content }: EmailLayoutProps) {
             color:${mailTheme.textMuted};
             line-height:22px;
           ">
-            <p style="margin:0;font-weight:700;color:${mailTheme.primary};font-size:14px;">
+            <p style="margin:0;font-weight:700;color:${mailTheme.primary};font-size:14px;letter-spacing:0.3px;">
               Mindcare
             </p>
             <p style="margin:8px 0 0;">
@@ -112,6 +127,7 @@ export function emailLayout({ title, content }: EmailLayoutProps) {
               Need help?
               <a href="mailto:support@mindcare.id" style="
                 color:${mailTheme.secondary};
+                font-weight:700;
                 text-decoration:underline;
               ">Contact support</a>
             </p>
