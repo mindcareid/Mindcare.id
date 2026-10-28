@@ -1,9 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Building2, GraduationCap, MapPin } from "lucide-react";
 
 import SectionHeader from "@/app/components/reusable/SectionHeader";
+import VerifiedBadge from "@/app/components/reusable/VerifiedBadge";
 import type { EventDetail } from "../data/events";
-import Image from "next/image";
 
 function initialsOf(name: string): string {
   return name
@@ -27,6 +28,9 @@ type EventHostCardProps = {
 export default function EventHostCard({ event }: EventHostCardProps) {
   const professional = event.professional;
   const careCentre = event.careCentre;
+  // `publisherType` dari database, bukan `host.type`: host PLATFORM juga
+  // dipakai sebagai cadangan untuk event tanpa profesional/klinik.
+  const isPlatform = event.publisherType === "PLATFORM";
 
   return (
     <section aria-labelledby="event-host-title">
@@ -133,7 +137,38 @@ export default function EventHostCard({ event }: EventHostCardProps) {
         </div>
       )}
 
-      {!professional && !careCentre && (
+      {/* Event yang diterbitkan MindCare sendiri: logo akun platform (bila
+          sudah diunggah) menggantikan inisial. Lihat design.md bagian 33. */}
+      {!professional && !careCentre && isPlatform && (
+        <div className={cardClass}>
+          <span className={avatarClass}>
+            {event.host.logoUrl ? (
+              <Image
+                src={event.host.logoUrl}
+                alt={event.host.name}
+                fill
+                sizes="64px"
+                className="object-cover"
+              />
+            ) : (
+              <span aria-hidden="true">{initialsOf(event.host.name)}</span>
+            )}
+          </span>
+          <div className="min-w-0">
+            <p
+              id="event-host-title"
+              className="font-heading text-lg font-semibold text-foreground"
+            >
+              {event.host.name}
+            </p>
+            {event.host.isVerified && (
+              <VerifiedBadge label="Official MindCare" className="mt-2" />
+            )}
+          </div>
+        </div>
+      )}
+
+      {!professional && !careCentre && !isPlatform && (
         <div className={cardClass}>
           <span className={avatarClass}>
             <span aria-hidden="true">{initialsOf(event.host.name)}</span>
