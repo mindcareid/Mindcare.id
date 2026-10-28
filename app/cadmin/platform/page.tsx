@@ -23,6 +23,9 @@ export default async function PlatformPage() {
         id={platform.id}
         name={platform.name}
         slug={platform.slug}
+        logoUrl={platform.logoUrl}
+        logoPublicId={platform.logoPublicId}
+        isVerified={platform.isVerified}
       />
     </div>
   );

@@ -17,7 +17,20 @@ export async function GET(
 
   const event = await prisma.event.findFirst({
     where: { id: Number(id), deletedAt: null },
-    include: { category: true},
+    include: {
+      category: true,
+      // Speaker & agenda dibutuhkan form edit admin (design.md bagian 33).
+      speakers: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }] },
+      agenda: {
+        orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }],
+        include: {
+          speakers: {
+            orderBy: { sortOrder: "asc" },
+            select: { speakerId: true },
+          },
+        },
+      },
+    },
   });
 
   if (!event) {

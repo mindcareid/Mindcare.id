@@ -38,11 +38,22 @@ const eventDetailInclude = {
     orderBy: {
       sortOrder: "asc",
     },
+    include: {
+      // Pivot sesi -> speaker; nama dibaca dari `speakers` di bawah.
+      speakers: {
+        orderBy: { sortOrder: "asc" },
+        select: { speakerId: true, role: true },
+      },
+    },
   },
 
   industries: true,
 
   attendeeFields: true,
+
+  // Speaker & agenda MindCare. Selalu dibaca (satu query) dan hanya dipakai
+  // kalau publisher-nya PLATFORM; lihat design.md bagian 33.
+  speakers: { orderBy: { sortOrder: "asc" } },
 
   focusAreas: {
     include: {
@@ -106,6 +117,10 @@ export type EventHost = {
   name: string;
   type: "PLATFORM" | "PROFESSIONAL" | "CARE_CENTRE" | "SOLUTION";
   slug?: string;
+  /** Hanya diisi untuk host PLATFORM: logo akun platform. */
+  logoUrl?: string | null;
+  /** Hanya diisi untuk host PLATFORM: badge "Official MindCare". */
+  isVerified?: boolean;
 };
 
 export type EventFocusArea = {
@@ -138,7 +153,10 @@ const publicEventWhere = {
 } satisfies Prisma.EventWhereInput;
 
 function resolveEventHost(
-  event: Pick<EventListPayload, "professional" | "careCentre" | "platform">,
+  event: Pick<
+    EventListPayload,
+    "publisherType" | "professional" | "careCentre" | "platform"
+  >,
 ): EventHost {
   if (event.professional) {
     return {
@@ -156,10 +174,18 @@ function resolveEventHost(
     };
   }
 
+  // Logo & badge hanya untuk event yang memang diterbitkan MindCare. Event
+  // tanpa profesional/klinik tapi publisher-nya lain tetap memakai identitas
+  // platform di kartu, tanpa logo, supaya tidak ada yang tampil seolah
+  // "Official MindCare" padahal bukan.
+  const isPlatform = event.publisherType === "PLATFORM";
+
   return {
     name: event.platform?.name ?? PLATFORM_NAME,
     slug: event.platform?.slug ?? PLATFORM_SLUG,
     type: "PLATFORM",
+    logoUrl: isPlatform ? (event.platform?.logoUrl ?? null) : null,
+    isVerified: isPlatform ? (event.platform?.isVerified ?? false) : false,
   };
 }
 

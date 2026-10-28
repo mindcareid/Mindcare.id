@@ -1,6 +1,11 @@
 import { cookies } from "next/headers";
 import EventForm from "../../components/EventForm";
 
+// Halaman edit tidak boleh disajikan dari cache: isinya data yang baru saja
+// diubah admin, dan `cookies()` sudah membuatnya dinamis — ini menegaskannya
+// supaya tidak ada lapisan cache lain yang menyajikan versi lama.
+export const dynamic = "force-dynamic";
+
 /* ================= FETCHERS ================= */
 
 async function getEvent(id: string) {

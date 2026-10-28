@@ -1,18 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
+import ImageUploadField from "@/app/components/reusable/ImageUploadField";
 
 type PlatformFormProps = {
   id: number;
   name: string;
   slug: string;
+  logoUrl: string | null;
+  logoPublicId: string | null;
+  isVerified: boolean;
 };
 
-export default function PlatformForm({ id, name, slug }: PlatformFormProps) {
+export default function PlatformForm({
+  id,
+  name,
+  slug,
+  logoUrl,
+  logoPublicId,
+  isVerified,
+}: PlatformFormProps) {
   const [displayName, setDisplayName] = useState(name);
+  const [logo, setLogo] = useState({
+    url: logoUrl,
+    publicId: logoPublicId,
+  });
+  const [verified, setVerified] = useState(isVerified);
   const [saving, setSaving] = useState(false);
+
+  // Aset yang diganti/dihapus ditahan dulu; baru dihapus dari Cloudinary
+  // setelah data benar-benar tersimpan (lihat `deferDelete` di ImageUploadField).
+  const discarded = useRef<Set<string>>(new Set());
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -21,13 +41,31 @@ export default function PlatformForm({ id, name, slug }: PlatformFormProps) {
       const res = await fetch("/api/cadmin/platform", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: displayName }),
+        body: JSON.stringify({
+          name: displayName,
+          logoUrl: logo.url,
+          logoPublicId: logo.publicId,
+          isVerified: verified,
+        }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
         throw new Error(data?.message || "Failed to save platform account");
       }
       setDisplayName(data.data.name);
+      setLogo({ url: data.data.logoUrl, publicId: data.data.logoPublicId });
+      setVerified(data.data.isVerified);
+
+      for (const publicId of discarded.current) {
+        if (publicId === data.data.logoPublicId) continue;
+        await fetch("/api/cloudinary/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ publicId }),
+        }).catch(() => undefined);
+      }
+      discarded.current.clear();
+
       toast.success("Platform account updated");
     } catch (error) {
       toast.error(
@@ -71,6 +109,39 @@ export default function PlatformForm({ id, name, slug }: PlatformFormProps) {
             Shown as the host on public event pages.
           </p>
         </div>
+
+        <ImageUploadField
+          label="Logo"
+          hint="Square image, shown on the host card of MindCare events."
+          entityType="platform"
+          aspect={1}
+          shape="square"
+          maxWidth={512}
+          maxHeight={512}
+          value={logo}
+          deferDelete
+          onDiscard={(publicIds) => {
+            for (const publicId of publicIds) discarded.current.add(publicId);
+          }}
+          onChange={setLogo}
+        />
+
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={verified}
+            onChange={(e) => setVerified(e.target.checked)}
+            className="mt-0.5 h-5 w-5"
+          />
+          <span>
+            <span className="block text-sm font-medium text-foreground">
+              Show the official badge
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              Adds a verified mark to the host card. Keep this on for MindCare.
+            </span>
+          </span>
+        </label>
 
         <div>
           <label
