@@ -10,6 +10,7 @@ export const UPLOAD_FOLDER_ENTITIES = [
   "hero",
   "about-section",
   "whyus",
+  "platform",
 ] as const;
 
 export type UploadFolderImage = (typeof UPLOAD_FOLDER_ENTITIES)[number];

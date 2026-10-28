@@ -142,6 +142,17 @@ enum EventRegistrationType {
   EXTERNAL
 }
 
+enum EventAgendaKind {
+  OPENING
+  KEYNOTE
+  PANEL
+  SOLUTION_PRESENTATION
+  TALK
+  DISCUSSION
+  BREAK
+  OTHER
+}
+
 enum OrderStatus {
   PENDING
   PAID
@@ -756,6 +767,9 @@ model Platform {
   name     String  @db.VarChar(255)
   slug     String  @unique @db.VarChar(255)
   isActive Boolean @default(true)
+  logoUrl      String? @db.VarChar(500)
+  logoPublicId String? @db.VarChar(255)
+  isVerified Boolean @default(true)
 
   events Event[]
 
@@ -817,6 +831,7 @@ model Event {
   industries     EventIndustry[]
   agenda         EventAgendaItem[]
   focusAreas     EventFocusAreaMap[]
+  speakers       EventSpeaker[]
 
   @@index([professionalId, status, startDate])
   @@index([careCentreId, status, startDate])
@@ -860,17 +875,64 @@ model EventAgendaItem {
 
   title       String  @db.VarChar(255)
   description String? @db.Text
+  kind EventAgendaKind @default(TALK)
+  attendees String? @db.Text
 
   startTime DateTime
   endTime   DateTime
 
   sortOrder Int @default(0)
 
+  speakers EventAgendaSpeaker[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([eventId, startTime])
   @@index([eventId, sortOrder])
+} 
+
+model EventSpeaker {
+  id Int @id @default(autoincrement())
+
+  eventId Int
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name  String  @db.VarChar(255)
+  title String? @db.VarChar(255)
+
+  photoUrl      String? @db.VarChar(500)
+  photoPublicId String? @db.VarChar(255)
+
+  // Jabatan boleh lebih dari satu baris; dipisah "\n" lalu dirender sebagai
+  // daftar. Dipakai untuk gelar panjang yang tidak muat di satu baris kartu.
+  titleLines String? @db.Text
+
+  sortOrder Int @default(0)
+
+  agendaItems EventAgendaSpeaker[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([eventId, name])
+  @@index([eventId, sortOrder])
+}
+
+model EventAgendaSpeaker {
+  agendaItemId Int
+  agendaItem   EventAgendaItem @relation(fields: [agendaItemId], references: [id], onDelete: Cascade)
+
+  speakerId Int
+  speaker   EventSpeaker @relation(fields: [speakerId], references: [id], onDelete: Cascade)
+
+  // Peran orang ini **di sesi tersebut**, bukan sifat permanennya: orang yang
+  // sama bisa jadi moderator di satu sesi dan pembicara di sesi lain.
+  role String @default("SPEAKER") @db.VarChar(50)
+
+  sortOrder Int @default(0)
+
+  @@id([agendaItemId, speakerId])
+  @@index([speakerId])
 }
 
 model EventCategory {
