@@ -1,12 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronUp, Download, Search } from "lucide-react";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Search,
+} from "lucide-react";
 import { toast } from "sonner";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 import { cn } from "@/lib/utils";
-// Impor dari modul ".shared" saja. Modul `eventRegistrations` menarik
-// `lib/prisma` (node:async_hooks) dan akan mematahkan bundel browser.
 import {
   buildFilterParams,
   MAX_EXPORT_ROWS,
@@ -112,8 +117,12 @@ function StatCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function EventRegistrationsManager() {
-  const [eventId, setEventId] = useState("");
+export default function EventRegistrationsManager({
+  initialEventId = "",
+}: {
+  initialEventId?: string;
+}) {
+  const [eventId, setEventId] = useState(initialEventId);
   const [status, setStatus] = useState<OrderStatus | "">("");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
@@ -201,15 +210,37 @@ export default function EventRegistrationsManager() {
 
   return (
     <div className="mx-auto max-w-6xl p-4 sm:p-6 lg:p-8">
+      {/* Halaman ini dibuka dari kartu event di Event List. Saat difilter ke
+          satu event, tampilkan jalan pulang dan nama eventnya, bukan judul
+          generik yang membuat admin lupa sedang melihat event mana. */}
+      {selectedEvent && (
+        <Link
+          href="/cadmin/events"
+          className="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to events
+        </Link>
+      )}
+
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <h1 className="font-heading text-2xl font-semibold text-foreground">
-            Event registrations
+            {selectedEvent ? selectedEvent.title : "Event registrations"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Everyone who registered for a MindCare platform event, with their
-            ticket, payment, and check-in status.
+            {selectedEvent ? (
+              <>
+                Registrants for this event ·{" "}
+                {formatDate(selectedEvent.startDate)}
+              </>
+            ) : (
+              <>
+                Everyone who registered for a MindCare platform event, with
+                their ticket, payment, and check-in status.
+              </>
+            )}
           </p>
         </div>
         <button
@@ -226,11 +257,26 @@ export default function EventRegistrationsManager() {
       {/* Ringkasan — mengikuti filter yang sama dengan tabel di bawah. */}
       {summary && (
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <StatCard label="Registrants" value={summary.totalRegistrants.toLocaleString("id-ID")} />
-          <StatCard label="Paid" value={summary.paidRegistrants.toLocaleString("id-ID")} />
-          <StatCard label="Pending" value={summary.pendingRegistrants.toLocaleString("id-ID")} />
-          <StatCard label="Checked in" value={summary.checkedIn.toLocaleString("id-ID")} />
-          <StatCard label="Revenue (paid)" value={idr.format(summary.revenue)} />
+          <StatCard
+            label="Registrants"
+            value={summary.totalRegistrants.toLocaleString("id-ID")}
+          />
+          <StatCard
+            label="Paid"
+            value={summary.paidRegistrants.toLocaleString("id-ID")}
+          />
+          <StatCard
+            label="Pending"
+            value={summary.pendingRegistrants.toLocaleString("id-ID")}
+          />
+          <StatCard
+            label="Checked in"
+            value={summary.checkedIn.toLocaleString("id-ID")}
+          />
+          <StatCard
+            label="Revenue (paid)"
+            value={idr.format(summary.revenue)}
+          />
         </div>
       )}
 
@@ -285,7 +331,8 @@ export default function EventRegistrationsManager() {
 
       {selectedEvent?.quota != null && summary && (
         <p className="mb-4 text-xs text-muted-foreground">
-          {selectedEvent.title}: {summary.paidRegistrants + summary.pendingRegistrants} of{" "}
+          {selectedEvent.title}:{" "}
+          {summary.paidRegistrants + summary.pendingRegistrants} of{" "}
           {selectedEvent.quota} seats taken (paid + pending, current filters).
         </p>
       )}
@@ -345,7 +392,9 @@ export default function EventRegistrationsManager() {
 
                   <button
                     type="button"
-                    onClick={() => setExpandedId(expanded ? null : row.ticketId)}
+                    onClick={() =>
+                      setExpandedId(expanded ? null : row.ticketId)
+                    }
                     className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary"
                     aria-expanded={expanded}
                   >
@@ -378,7 +427,9 @@ export default function EventRegistrationsManager() {
                       Registered
                     </th>
                     <th className="px-4 py-3 font-medium">Check-in</th>
-                    <th className="px-4 py-3 text-right font-medium">Details</th>
+                    <th className="px-4 py-3 text-right font-medium">
+                      Details
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -442,7 +493,9 @@ export default function EventRegistrationsManager() {
                               setExpandedId(expanded ? null : row.ticketId)
                             }
                             aria-expanded={expanded}
-                            aria-label={expanded ? "Hide details" : "Show details"}
+                            aria-label={
+                              expanded ? "Hide details" : "Show details"
+                            }
                             className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
                           >
                             {expanded ? (
@@ -455,7 +508,10 @@ export default function EventRegistrationsManager() {
                       </tr>,
                       ...(expanded
                         ? [
-                            <tr key={`${row.ticketId}-detail`} className="bg-muted/20">
+                            <tr
+                              key={`${row.ticketId}-detail`}
+                              className="bg-muted/20"
+                            >
                               <td colSpan={6} className="px-4 py-5">
                                 <RegistrationDetail row={row} />
                               </td>
@@ -473,7 +529,8 @@ export default function EventRegistrationsManager() {
           {meta && meta.totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between gap-3">
               <p className="text-xs text-muted-foreground">
-                Page {meta.page} of {meta.totalPages} · {meta.total.toLocaleString("id-ID")} registrants
+                Page {meta.page} of {meta.totalPages} ·{" "}
+                {meta.total.toLocaleString("id-ID")} registrants
               </p>
               <div className="flex gap-2">
                 <button
@@ -486,7 +543,9 @@ export default function EventRegistrationsManager() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
+                  onClick={() =>
+                    setPage((p) => Math.min(meta.totalPages, p + 1))
+                  }
                   disabled={meta.page >= meta.totalPages || loading}
                   className={buttonStyles({ variant: "outline", size: "sm" })}
                 >
@@ -514,17 +573,14 @@ function RegistrationDetail({ row }: { row: RegistrationRow }) {
   return (
     <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <DetailRow label="Ticket code" value={row.code} />
-      <DetailRow
-        label="Order"
-        value={`${row.orderId} · ${row.orderStatus}`}
-      />
+      <DetailRow label="Order" value={`${row.orderId} · ${row.orderStatus}`} />
       <DetailRow label="Amount" value={idr.format(row.orderAmount)} />
       <DetailRow label="Paid at" value={formatDateTime(row.paidAt)} />
-      <DetailRow label="Registered at" value={formatDateTime(row.registeredAt)} />
       <DetailRow
-        label="Checked in at"
-        value={formatDateTime(row.checkedAt)}
+        label="Registered at"
+        value={formatDateTime(row.registeredAt)}
       />
+      <DetailRow label="Checked in at" value={formatDateTime(row.checkedAt)} />
       <DetailRow label="Event" value={row.eventTitle} />
       <DetailRow label="Event date" value={formatDate(row.eventStartDate)} />
       <DetailRow label="Phone" value={row.attendeePhone ?? "—"} />
@@ -557,7 +613,9 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="break-words text-sm font-medium text-foreground">{value}</p>
+      <p className="wrap-break-word text-sm font-medium text-foreground">
+        {value}
+      </p>
     </div>
   );
 }
