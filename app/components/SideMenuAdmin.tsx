@@ -29,6 +29,7 @@ type GroupLink = { href: string; label: string };
 
 const EVENT_LINKS: GroupLink[] = [
   { href: "/cadmin/events", label: "Event List" },
+  { href: "/cadmin/event-registrations", label: "Event Registrations" },
   { href: "/cadmin/event-categories", label: "Event Categories" },
   { href: "/cadmin/event-industries", label: "Event Industries" },
   { href: "/cadmin/event-focus-areas", label: "Event Focus Areas" },
