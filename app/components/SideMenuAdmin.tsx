@@ -19,21 +19,30 @@ import {
   faRightFromBracket,
   faShieldHalved,
   faTags,
-  faBriefcase,
-  faLayerGroup,
-  faUserGroup,
   faBuilding,
   faImages,
-  faClockRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
+
 import { cn } from "@/lib/utils";
 
-const EVENT_LINKS = [
+type GroupLink = { href: string; label: string };
+
+const EVENT_LINKS: GroupLink[] = [
   { href: "/cadmin/events", label: "Event List" },
   { href: "/cadmin/event-categories", label: "Event Categories" },
   { href: "/cadmin/event-industries", label: "Event Industries" },
   { href: "/cadmin/event-focus-areas", label: "Event Focus Areas" },
-] as const;
+];
+
+const REFERENCE_LINKS: GroupLink[] = [
+  { href: "/cadmin/areas-of-support", label: "Areas of Support" },
+  { href: "/cadmin/centre-services", label: "Centre Services" },
+  { href: "/cadmin/solution-categories", label: "Solution Categories" },
+  { href: "/cadmin/solution-audiences", label: "Solution Audiences" },
+];
+
+// Sections rendered as a collapsible dropdown instead of flat links:
+// "Reference" -> Manage Reference, "Events" -> Manage Events.
 
 const NAV_LINKS: {
   href: string;
@@ -68,30 +77,6 @@ const NAV_LINKS: {
     section: "Content",
   },
   {
-    href: "/cadmin/areas-of-support",
-    label: "Areas of Support",
-    icon: faTags,
-    section: "Reference",
-  },
-  {
-    href: "/cadmin/centre-services",
-    label: "Centre Services",
-    icon: faBriefcase,
-    section: "Reference",
-  },
-  {
-    href: "/cadmin/solution-categories",
-    label: "Solution Categories",
-    icon: faLayerGroup,
-    section: "Reference",
-  },
-  {
-    href: "/cadmin/solution-audiences",
-    label: "Solution Audiences",
-    icon: faUserGroup,
-    section: "Reference",
-  },
-  {
     href: "/cadmin/platform",
     label: "Platform Account",
     icon: faBuilding,
@@ -111,6 +96,7 @@ export default function SideMenuAdmin() {
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
   const [eventToggle, setEventToggle] = useState<boolean | null>(null);
+  const [referenceToggle, setReferenceToggle] = useState<boolean | null>(null);
 
   const isSuperadmin = session?.user?.adminRole === "SUPERADMIN";
   const navLinks = NAV_LINKS.filter(
@@ -124,6 +110,9 @@ export default function SideMenuAdmin() {
 
   const eventsActive = EVENT_LINKS.some((link) => isActive(link.href));
   const eventOpen = eventToggle ?? eventsActive;
+
+  const referenceActive = REFERENCE_LINKS.some((link) => isActive(link.href));
+  const referenceOpen = referenceToggle ?? referenceActive;
 
   useEffect(() => {
     if (!open) return;
@@ -149,7 +138,17 @@ export default function SideMenuAdmin() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const sections = Array.from(new Set(navLinks.map((item) => item.section)));
+  // Sections order: flat NAV_LINKS sections, then the dropdown-only groups.
+  const sections = [
+    "Overview",
+    "Access",
+    "Applications",
+    "Events",
+    "Reference",
+    "Content",
+    "Messages",
+    "Settings",
+  ];
 
   return (
     <>
@@ -211,100 +210,54 @@ export default function SideMenuAdmin() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-5 overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-4 scrollbar-thin [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-track]:bg-transparent">
-          {sections.map((section) => (
-            <div key={section} className="space-y-1">
-              <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-lavender-200/50">
-                {section}
-              </p>
+          {sections.map((section) => {
+            const sectionLinks = navLinks.filter(
+              (item) => item.section === section,
+            );
 
-              {navLinks
-                .filter((item) => item.section === section)
-                .map((item) => (
-                  <NavLink
-                    key={item.href}
-                    href={item.href}
-                    label={item.label}
-                    icon={item.icon}
-                    active={isActive(item.href)}
+            return (
+              <div key={section} className="space-y-1">
+                <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-lavender-200/50">
+                  {section}
+                </p>
+
+                {section === "Reference" ? (
+                  <NavDropdown
+                    label="Manage Reference"
+                    icon={faTags}
+                    links={REFERENCE_LINKS}
+                    open={referenceOpen}
+                    activeGroup={referenceActive}
+                    isActive={isActive}
+                    onToggle={() => setReferenceToggle(!referenceOpen)}
                     onNavigate={() => setOpen(false)}
                   />
-                ))}
-            </div>
-          ))}
-
-          {/* Events group */}
-          <div className="space-y-1">
-            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-lavender-200/50">
-              Events
-            </p>
-            <button
-              type="button"
-              onClick={() => setEventToggle(!eventOpen)}
-              aria-expanded={eventOpen}
-              className={cn(
-                "group relative flex w-full min-w-0 items-center gap-3 rounded-xl px-3 py-2 text-sm transition",
-                eventsActive
-                  ? "bg-white/10 text-white"
-                  : "text-brand-lavender-100/80 hover:bg-white/10 hover:text-white",
-              )}
-            >
-              {eventsActive && <ActiveBar />}
-              <FontAwesomeIcon
-                icon={faCalendarDays}
-                className="size-4 shrink-0"
-              />
-              <span className="min-w-0 flex-1 truncate text-left font-medium">
-                Manage Events
-              </span>
-              <FontAwesomeIcon
-                icon={faChevronDown}
-                className={cn(
-                  "size-3 transition-transform duration-200",
-                  eventOpen && "rotate-180",
+                ) : section === "Events" ? (
+                  <NavDropdown
+                    label="Manage Events"
+                    icon={faCalendarDays}
+                    links={EVENT_LINKS}
+                    open={eventOpen}
+                    activeGroup={eventsActive}
+                    isActive={isActive}
+                    onToggle={() => setEventToggle(!eventOpen)}
+                    onNavigate={() => setOpen(false)}
+                  />
+                ) : (
+                  sectionLinks.map((item) => (
+                    <NavLink
+                      key={item.href}
+                      href={item.href}
+                      label={item.label}
+                      icon={item.icon}
+                      active={isActive(item.href)}
+                      onNavigate={() => setOpen(false)}
+                    />
+                  ))
                 )}
-              />
-            </button>
-
-            <div
-              className={cn(
-                "grid transition-all duration-200",
-                eventOpen
-                  ? "grid-rows-[1fr] opacity-100"
-                  : "grid-rows-[0fr] opacity-0",
-              )}
-            >
-              <ul className="ml-4 overflow-hidden border-l border-white/10">
-                {EVENT_LINKS.map((link) => {
-                  const active = isActive(link.href);
-                  return (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        onClick={() => setOpen(false)}
-                        aria-current={active ? "page" : undefined}
-                        className={cn(
-                          "relative flex items-center gap-3 rounded-lg py-2 pl-4 pr-3 text-sm transition",
-                          active
-                            ? "text-white"
-                            : "text-brand-lavender-100/70 hover:bg-white/10 hover:text-white",
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "size-1.5 shrink-0 rounded-full transition",
-                            active
-                              ? "bg-brand-emerald-600"
-                              : "bg-brand-lavender-200/40",
-                          )}
-                        />
-                        {link.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </div>
+              </div>
+            );
+          })}
         </nav>
 
         {/* Footer */}
@@ -332,6 +285,93 @@ export default function SideMenuAdmin() {
           </button>
         </div>
       </aside>
+    </>
+  );
+}
+
+function NavDropdown({
+  label,
+  icon,
+  links,
+  open,
+  activeGroup,
+  isActive,
+  onToggle,
+  onNavigate,
+}: {
+  label: string;
+  icon: IconProp;
+  links: GroupLink[];
+  open: boolean;
+  activeGroup: boolean;
+  isActive: (href: string) => boolean;
+  onToggle: () => void;
+  onNavigate: () => void;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className={cn(
+          "group relative flex w-full min-w-0 items-center gap-3 rounded-xl px-3 py-2 text-sm transition",
+          activeGroup
+            ? "bg-white/10 text-white"
+            : "text-brand-lavender-100/80 hover:bg-white/10 hover:text-white",
+        )}
+      >
+        {activeGroup && <ActiveBar />}
+        <FontAwesomeIcon icon={icon} className="size-4 shrink-0" />
+        <span className="min-w-0 flex-1 truncate text-left font-medium">
+          {label}
+        </span>
+        <FontAwesomeIcon
+          icon={faChevronDown}
+          className={cn(
+            "size-3 transition-transform duration-200",
+            open && "rotate-180",
+          )}
+        />
+      </button>
+
+      <div
+        className={cn(
+          "grid transition-all duration-200",
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+        )}
+      >
+        <ul className="ml-4 overflow-hidden border-l border-white/10">
+          {links.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "relative flex items-center gap-3 rounded-lg py-2 pl-4 pr-3 text-sm transition",
+                    active
+                      ? "text-white"
+                      : "text-brand-lavender-100/70 hover:bg-white/10 hover:text-white",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "size-1.5 shrink-0 rounded-full transition",
+                      active
+                        ? "bg-brand-emerald-600"
+                        : "bg-brand-lavender-200/40",
+                    )}
+                  />
+                  {link.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </>
   );
 }

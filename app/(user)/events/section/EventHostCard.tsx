@@ -154,15 +154,18 @@ export default function EventHostCard({ event }: EventHostCardProps) {
               <span aria-hidden="true">{initialsOf(event.host.name)}</span>
             )}
           </span>
-          <div className="min-w-0">
+          <div className="flex min-w-0 flex-col justify-center">
             <p
               id="event-host-title"
-              className="font-heading text-lg font-semibold text-foreground"
+              className="font-heading text-lg leading-tight font-semibold text-foreground"
             >
               {event.host.name}
             </p>
             {event.host.isVerified && (
-              <VerifiedBadge label="Official MindCare" className="mt-2" />
+              <VerifiedBadge
+                label="Official MindCare"
+                className="mt-2 self-start"
+              />
             )}
           </div>
         </div>
