@@ -14,10 +14,10 @@ export const Menu: Menudata[] = [
     title: "Care Center",
     link: "/care-centres",
   },
-  {
-    title: "Solutions",
-    link: "/solutions",
-  },
+  // {
+  //   title: "Solutions",
+  //   link: "/solutions",
+  // },
   {
     title: "Events",
     link: "/events",
@@ -40,10 +40,10 @@ export const FooterMenu: FooterSection[] = [
         name: "Care Center",
         path: "/care-centres",
       },
-      {
-        name: "Solutions",
-        path: "/solutions",
-      },
+      // {
+      //   name: "Solutions",
+      //   path: "/solutions",
+      // },
       {
         name: "Events",
         path: "/events",
@@ -65,10 +65,10 @@ export const FooterMenu: FooterSection[] = [
         name: "Register a Centre",
         path: "/apply/care-centre",
       },
-      {
-        name: "Register a Solutions",
-        path: "/apply/solution",
-      },
+      // {
+      //   name: "Register a Solutions",
+      //   path: "/apply/solution",
+      // },
     ],
   },
   {

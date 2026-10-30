@@ -98,21 +98,21 @@ export default async function DashboardOverviewPage() {
       applyHref: "/apply/care-centre",
       applyLabel: "Register a centre",
     },
-    {
-      key: "solution",
-      icon: Boxes,
-      title: "Solutions",
-      name:
-        solutions.length === 0
-          ? null
-          : solutions.length === 1
-            ? solutions[0].name
-            : `${solutions.length} solutions`,
-      status: solutions[0]?.listingStatus as ListingStatusValue | undefined,
-      manageHref: "/dashboard/solution",
-      applyHref: "/apply/solution",
-      applyLabel: "List a solution",
-    },
+    // {
+    //   key: "solution",
+    //   icon: Boxes,
+    //   title: "Solutions",
+    //   name:
+    //     solutions.length === 0
+    //       ? null
+    //       : solutions.length === 1
+    //         ? solutions[0].name
+    //         : `${solutions.length} solutions`,
+    //   status: solutions[0]?.listingStatus as ListingStatusValue | undefined,
+    //   manageHref: "/dashboard/solution",
+    //   applyHref: "/apply/solution",
+    //   applyLabel: "List a solution",
+    // },
   ];
 
   return (
@@ -132,7 +132,7 @@ export default async function DashboardOverviewPage() {
               What visitors can find you for in the directory.
             </p>
           </div>
-          {canHostEvents && (
+          {/* {canHostEvents && (
             <Link
               href="/dashboard/events"
               className={buttonStyles({ variant: "primary", size: "sm" })}
@@ -140,7 +140,7 @@ export default async function DashboardOverviewPage() {
               <CalendarPlus className="size-4" />
               My events
             </Link>
-          )}
+          )} */}
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

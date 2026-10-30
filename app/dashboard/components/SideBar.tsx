@@ -70,15 +70,15 @@ export default function Sidebar() {
           },
         ]
       : []),
-    ...(hasListing.canCreateEvents
-      ? [
-          {
-            name: "My Events",
-            path: "/dashboard/events",
-            icon: MdCalendarMonth,
-          },
-        ]
-      : []),
+    // ...(hasListing.canCreateEvents
+    //   ? [
+    //       {
+    //         name: "My Events",
+    //         path: "/dashboard/events",
+    //         icon: MdCalendarMonth,
+    //       },
+    //     ]
+    //   : []),
   ];
 
   const navigationMenu: MenuItems[] = [...menu, ...listingMenu];

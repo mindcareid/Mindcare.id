@@ -166,12 +166,12 @@ export default function Home({
             >
               Register a care centre
             </Link>
-            <Link
+            {/* <Link
               href="/apply/solution"
               className={buttonStyles({ variant: "outline", size: "lg" })}
             >
               List a solution
-            </Link>
+            </Link> */}
           </div>
         </div>
       </Container>
