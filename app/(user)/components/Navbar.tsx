@@ -21,6 +21,7 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const isAdmin = Boolean(session?.user?.adminRole);
@@ -33,7 +34,26 @@ export default function Navbar() {
       : pathname === path || pathname.startsWith(path + "/");
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 8);
+    let lastY = window.scrollY;
+
+    const handleScroll = () => {
+      const y = window.scrollY;
+      const delta = y - lastY;
+
+      setScrolled(y > 8);
+
+      // Selalu tampil di dekat atas halaman
+      if (y < 64) {
+        setHidden(false);
+      } else if (Math.abs(delta) > 6) {
+        // Turun -> sembunyi, naik -> muncul
+        setHidden(delta > 0);
+      }
+
+      // Jangan update lastY saat selisih masih kecil (mencegah flicker)
+      if (Math.abs(delta) > 6) lastY = y;
+    };
+
     const handleSize = () => {
       if (window.innerWidth >= 1024) setIsOpen(false);
     };
@@ -44,7 +64,7 @@ export default function Navbar() {
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", handleSize);
     window.addEventListener("keydown", handleKey);
     return () => {
@@ -56,7 +76,10 @@ export default function Navbar() {
 
   return (
     <>
-      <header
+      <motion.header
+        initial={false}
+        animate={{ y: hidden && !isOpen ? "-100%" : "0%" }}
+        transition={{ duration: 0.28, ease: "easeInOut" }}
         className={`sticky top-0 z-50 w-full bg-card/95 backdrop-blur transition-shadow ${
           scrolled ? "border-b border-border shadow-search" : ""
         }`}
@@ -190,7 +213,7 @@ export default function Navbar() {
             </button>
           </div>
         </Container>
-      </header>
+      </motion.header>
 
       <AnimatePresence>
         {isOpen && (
