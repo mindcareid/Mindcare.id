@@ -31,8 +31,9 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
 
   icons: {
-    icon: "/images/icon/iconMindcare.ico",
-    apple: "/images/icon/iconMindcare.ico",
+    icon: "/images/icon/favicon.ico",
+    shortcut: "/images/icon/favicon.ico",
+    apple: "/images/icon/favicon.ico",
   },
 
   openGraph: {
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     images: [
       {
-        url: "/images/icon/iconMindcare.ico",
+        url: "/images/logo/MindcareLogo.png",
         width: 1200,
         height: 630,
       },
