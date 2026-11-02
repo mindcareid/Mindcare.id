@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { sendTicketEmail } from "@/lib/mail";
 import { mailConfig } from "@/lib/mail/config";
 import { createTicketToken } from "@/lib/tickets/token";
-import { formatTime, formatDate } from "@/lib/utils";
+import { formatDate, formatTimeOnly } from "@/lib/utils/FormatDate";
 
 function asString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
@@ -16,6 +16,8 @@ export async function sendOrderTicketEmails(orderId: string): Promise<void> {
   if (!order || order.event.externalUrl || order.tickets.length === 0) {
     return;
   }
+
+  const timeZone = order.event.timeZone || "Asia/Jakarta";
 
   await Promise.allSettled(
     order.tickets.map((t) => {
@@ -34,8 +36,8 @@ export async function sendOrderTicketEmails(orderId: string): Promise<void> {
         attendeeName: t.attendeeName,
         bookingCode: t.code,
 
-        date: formatDate(order.event.startDate),
-        time: formatTime(order.event.startDate, order.event.endDate),
+        date: formatDate(order.event.startDate, timeZone),
+        time: `${formatTimeOnly(order.event.startDate, timeZone)} - ${formatTimeOnly(order.event.endDate, timeZone)}`,
         venue: order.event.location ?? "",
 
         eventImage: order.event.coverImage ?? "",

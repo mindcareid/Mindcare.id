@@ -102,7 +102,7 @@ export default function Home({
         />
       </HomeSection>
 
-      <HomeSection
+      {/* <HomeSection
         title="Solutions"
         description="Structured solutions for individuals, workplaces, and communities."
         href="/solutions"
@@ -115,7 +115,7 @@ export default function Home({
               "Published solutions appear here. You can also browse the full directory.",
           }}
         />
-      </HomeSection>
+      </HomeSection> */}
       <HomeSection
         title="Upcoming events"
         description="Webinars, workshops, training, and support groups, online and in person."
