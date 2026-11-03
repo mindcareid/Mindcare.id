@@ -1,6 +1,10 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 
 import {
+  ProposalPdf,
+  ProposalPdfProps,
+} from "./templates/proposal";
+import {
   TicketPdf,
   TicketPdfProps,
 } from "./templates/ticket";
@@ -15,6 +19,14 @@ export class PdfService {
   ): Promise<Buffer> {
     return renderToBuffer(
       <TicketPdf {...data} />,
+    );
+  }
+
+  static async generateProposal(
+    data: ProposalPdfProps,
+  ): Promise<Buffer> {
+    return renderToBuffer(
+      <ProposalPdf {...data} />,
     );
   }
 

@@ -15,6 +15,17 @@ export interface SendTicketEmailParams {
   ticketUrl?: string;
 }
 
+export interface SendProposalEmailParams {
+  to: string;
+  fullName: string;
+  eventTitle: string;
+  date: string;
+  time: string;
+  location: string;
+  eventUrl?: string;
+  fileName: string;
+}
+
 export interface SendContactNotificationParams {
   name: string;
   email: string;

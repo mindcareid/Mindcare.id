@@ -806,6 +806,8 @@ model Event {
   publicId      String?            @db.VarChar(255)
   isPublished   Boolean            @default(false)
   publisherType EventPublisherType @default(PLATFORM)
+  proposalUrl      String? @db.VarChar(1000)
+  proposalPublicId String? @db.VarChar(255)
 
   professionalId Int?
   careCentreId   Int?
@@ -832,6 +834,7 @@ model Event {
   agenda         EventAgendaItem[]
   focusAreas     EventFocusAreaMap[]
   speakers       EventSpeaker[]
+  proposalLeads  EventProposalDownload[]
 
   @@index([professionalId, status, startDate])
   @@index([careCentreId, status, startDate])
@@ -891,6 +894,11 @@ model EventAgendaItem {
   @@index([eventId, startTime])
   @@index([eventId, sortOrder])
 } 
+enum ProposalLeadStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
 
 model EventSpeaker {
   id Int @id @default(autoincrement())
@@ -933,6 +941,38 @@ model EventAgendaSpeaker {
 
   @@id([agendaItemId, speakerId])
   @@index([speakerId])
+}
+model EventProposalDownload {
+  id Int @id @default(autoincrement())
+
+  eventId Int
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  userId Int?
+
+  eventName   String  @db.VarChar(255)
+  fullName    String  @db.VarChar(255)
+  email       String  @db.VarChar(255)
+  phone       String  @db.VarChar(50)
+  institution String? @db.VarChar(255)
+  position    String? @db.VarChar(255)
+  source String @default("ATTACHED") @db.VarChar(20)
+
+  documentWarning String? @db.VarChar(500)
+  status      ProposalLeadStatus @default(PENDING)
+  emailSentAt DateTime?
+  emailError  String?            @db.VarChar(500)
+
+  ip        String? @db.VarChar(64)
+  userAgent String? @db.VarChar(500)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId, createdAt])
+  @@index([email])
+  @@index([createdAt])
+  @@index([createdAt, email])
 }
 
 model EventCategory {
