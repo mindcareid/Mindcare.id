@@ -79,6 +79,12 @@ export const FolderImage: Record<UploadFolderImage, FolderConfig> = {
     path: appDataPath("Platform"),
     allowedRoles: ADMIN_ONLY,
   },
+
+  "event-proposals": {
+    path: appDataPath("Events", "Proposals"),
+    allowedRoles: ADMIN_ONLY,
+    resourceType: "raw",
+  },
 };
 export const LEGACY_DELETE_ONLY_FOLDERS: {
   folder: string;

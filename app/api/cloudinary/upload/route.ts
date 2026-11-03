@@ -5,17 +5,109 @@ import { cloudinary } from "@/lib/cloudinary/config";
 import { FolderImage, isRoleAllowed } from "@/lib/cloudinary/folders";
 import { resolveFolderRole } from "@/lib/adminAccess";
 import {
+  canDestroyPublicId,
+  resourceTypeForPublicId,
+} from "@/lib/cloudinary/asset";
+import { safeFileName } from "@/lib/events/proposal";
+import {
   UPLOAD_FOLDER_ENTITIES,
   UploadFolderImage,
 } from "@/lib/cloudinary/types/upload";
 
-/**
- * Server-controlled upload. Client mengirim file + entityType; folder,
- * resource_type, dan (opsional) penghapusan aset lama sepenuhnya ditentukan
- * server, sehingga tidak bisa ditimpa dari browser. Dipakai oleh form yang
- * memakai cropper/direct-upload (hero, about-section, whyus, categories,
- * user, event) yang tidak cocok dengan signature khusus-widget.
- */
+const MAX_DOCUMENT_BYTES = 15 * 1024 * 1024;
+function hasPdfMagicBytes(buffer: Buffer): boolean {
+  return buffer.subarray(0, 5).toString("latin1") === "%PDF-";
+}
+
+function looksLikePdf(file: File, buffer: Buffer): boolean {
+  const named = file.name.toLowerCase().endsWith(".pdf");
+  const typed = file.type === "application/pdf";
+  return hasPdfMagicBytes(buffer) && (named || typed);
+}
+
+async function uploadDocument({
+  buffer,
+  file,
+  folder,
+  oldPublicId,
+  userRole,
+}: {
+  buffer: Buffer;
+  file: File;
+  folder: string;
+  oldPublicId: FormDataEntryValue | null;
+  userRole: string | undefined;
+}) {
+  const base64 = buffer.toString("base64");
+  const dataUri = `data:application/pdf;base64,${base64}`;
+
+  const uploaded = await cloudinary.uploader.upload(dataUri, {
+    folder,
+    resource_type: "raw",
+    format: "pdf",
+    use_filename: true,
+    unique_filename: true,
+    filename_override: safeFileName(file.name.replace(/\.pdf$/i, "")),
+  });
+
+  await destroyReplacedAsset({
+    newPublicId: uploaded.public_id,
+    oldPublicId,
+    userRole,
+    folder,
+  });
+
+  return NextResponse.json({
+    data: {
+      secure_url: uploaded.secure_url,
+      public_id: uploaded.public_id,
+    },
+  });
+}
+async function destroyReplacedAsset({
+  newPublicId,
+  oldPublicId,
+  userRole,
+  folder,
+}: {
+  newPublicId: string;
+  oldPublicId: FormDataEntryValue | null;
+  userRole: string | undefined;
+  folder: string;
+}) {
+  if (
+    typeof oldPublicId !== "string" ||
+    !oldPublicId ||
+    oldPublicId === newPublicId
+  ) {
+    return;
+  }
+
+  if (!canDestroyPublicId(oldPublicId, userRole)) {
+    return;
+  }
+  if (!publicIdIsInFolder(oldPublicId, folder)) {
+    return;
+  }
+
+  try {
+    await cloudinary.uploader.destroy(oldPublicId, {
+      resource_type: resourceTypeForPublicId(oldPublicId),
+    });
+  } catch (err) {
+    console.error("[CLOUDINARY_UPLOAD_DESTROY_OLD]", err);
+  }
+}
+
+function publicIdIsInFolder(publicId: string, folder: string): boolean {
+  const normalized = publicId.replace(/^\/+|\/+$/g, "");
+  const normalizedFolder = folder.replace(/^\/+|\/+$/g, "");
+  return (
+    normalized === normalizedFolder ||
+    normalized.startsWith(`${normalizedFolder}/`)
+  );
+}
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -59,6 +151,32 @@ export async function POST(req: Request) {
     }
 
     const { path: folder, resourceType = "image" } = FolderImage[entity];
+    if (resourceType === "raw") {
+      if (file.size > MAX_DOCUMENT_BYTES) {
+        return NextResponse.json(
+          { message: "File is larger than 15 MB." },
+          { status: 413 },
+        );
+      }
+
+      const buffer = Buffer.from(await file.arrayBuffer());
+
+      if (!looksLikePdf(file, buffer)) {
+        return NextResponse.json(
+          { message: "Only PDF files are allowed for this upload." },
+          { status: 415 },
+        );
+      }
+
+      return uploadDocument({
+        buffer,
+        file,
+        folder,
+        oldPublicId,
+        userRole: resolveFolderRole(session.user),
+      });
+    }
+
     const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
     const dataUri = `data:${file.type || "application/octet-stream"};base64,${base64}`;
 
@@ -75,19 +193,12 @@ export async function POST(req: Request) {
         },
       ],
     });
-    if (
-      typeof oldPublicId === "string" &&
-      oldPublicId &&
-      oldPublicId !== uploaded.public_id
-    ) {
-      try {
-        await cloudinary.uploader.destroy(oldPublicId, {
-          resource_type: resourceType,
-        });
-      } catch (err) {
-        console.error("[CLOUDINARY_UPLOAD_DESTROY_OLD]", err);
-      }
-    }
+    await destroyReplacedAsset({
+      newPublicId: uploaded.public_id,
+      oldPublicId,
+      userRole: resolveFolderRole(session.user),
+      folder,
+    });
 
     return NextResponse.json({
       data: {

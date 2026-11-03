@@ -44,11 +44,41 @@ function decodedSegments(pathname: string): string[] {
       }
     });
 }
+export function isCloudinaryRawAssetUrl(url: string): boolean {
+  const name = cloudName();
+  if (!name) return false;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+
+  if (parsed.protocol !== "https:" || parsed.hostname !== CLOUDINARY_HOST) {
+    return false;
+  }
+
+  const segments = decodedSegments(parsed.pathname);
+  if (segments.length < 3) return false;
+  if (segments[0] !== name) return false;
+  return segments[1] === "raw";
+}
 export function isPublicIdInEntityFolder(
   publicId: string,
   entityType: UploadFolderImage,
 ): boolean {
   return publicIdBelongsToFolder(publicId, FolderImage[entityType].path);
+}
+export function resourceTypeForPublicId(
+  publicId: string,
+): "image" | "raw" {
+  const inRawFolder = UPLOAD_FOLDER_ENTITIES.some(
+    (entity) =>
+      FolderImage[entity].resourceType === "raw" &&
+      publicIdBelongsToFolder(publicId, FolderImage[entity].path),
+  );
+  return inRawFolder ? "raw" : "image";
 }
 
 function publicIdBelongsToFolder(publicId: string, folder: string): boolean {

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { cloudinary } from "@/lib/cloudinary/config";
-import { canDestroyPublicId } from "@/lib/cloudinary/asset";
+import { canDestroyPublicId, resourceTypeForPublicId } from "@/lib/cloudinary/asset";
 import { resolveFolderRole } from "@/lib/adminAccess";
 
 export async function POST(req: Request) {
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
   try {
     const result = await cloudinary.uploader.destroy(publicId, {
-      resource_type: "image",
+      resource_type: resourceTypeForPublicId(publicId),
     });
     return NextResponse.json({ result });
   } catch (err) {
