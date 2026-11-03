@@ -6,6 +6,7 @@ import { autoSlug } from "@/lib/utils/autoSlug";
 import { toEventPlainText } from "@/lib/events/serializers";
 import { fromUtcFormat } from "@/lib/date";
 import ImageUploadField from "@/app/components/reusable/ImageUploadField";
+import PdfUploadField from "@/app/components/reusable/PdfUploadField";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 import AgendaSpeakersEditor, {
     type AgendaDraft,
@@ -53,6 +54,8 @@ type EventFormFields = {
     quota?: number;
     coverImage?: string;
     publicId?: string;
+    proposalUrl?: string | null;
+    proposalPublicId?: string | null;
     isPublished: boolean;
     categoryId: number;
     publisherType?: string;
@@ -182,6 +185,8 @@ function EventForm({
         quota: defaultValues?.quota ?? undefined,
         coverImage: defaultValues?.coverImage ?? "",
         publicId: defaultValues?.publicId ?? "",
+        proposalUrl: defaultValues?.proposalUrl ?? "",
+        proposalPublicId: defaultValues?.proposalPublicId ?? "",
         isPublished: defaultValues?.isPublished ?? false,
         categoryId: Number(defaultValues?.categoryId ?? categories[0]?.id ?? 0),
         publisherType: defaultValues?.publisherType ?? "PLATFORM",
@@ -221,6 +226,8 @@ function EventForm({
             quota: server.quota ?? undefined,
             coverImage: server.coverImage ?? "",
             publicId: server.publicId ?? "",
+            proposalUrl: server.proposalUrl ?? "",
+            proposalPublicId: server.proposalPublicId ?? "",
             isPublished: server.isPublished ?? false,
             categoryId: Number(server.categoryId ?? form.categoryId),
             publisherType: server.publisherType ?? "PLATFORM",
@@ -751,6 +758,43 @@ function EventForm({
                     }))
                 }
             />
+
+            {/* PROPOSAL PDF — hanya untuk event MindCare */}
+            {(form.publisherType ?? "PLATFORM") === "PLATFORM" && (
+                <section className="space-y-3 border-t pt-8">
+                    <div>
+                        <h2 className="text-lg font-semibold">Event Proposal</h2>
+                        <p className="mt-1 text-sm text-gray-500">
+                            Visitors can download this proposal from the public
+                            event page by filling in a short form; the PDF is
+                            then emailed to them. Leave it empty to send an
+                            auto-generated summary instead.
+                        </p>
+                    </div>
+
+                    <PdfUploadField
+                        label="Proposal PDF"
+                        hint="PDF, max 15 MB. Uploaded as-is — no compression."
+                        value={{
+                            url: form.proposalUrl || null,
+                            publicId: form.proposalPublicId || null,
+                        }}
+                        onChange={({ url, publicId }) =>
+                            setForm((prev) => ({
+                                ...prev,
+                                proposalUrl: url ?? "",
+                                proposalPublicId: publicId ?? "",
+                            }))
+                        }
+                        deferDelete
+                        onDiscard={(publicIds) => {
+                            for (const publicId of publicIds) {
+                                discarded.current.add(publicId);
+                            }
+                        }}
+                    />
+                </section>
+            )}
 
 
             {/* ================= SPEAKERS & SCHEDULE ================= */}

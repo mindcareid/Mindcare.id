@@ -22,7 +22,7 @@ import {
   isCloudinaryAssetUrl,
   isPublicIdInEntityFolder,
 } from "@/lib/cloudinary/asset";
-
+import { parseProposal } from "@/lib/events/proposalInput";
 
 function resolveTimeZone(body: Record<string, unknown>): string {
   return typeof body.timeZone === "string" && body.timeZone
@@ -67,12 +67,6 @@ class AgendaError extends Error {}
 
 type SpeakerInput = {
   id?: number;
-  /**
-   * Identitas baris yang dipakai agenda (`speakers[].key`) untuk merujuk
-   * speaker ini. Selalu string: id dari database diubah ke `"123"`, baris baru
-   * memakai key sementara dari form. Dulu hanya string yang diterima, sehingga
-   * simpan kedua kali gagal karena form mengirim id sebagai number.
-   */
   clientKey: string | null;
   name: string;
   title: string | null;
@@ -92,17 +86,9 @@ type AgendaInput = {
   startTime: Date;
   endTime: Date;
   sortOrder: number;
-  /**
-   * Speaker yang tampil di sesi ini, berurutan sesuai urutan nama. `role`
-   * adalah peran orang itu **di sesi ini** (moderator, panelis, dst).
-   */
   speakers: { key: string; role: AgendaSpeakerRole }[];
 };
 
-/**
- * Menormalkan `speakers[]` dari body. `null` berarti field tidak dikirim
- * (jangan disentuh); array berarti daftar baru yang menggantikan yang lama.
- */
 function parseSpeakers(
   raw: unknown,
 ): { ok: true; speakers: SpeakerInput[] } | { ok: false; error: string } {
@@ -137,9 +123,6 @@ function parseSpeakers(
         error: `Speaker "${name}": photo and its public id must be provided together`,
       };
     }
-    // Foto hanya boleh dari bucket Cloudinary proyek ini. URL luar akan gagal
-    // dirender next/image (domain tidak ada di next.config) dan membuat
-    // halaman publik error, bukan sekadar gambar kosong.
     if (photoUrl && !isCloudinaryAssetUrl(photoUrl)) {
       return {
         ok: false,
@@ -152,9 +135,6 @@ function parseSpeakers(
         error: `Speaker "${name}": photo belongs to another folder`,
       };
     }
-
-    // `id` boleh number (baris tersimpan) atau string (baris baru). Keduanya
-    // jadi kunci string, karena itulah yang dipakai `agenda[].speakers[].key`.
     const numericId = Number.isInteger(row.id)
       ? Number(row.id)
       : typeof row.id === "string" && /^\d+$/.test(row.id.trim())
@@ -181,20 +161,13 @@ function parseSpeakers(
 
   return { ok: true, speakers };
 }
-
-/**
- * Menormalkan `agenda[]`. `startTime`/`endTime` diterima sebagai jam lokal
- * "HH:MM" dan digabung dengan tanggal event, atau ISO lengkap.
- */
 function parseAgenda(
   raw: unknown,
   args: {
     eventDate: Date;
     timeZone: string;
-    /** `YYYY-MM-DD` hari pertama & terakhir acara (zona event). */
     firstDay: string;
     lastDay: string;
-    /** clientKey seluruh speaker yang dikirim body. */
     speakerKeys: Set<string>;
   },
 ): { ok: true; agenda: AgendaInput[] } | { ok: false; error: string } {
@@ -204,16 +177,16 @@ function parseAgenda(
   }
 
   const agenda: AgendaInput[] = [];
-  // Tanggal sesi dibaca di zona event, bukan UTC: event 02:00 WIB berarti
-  // 19:00Z hari sebelumnya, dan jam lokal "08:00" harus jatuh di hari event.
-  const datePart = formatInTimeZone(args.eventDate, args.timeZone, "yyyy-MM-dd");
+  const datePart = formatInTimeZone(
+    args.eventDate,
+    args.timeZone,
+    "yyyy-MM-dd",
+  );
 
   const toDate = (value: unknown): Date | null => {
     if (typeof value !== "string" || !value.trim()) return null;
     const raw = value.trim();
-    const iso = /^\d{2}:\d{2}$/.test(raw)
-      ? `${datePart}T${raw}:00`
-      : raw;
+    const iso = /^\d{2}:\d{2}$/.test(raw) ? `${datePart}T${raw}:00` : raw;
     const parsed = toUtc(iso, args.timeZone);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   };
@@ -243,12 +216,6 @@ function parseAgenda(
         error: `Agenda "${title}": end time must be after start time`,
       };
     }
-
-    // Field yang dipakai adalah `speakers` (daftar { key, role }). Bentuk lama
-    // `speakerKeys` (array string) tetap dibaca sebagai cadangan, supaya klien
-    // yang belum diperbarui tidak rusak. Dulu yang dibaca hanya `speakerKeys`,
-    // sehingga centangan di form baru dikirim dengan benar lalu dibuang di
-    // sini — gejalanya "speaker tersimpan tapi sesinya kosong".
     const rawSpeakers = Array.isArray(row.speakers)
       ? row.speakers
       : Array.isArray(row.speakerKeys)
@@ -301,10 +268,9 @@ function parseAgenda(
 
     const kind = resolveKind(row.kind);
     const hidesSpeakers = agendaKindHidesSpeakers(kind);
-
-    // Satu moderator per sesi. Dicek di server juga supaya request langsung
-    // tidak bisa menyimpan panel dengan dua moderator.
-    if (sessionSpeakers.filter((link) => link.role === "MODERATOR").length > 1) {
+    if (
+      sessionSpeakers.filter((link) => link.role === "MODERATOR").length > 1
+    ) {
       return {
         ok: false,
         error: `Agenda "${title}": only one moderator per session`,
@@ -327,7 +293,11 @@ function parseAgenda(
     // Sesi boleh di hari mana pun selama masih di rentang acara. Tanpa ini,
     // tanggal di luar rentang tersimpan diam-diam dan halaman publik
     // menampilkan sesi di luar tanggal acara.
-    const sessionDate = formatInTimeZone(startTime, args.timeZone, "yyyy-MM-dd");
+    const sessionDate = formatInTimeZone(
+      startTime,
+      args.timeZone,
+      "yyyy-MM-dd",
+    );
     if (sessionDate < args.firstDay || sessionDate > args.lastDay) {
       return {
         ok: false,
@@ -353,11 +323,6 @@ function parseAgenda(
   return { ok: true, agenda };
 }
 
-/**
- * Menyimpan speaker + agenda untuk satu event di dalam transaksi yang sudah
- * berjalan. Urutannya: speaker dulu (karena pivot merujuk ke id-nya), lalu
- * agenda, lalu pivot.
- */
 async function saveAgendaAndSpeakers(
   tx: Prisma.TransactionClient,
   eventId: number,
@@ -372,11 +337,6 @@ async function saveAgendaAndSpeakers(
     where: { eventId },
     select: { id: true, name: true },
   });
-
-  // Nama unik per event ditegakkan database (`EventSpeaker_eventId_name_key`,
-  // kolom utf8mb4_unicode_ci sehingga tidak peduli huruf besar/kecil). Tanpa
-  // cek di sini, rename ke nama yang sudah dipakai — atau menukar dua nama —
-  // gagal di tengah transaksi dan muncul sebagai 500 generik.
   if (speakers) {
     const ownedBy = new Map(
       existingSpeakers.map((row) => [row.name.toLowerCase(), row.id]),
@@ -385,8 +345,6 @@ async function saveAgendaAndSpeakers(
     for (const speaker of speakers) {
       const lower = speaker.name.toLowerCase();
       const ownerId = ownedBy.get(lower);
-      // Aman kalau nama itu milik baris ini sendiri, atau milik baris yang
-      // sedang diganti namanya di penyimpanan yang sama (kasus tukar nama).
       const ownerIsChanging = speakers.some(
         (other) => other.id === ownerId && other.name.toLowerCase() !== lower,
       );
@@ -397,10 +355,6 @@ async function saveAgendaAndSpeakers(
       }
     }
   }
-
-  // ---- speaker ----
-  // Kunci pivot adalah `clientKey`, bukan indeks: baris yang baru dibuat
-  // mendapat id dari database, sedangkan baris lama memakai id-nya sendiri.
   const speakerIdByKey = new Map<string, number>();
   const existingSpeakerIds = new Set(existingSpeakers.map((s) => s.id));
   const keptSpeakerIds = new Set<number>();
@@ -419,7 +373,8 @@ async function saveAgendaAndSpeakers(
       if (speaker.id && existingSpeakerIds.has(speaker.id)) {
         await tx.eventSpeaker.update({ where: { id: speaker.id }, data });
         keptSpeakerIds.add(speaker.id);
-        if (speaker.clientKey) speakerIdByKey.set(speaker.clientKey, speaker.id);
+        if (speaker.clientKey)
+          speakerIdByKey.set(speaker.clientKey, speaker.id);
         continue;
       }
 
@@ -490,8 +445,13 @@ async function saveAgendaAndSpeakers(
           sortOrder: order,
         }))
         .filter(
-          (link): link is { speakerId: number; role: AgendaSpeakerRole; sortOrder: number } =>
-            typeof link.speakerId === "number",
+          (
+            link,
+          ): link is {
+            speakerId: number;
+            role: AgendaSpeakerRole;
+            sortOrder: number;
+          } => typeof link.speakerId === "number",
         );
       if (links.length === 0) continue;
 
@@ -501,10 +461,6 @@ async function saveAgendaAndSpeakers(
     }
   }
 
-  // ---- yang tidak dikirim lagi dihapus ----
-  // Pivot dibersihkan eksplisit lebih dulu, tidak hanya mengandalkan
-  // ON DELETE CASCADE di migrasi: relationMode proyek ini "prisma", dan FK
-  // manual tidak ditegakkan kalau tabelnya bukan InnoDB.
   if (speakers) {
     const staleSpeakers = [...existingSpeakerIds].filter(
       (id) => !keptSpeakerIds.has(id),
@@ -665,6 +621,14 @@ export async function POST(req: Request) {
       );
     }
 
+    const parsedProposal = parseProposal(body);
+    if (!parsedProposal.ok) {
+      return NextResponse.json(
+        { success: false, message: parsedProposal.error },
+        { status: 422 },
+      );
+    }
+
     const event = await prisma.$transaction(async (tx) => {
       const created = await tx.event.create({
         data: {
@@ -680,6 +644,8 @@ export async function POST(req: Request) {
           categoryId: Number(body.categoryId),
           coverImage: body.coverImage,
           publicId: body.publicId,
+          proposalUrl: parsedProposal.url,
+          proposalPublicId: parsedProposal.publicId,
           status,
           isPublished: status === EventStatus.PUBLISHED,
           publisherType: EventPublisherType.PLATFORM,
@@ -760,8 +726,6 @@ export async function PUT(req: Request) {
       }
     }
 
-    // Draft = disembunyikan dari publik. status & isPublished selalu
-    // disimpan bersama supaya kedua jalur pembacaan publik konsisten.
     const status = resolveStatus(body);
     const timeZone = resolveTimeZone(body);
     const startDate = toUtc(body.startDate, timeZone);
@@ -777,14 +741,9 @@ export async function PUT(req: Request) {
       );
     }
 
-    // Speaker & agenda hanya untuk event MindCare. Untuk event lain, field
-    // itu dibiarkan apa adanya.
     const writesAgenda = current.publisherType === EventPublisherType.PLATFORM;
     const sendsSpeakers = writesAgenda && body.speakers !== undefined;
     const sendsAgenda = writesAgenda && body.agenda !== undefined;
-
-    // Speaker dan agenda selalu dikirim berpasangan: mengganti daftar speaker
-    // tanpa agenda akan menghapus tautan sesi yang tidak bisa dibangun ulang.
     if (sendsSpeakers !== sendsAgenda) {
       return NextResponse.json(
         {
@@ -838,6 +797,14 @@ export async function PUT(req: Request) {
       parsedAgenda = result.agenda;
     }
 
+    const parsedProposal = parseProposal(body);
+    if (!parsedProposal.ok) {
+      return NextResponse.json(
+        { success: false, message: parsedProposal.error },
+        { status: 422 },
+      );
+    }
+
     const event = await prisma.$transaction(async (tx) => {
       const updated = await tx.event.update({
         where: { id: Number(id) },
@@ -856,6 +823,13 @@ export async function PUT(req: Request) {
           publicId: body.publicId,
           status,
           isPublished: status === EventStatus.PUBLISHED,
+          ...(body.proposalUrl !== undefined ||
+          body.proposalPublicId !== undefined
+            ? {
+                proposalUrl: parsedProposal.url,
+                proposalPublicId: parsedProposal.publicId,
+              }
+            : {}),
         },
       });
 
@@ -912,8 +886,6 @@ export async function DELETE(req: Request) {
       );
     }
 
-    // Soft delete: hanya baris yang masih hidup yang disentuh, jadi id yang
-    // salah atau yang sudah terhapus dilaporkan 404, bukan sukses palsu.
     const { count } = await prisma.event.updateMany({
       where: { id: Number(id), deletedAt: null },
       data: { deletedAt: new Date() },

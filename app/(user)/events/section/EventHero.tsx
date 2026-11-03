@@ -15,7 +15,7 @@ type EventHeroProps = {
   now: string;
 };
 
-export default function EventHero({ event, now }: EventHeroProps) {
+export default function EventHero({ event }: EventHeroProps) {
   const hasCover = Boolean(event.coverImage);
 
   return (

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import slugify from "slugify";
 import { EventStatus } from "@prisma/client";
+import { parseProposal } from "@/lib/events/proposalInput";
 
 export async function GET(
   req: Request,
@@ -39,8 +40,6 @@ export async function GET(
   return NextResponse.json({ success: true, data: event });
 }
 
-/* Toggle sembunyikan/tampilkan. Draft = status DRAFT + isPublished false,
-   dipakai tombol Hide/Publish di daftar event admin. */
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -88,6 +87,17 @@ export async function PUT(
       );
     }
   }
+  const proposalProvided =
+    body.proposalUrl !== undefined || body.proposalPublicId !== undefined;
+
+  const parsedProposal = proposalProvided ? parseProposal(body) : null;
+
+  if (parsedProposal && !parsedProposal.ok) {
+    return NextResponse.json(
+      { message: parsedProposal.error },
+      { status: 422 },
+    );
+  }
 
   const event = await prisma.event.update({
     where: { id: Number(id) },
@@ -104,6 +114,12 @@ export async function PUT(
       isPublished: Boolean(body.isPublished),
       coverImage: body.coverImage,
       publicId: body.publicId,
+      ...(parsedProposal && parsedProposal.ok
+        ? {
+            proposalUrl: parsedProposal.url,
+            proposalPublicId: parsedProposal.publicId,
+          }
+        : {}),
     },
   });
   return NextResponse.json({ success: true, data: event });

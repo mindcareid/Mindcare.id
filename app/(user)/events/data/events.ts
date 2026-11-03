@@ -145,6 +145,7 @@ export type EventDetail = Omit<EventDetailPayload, "focusAreas"> & {
   registeredCount: number;
   remaining: number | null;
   soldOut: boolean;
+  canDownloadProposal: boolean;
 };
 
 const publicEventWhere = {
@@ -174,10 +175,6 @@ function resolveEventHost(
     };
   }
 
-  // Logo & badge hanya untuk event yang memang diterbitkan MindCare. Event
-  // tanpa profesional/klinik tapi publisher-nya lain tetap memakai identitas
-  // platform di kartu, tanpa logo, supaya tidak ada yang tampil seolah
-  // "Official MindCare" padahal bukan.
   const isPlatform = event.publisherType === "PLATFORM";
 
   return {
@@ -219,6 +216,7 @@ function serializeEvent(
 function serializeEventDetail(
   event: EventDetailPayload,
   registeredCount: number,
+  hasProposal: boolean,
 ): EventDetail {
   const remaining =
     event.quota === null ? null : Math.max(event.quota - registeredCount, 0);
@@ -232,6 +230,7 @@ function serializeEventDetail(
     registeredCount,
     remaining,
     soldOut,
+    canDownloadProposal: event.publisherType === "PLATFORM" && hasProposal,
   };
 }
 
@@ -273,10 +272,19 @@ export async function getEventBySlug(
   if (!event) {
     return null;
   }
+  const [registeredCount, proposal] = await Promise.all([
+    getRegisteredCount(event.id),
+    prisma.event.findUnique({
+      where: { id: event.id },
+      select: { proposalUrl: true },
+    }),
+  ]);
 
-  const registeredCount = await getRegisteredCount(event.id);
-
-  return serializeEventDetail(event, registeredCount);
+  return serializeEventDetail(
+    event,
+    registeredCount,
+    Boolean(proposal?.proposalUrl),
+  );
 }
 
 export async function getUpcomingEvents(

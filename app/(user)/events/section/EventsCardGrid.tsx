@@ -75,13 +75,11 @@ type EventsCardGridProps = {
   now: string;
   emptyAction?: React.ReactNode;
   className?: string;
-  /** Copy untuk konteks tanpa filter, mis. preview di homepage. */
   emptyState?: { title: string; description: string };
 };
 
 export default function EventsCardGrid({
   events,
-  now,
   emptyAction,
   className,
   emptyState,

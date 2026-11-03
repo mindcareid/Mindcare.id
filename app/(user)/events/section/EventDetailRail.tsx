@@ -7,6 +7,7 @@ import {
   formatEventTimeRange,
   hasEnded,
 } from "../data/eventTime";
+import DownloadProposalButton from "./DownloadProposalButton";
 import RegisterEventButton from "./RegisterEventButton";
 
 import type { EventDetail } from "../data/events";
@@ -49,7 +50,6 @@ export default function EventDetailRail({ event, now }: EventDetailRailProps) {
             icon={Clock}
             label="Time"
             value={formatEventTimeRange(event)}
-            timeZone={event.timeZone}
           />
           {location && (
             <MetaRow
@@ -99,6 +99,14 @@ export default function EventDetailRail({ event, now }: EventDetailRailProps) {
             }))}
           />
         )}
+
+        {event.canDownloadProposal && (
+          <DownloadProposalButton
+            eventId={event.id}
+            eventTitle={event.title}
+            eventName={event.title}
+          />
+        )}
       </div>
 
       {/* kategori */}
@@ -139,20 +147,11 @@ function TimeRow({
   icon: Icon,
   label,
   value,
-  timeZone,
 }: {
   icon: typeof Clock;
   label: string;
   value: string;
-  timeZone: string;
 }) {
-  const tzLabel: Record<string, string> = {
-    "Asia/Jakarta": "WIB",
-    "Asia/Makassar": "WITA",
-    "Asia/Jayapura": "WIT",
-  };
-  const tzAbbr = tzLabel[timeZone] ?? timeZone;
-
   return (
     <div className="flex items-start gap-3 pt-4 first:pt-0">
       <Icon
