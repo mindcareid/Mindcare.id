@@ -55,6 +55,9 @@ export function rateLimit(
     resetAt: bucket.resetAt,
   };
 }
+export function resetRateLimit(key: string): void {
+  buckets.delete(key);
+}
 
 export function getClientIp(req: Request): string {
   const forwardedFor = req.headers.get("x-forwarded-for");
