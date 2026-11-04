@@ -40,11 +40,35 @@ async function main() {
   console.log(
     `Seeded ${payload.provinces.length} provinces and ${payload.regencies.length} regencies.`,
   );
+
+  await seedCountries();
+}
+
+async function seedCountries() {
+  const file = resolve(
+    dirname(fileURLToPath(import.meta.url)),
+    "data/countries.json",
+  );
+  const payload = JSON.parse(await readFile(file, "utf8"));
+
+  for (const country of payload.countries) {
+    await prisma.country.upsert({
+      where: { code: country.code },
+      update: { name: country.name, callingCode: country.callingCode ?? null },
+      create: {
+        code: country.code,
+        name: country.name,
+        callingCode: country.callingCode ?? null,
+      },
+    });
+  }
+
+  console.log(`Seeded ${payload.countries.length} countries.`);
 }
 
 main()
   .catch((error) => {
-    console.error("Failed to seed wilayah:", error);
+    console.error("Failed to seed wilayah/countries:", error);
     process.exitCode = 1;
   })
   .finally(async () => {

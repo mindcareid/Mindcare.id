@@ -835,6 +835,8 @@ model Event {
   focusAreas     EventFocusAreaMap[]
   speakers       EventSpeaker[]
   proposalLeads  EventProposalDownload[]
+  sponsorTiers   EventSponsorTier[]
+  sponsorApplications EventSponsorApplication[]
 
   @@index([professionalId, status, startDate])
   @@index([careCentreId, status, startDate])
@@ -898,6 +900,11 @@ enum ProposalLeadStatus {
   PENDING
   CONFIRMED
   FAILED
+}
+enum SponsorApplicationStatus {
+  PENDING
+  REVIEWED
+  ARCHIVED
 }
 
 model EventSpeaker {
@@ -974,6 +981,90 @@ model EventProposalDownload {
   @@index([createdAt])
   @@index([createdAt, email])
 }
+
+model EventSponsorTier {
+  id Int @id @default(autoincrement())
+
+  eventId Int
+  // RESTRICT, sama dengan migrasi 20261103073000_sponsor_fk_restrict. Dengan
+  // relationMode = "prisma", aksi relasi dibaca dari skema ini — bukan dari FK
+  // di database — jadi Cascade di sini membuat hapus event mencoba menghapus
+  // paket lebih dulu lalu ditolak MySQL.
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  name        String @db.VarChar(120)
+  priceAmount Int
+  currency    String @default("IDR") @db.VarChar(10)
+  displayUsd Int?
+  fxRateUsed Int?
+  benefits Json?
+
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  applications EventSponsorApplication[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId, isActive, sortOrder])
+}
+
+model EventSponsorApplication {
+  id Int @id @default(autoincrement())
+
+  referenceNo String @unique @db.VarChar(32)
+
+  eventId Int
+  // RESTRICT, sama dengan migrasi 20261103073000_sponsor_fk_restrict (lihat
+  // catatan di EventSponsorTier).
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  tierId Int
+  tier   EventSponsorTier @relation(fields: [tierId], references: [id], onDelete: Restrict)
+
+  status SponsorApplicationStatus @default(PENDING)
+
+  companyName  String  @db.VarChar(255)
+  address      String  @db.Text
+  countryCode  String  @db.VarChar(2)
+  website      String? @db.VarChar(500)
+  companyEmail String? @db.VarChar(255)
+
+  picFirstName String  @db.VarChar(120)
+  picLastName  String  @db.VarChar(120)
+  picTitle     String? @db.VarChar(20)
+  picPosition  String  @db.VarChar(255)
+  picPhone     String  @db.VarChar(30)
+  picEmail     String  @db.VarChar(255)
+  notes String? @db.Text
+  priceAmountSnapshot Int
+  currencySnapshot    String @default("IDR") @db.VarChar(10)
+  displayUsdSnapshot  Int?
+  /**
+   * Salinan daftar benefit saat pengajuan dibuat.
+   *
+   * Sebelumnya panel admin menampilkan harga dari snapshot tetapi benefit dari
+   * paket yang LIVE. Karena admin boleh mengedit benefit paket yang sudah
+   * dipakai, pengajuan lama bisa menampilkan janji yang tidak pernah disetujui
+   * sponsor itu. Formatnya sama dengan `EventSponsorTier.benefits`.
+   */
+  benefitsSnapshot Json?
+
+  emailSentAt DateTime?
+  emailError  String?   @db.VarChar(500)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId, status, createdAt])
+  // Dipakai _count.applications, cek "paket masih dipakai" sebelum hapus, dan
+  // join tier pada detail/ekspor.
+  @@index([tierId])
+  @@index([companyName])
+  @@index([picEmail])
+  @@index([createdAt])
+}
+
 
 model EventCategory {
   id Int @id @default(autoincrement())
@@ -1283,3 +1374,14 @@ model Regency {
 
   @@index([provinceId])
 }
+model Country {
+  code        String  @id @db.VarChar(2)
+  name        String  @db.VarChar(150)
+  callingCode String? @db.VarChar(20)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
