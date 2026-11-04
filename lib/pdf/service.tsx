@@ -8,6 +8,10 @@ import {
   TicketPdf,
   TicketPdfProps,
 } from "./templates/ticket";
+import {
+  SponsorConfirmationPdf,
+  SponsorConfirmationPdfProps,
+} from "./templates/sponsor";
 
 // nanti
 // import { InvoicePdf, InvoicePdfProps } from "./templates/invoice";
@@ -27,6 +31,14 @@ export class PdfService {
   ): Promise<Buffer> {
     return renderToBuffer(
       <ProposalPdf {...data} />,
+    );
+  }
+
+  static async generateSponsorConfirmation(
+    data: SponsorConfirmationPdfProps,
+  ): Promise<Buffer> {
+    return renderToBuffer(
+      <SponsorConfirmationPdf {...data} />,
     );
   }
 

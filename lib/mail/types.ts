@@ -57,3 +57,19 @@ export interface SendListingReviewEmailParams {
   reason?: string;
   dashboardUrl?: string;
 }
+
+export interface SendSponsorApplicationEmailParams {
+  to: string;
+  referenceNo: string;
+  companyName: string;
+  picName: string;
+  eventTitle: string;
+  eventDate: string;
+  eventLocation: string;
+  tierName: string;
+  priceAmount: number;
+  currency: string;
+  displayUsd?: number | null;
+  benefits: { title: string; detail?: string }[];
+  supportEmail: string;
+}
