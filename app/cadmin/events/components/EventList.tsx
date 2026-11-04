@@ -9,6 +9,7 @@ import {
   ChevronUp,
   Eye,
   EyeOff,
+  Handshake,
   ListChecks,
   MapPin,
   Pencil,
@@ -142,17 +143,30 @@ function EventCard({
 
         {/* Footer aksi — didorong ke bawah supaya sejajar antar kartu */}
         <div className="mt-auto space-y-2 pt-3">
-          <Link
-            href={`/cadmin/event-registrations?eventId=${event.id}`}
-            className={buttonStyles({
-              variant: "accent",
-              size: "sm",
-              className: "w-full",
-            })}
-          >
-            <Users className="h-3.5 w-3.5" />
-            Registrants
-          </Link>
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              href={`/cadmin/event-registrations?eventId=${event.id}`}
+              className={buttonStyles({
+                variant: "accent",
+                size: "sm",
+                className: "w-full",
+              })}
+            >
+              <Users className="h-3.5 w-3.5" />
+              Registrants
+            </Link>
+            <Link
+              href={`/cadmin/events/${event.id}/sponsor-tiers`}
+              className={buttonStyles({
+                variant: "secondary",
+                size: "sm",
+                className: "w-full",
+              })}
+            >
+              <Handshake className="h-3.5 w-3.5" />
+              Sponsors
+            </Link>
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <Link
               href={`/cadmin/events/edit/${event.id}`}
