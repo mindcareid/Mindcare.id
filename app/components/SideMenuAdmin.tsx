@@ -27,9 +27,17 @@ import { cn } from "@/lib/utils";
 
 type GroupLink = { href: string; label: string };
 
+/*
+ * "Event Registrations" sengaja TIDAK ada di menu: daftar registran selalu
+ * terikat ke satu event, dan pintu masuknya adalah tombol "Registrants" pada
+ * kartu event di /cadmin/events. Menu global hanya menampilkan campuran
+ * registran dari semua event sehingga tidak ada yang dicari di sana.
+ *
+ * Halamannya sendiri masih ada (bisa dibuka lewat tombol itu atau tautan
+ * langsung dengan ?eventId=), jadi URL lama tidak menjadi 404.
+ */
 const EVENT_LINKS: GroupLink[] = [
   { href: "/cadmin/events", label: "Event List" },
-  { href: "/cadmin/event-registrations", label: "Event Registrations" },
   { href: "/cadmin/proposal-downloads", label: "Proposal Downloads" },
   { href: "/cadmin/event-categories", label: "Event Categories" },
   { href: "/cadmin/event-industries", label: "Event Industries" },
