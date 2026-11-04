@@ -34,7 +34,8 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({
   params,
 }: EventPageProps): Promise<Metadata> {
-  const event = await getEventBySlug(params.slug);
+  // Paket sponsor tidak dipakai di metadata; jangan ikut di-query.
+  const event = await getEventBySlug(params.slug, { withTiers: false });
 
   if (!event) {
     return {

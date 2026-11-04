@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { CalendarDays, Clock, MapPin, Video } from "lucide-react";
+import { CalendarDays, Clock, Handshake, MapPin, Video } from "lucide-react";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
+import { cn } from "@/lib/utils";
 
 import {
   formatEventDateLong,
@@ -106,6 +107,29 @@ export default function EventDetailRail({ event, now }: EventDetailRailProps) {
             eventTitle={event.title}
             eventName={event.title}
           />
+        )}
+
+        {/*
+         * Pintu masuk "Apply as sponsor". Section Sponsorship ada jauh di
+         * bawah halaman, jadi tanpa tombol di sini pengunjung tidak tahu
+         * fiturnya ada. Gaya `outline` disengaja: `Register now` tetap aksi
+         * utama, tombol ini alternatif, bukan pesaingnya.
+         *
+         * Hanya muncul kalau event belum berakhir DAN punya paket aktif —
+         * tombol yang mengantar ke halaman "Sponsorship is not open" lebih
+         * buruk daripada tidak ada tombol.
+         */}
+        {!ended && event.sponsorTiers.length > 0 && (
+          <Link
+            href={`/events/${event.slug}/sponsor`}
+            className={cn(
+              buttonStyles({ variant: "outline", size: "lg", className: "w-full" }),
+              "justify-center",
+            )}
+          >
+            <Handshake className="size-4" aria-hidden="true" />
+            Apply as sponsor
+          </Link>
         )}
       </div>
 

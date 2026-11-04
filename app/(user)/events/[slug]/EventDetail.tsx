@@ -6,6 +6,7 @@ import { hasEnded } from "../data/eventTime";
 import EventHero from "../section/EventHero";
 import EventAbout from "../section/EventAbout";
 import EventAgenda from "../section/EventAgenda";
+import EventSponsorship from "../section/EventSponsorship";
 import EventSpeakers from "../section/EventSpeakers";
 import EventHostCard from "../section/EventHostCard";
 import EventDetailRail from "../section/EventDetailRail";
@@ -58,6 +59,13 @@ export default function EventDetail({ event, related, now }: EventDetailProps) {
                   The order and duration may change on the day.
                 </p>
               </div>
+            ) : null}
+
+            {!ended ? (
+              <EventSponsorship
+                eventSlug={event.slug}
+                tiers={event.sponsorTiers}
+              />
             ) : null}
           </div>
 

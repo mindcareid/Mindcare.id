@@ -2,6 +2,8 @@ import { EventStatus, OrderStatus, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { PLATFORM_NAME, PLATFORM_SLUG } from "@/lib/events/constants";
+import { getPublicSponsorTiers, normalizeBenefits } from "@/lib/sponsors/queries";
+import type { SponsorBenefit } from "@/lib/sponsors/shared";
 
 const eventListInclude = {
   category: true,
@@ -146,6 +148,19 @@ export type EventDetail = Omit<EventDetailPayload, "focusAreas"> & {
   remaining: number | null;
   soldOut: boolean;
   canDownloadProposal: boolean;
+
+  /**
+   * Paket sponsor yang aktif. Kosong berarti section sponsorship tidak
+   * dirender sama sekali (event lama tidak dipaksa punya paket).
+   */
+  sponsorTiers: {
+    id: number;
+    name: string;
+    priceAmount: number;
+    currency: string;
+    displayUsd: number | null;
+    benefits: SponsorBenefit[];
+  }[];
 };
 
 const publicEventWhere = {
@@ -217,6 +232,7 @@ function serializeEventDetail(
   event: EventDetailPayload,
   registeredCount: number,
   hasProposal: boolean,
+  sponsorTiers: EventDetail["sponsorTiers"],
 ): EventDetail {
   const remaining =
     event.quota === null ? null : Math.max(event.quota - registeredCount, 0);
@@ -231,6 +247,7 @@ function serializeEventDetail(
     remaining,
     soldOut,
     canDownloadProposal: event.publisherType === "PLATFORM" && hasProposal,
+    sponsorTiers,
   };
 }
 
@@ -257,8 +274,17 @@ export async function getEvents(): Promise<EventListItem[]> {
   );
 }
 
+/**
+ * Detail event untuk halaman publik.
+ *
+ * `withTiers: false` dipakai `generateMetadata`: metadata tidak memakai paket
+ * sponsor, dan halaman ini memanggil fungsi ini dua kali per request (metadata
+ * + komponen). Tanpa flag ini, query paket ikut berjalan dua kali pada setiap
+ * tampilan halaman event.
+ */
 export async function getEventBySlug(
   slug: string,
+  { withTiers = true }: { withTiers?: boolean } = {},
 ): Promise<EventDetail | null> {
   const event = await prisma.event.findFirst({
     where: {
@@ -280,10 +306,25 @@ export async function getEventBySlug(
     }),
   ]);
 
+  // Sponsorship hanya untuk event platform. Event profesional/care centre
+  // tidak punya paket dan tidak boleh menampilkan section ini.
+  const tiers =
+    withTiers && event.publisherType === "PLATFORM"
+      ? await getPublicSponsorTiers(event.id)
+      : [];
+
   return serializeEventDetail(
     event,
     registeredCount,
     Boolean(proposal?.proposalUrl),
+    tiers.map((tier) => ({
+      id: tier.id,
+      name: tier.name,
+      priceAmount: tier.priceAmount,
+      currency: tier.currency,
+      displayUsd: tier.displayUsd,
+      benefits: normalizeBenefits(tier.benefits),
+    })),
   );
 }
 
