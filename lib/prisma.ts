@@ -1,11 +1,15 @@
 import { PrismaClient } from "@prisma/client";
-import { createAuditExtension } from "@/lib/auditLog";
+// Sementara dinonaktifkan: extension audit menulis log lewat client `base`
+// (bukan `tx`) sehingga membuka koneksi lain di tengah `$transaction` dan
+// memicu P2028 "Transaction not found" di Vercel. Aktifkan lagi setelah
+// penulisan log ikut transaksi.
+// import { createAuditExtension } from "@/lib/auditLog";
 
 function createClient(): PrismaClient {
   const base = new PrismaClient();
-  // Runtime memakai client yang sudah diextensi audit; tipe dijaga tetap
-  // PrismaClient agar kompatibel dengan Prisma.TransactionClient dsb.
-  return base.$extends(createAuditExtension(base)) as unknown as PrismaClient;
+  // Tanpa extension audit untuk sementara.
+  // return base.$extends(createAuditExtension(base)) as unknown as PrismaClient;
+  return base;
 }
 
 const globalForPrisma = global as unknown as { prisma?: PrismaClient };

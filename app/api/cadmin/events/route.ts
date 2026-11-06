@@ -24,6 +24,13 @@ import {
 } from "@/lib/cloudinary/asset";
 import { parseProposal } from "@/lib/events/proposalInput";
 
+/**
+ * Opsi `$transaction` untuk simpan event + speaker + agenda. Default Prisma
+ * hanya 5 detik; di Vercel (latency ke DB tinggi, pool kecil) simpan banyak
+ * speaker/agenda mudah melewatinya dan berakhir P2028 "Transaction not found".
+ */
+const EVENT_WRITE_TRANSACTION = { maxWait: 15_000, timeout: 60_000 } as const;
+
 function resolveTimeZone(body: Record<string, unknown>): string {
   return typeof body.timeZone === "string" && body.timeZone
     ? body.timeZone
@@ -360,29 +367,49 @@ async function saveAgendaAndSpeakers(
   const keptSpeakerIds = new Set<number>();
 
   if (speakers) {
-    for (const speaker of speakers) {
-      const data = {
-        name: speaker.name,
-        title: speaker.title,
-        titleLines: speaker.titleLines,
-        photoUrl: speaker.photoUrl,
-        photoPublicId: speaker.photoPublicId,
-        sortOrder: speaker.sortOrder,
-      };
+    type SpeakerData = Omit<SpeakerInput, "id" | "clientKey">;
+    const toData = (speaker: SpeakerInput): SpeakerData => ({
+      name: speaker.name,
+      title: speaker.title,
+      titleLines: speaker.titleLines,
+      photoUrl: speaker.photoUrl,
+      photoPublicId: speaker.photoPublicId,
+      sortOrder: speaker.sortOrder,
+    });
 
-      if (speaker.id && existingSpeakerIds.has(speaker.id)) {
-        await tx.eventSpeaker.update({ where: { id: speaker.id }, data });
-        keptSpeakerIds.add(speaker.id);
-        if (speaker.clientKey)
-          speakerIdByKey.set(speaker.clientKey, speaker.id);
-        continue;
-      }
-
-      const created = await tx.eventSpeaker.create({
-        data: { eventId, ...data },
+    const toUpdate = speakers.filter(
+      (speaker): speaker is SpeakerInput & { id: number } =>
+        Boolean(speaker.id) && existingSpeakerIds.has(speaker.id as number),
+    );
+    for (const speaker of toUpdate) {
+      await tx.eventSpeaker.update({
+        where: { id: speaker.id },
+        data: toData(speaker),
       });
-      if (speaker.clientKey) {
-        speakerIdByKey.set(speaker.clientKey, created.id);
+      keptSpeakerIds.add(speaker.id);
+      if (speaker.clientKey) speakerIdByKey.set(speaker.clientKey, speaker.id);
+    }
+
+    // Speaker baru dikirim satu `createMany`, bukan satu `create` per baris:
+    // tiap round-trip dalam transaksi menambah risiko timeout (P2028) di
+    // serverless. Id hasil insert dibaca ulang lewat `name` yang unik per event.
+    const newSpeakers = speakers.filter(
+      (speaker) => !speaker.id || !existingSpeakerIds.has(speaker.id),
+    );
+    if (newSpeakers.length) {
+      await tx.eventSpeaker.createMany({
+        data: newSpeakers.map((speaker) => ({ eventId, ...toData(speaker) })),
+      });
+      const inserted = await tx.eventSpeaker.findMany({
+        where: { eventId, name: { in: newSpeakers.map((s) => s.name) } },
+        select: { id: true, name: true },
+      });
+      const idByName = new Map(inserted.map((row) => [row.name, row.id]));
+      for (const speaker of newSpeakers) {
+        const id = idByName.get(speaker.name);
+        if (id === undefined) continue;
+        keptSpeakerIds.add(id);
+        if (speaker.clientKey) speakerIdByKey.set(speaker.clientKey, id);
       }
     }
   }
@@ -398,30 +425,73 @@ async function saveAgendaAndSpeakers(
   if (agenda) {
     const agendaIdByPosition: number[] = [];
 
-    for (const item of agenda) {
-      const data = {
-        kind: item.kind,
-        title: item.title,
-        description: item.description,
-        // Keterangan teks hanya bermakna saat sesi tidak punya pembicara.
-        attendees: item.speakers.length ? null : item.attendees,
-        startTime: item.startTime,
-        endTime: item.endTime,
-        sortOrder: item.sortOrder,
-      };
+    const toData = (item: AgendaInput) => ({
+      kind: item.kind,
+      title: item.title,
+      description: item.description,
+      // Keterangan teks hanya bermakna saat sesi tidak punya pembicara.
+      attendees: item.speakers.length ? null : item.attendees,
+      startTime: item.startTime,
+      endTime: item.endTime,
+      sortOrder: item.sortOrder,
+    });
 
+    for (const item of agenda) {
       if (item.id && existingAgendaIds.has(item.id)) {
-        await tx.eventAgendaItem.update({ where: { id: item.id }, data });
+        await tx.eventAgendaItem.update({
+          where: { id: item.id },
+          data: toData(item),
+        });
         keptAgendaIds.add(item.id);
         agendaIdByPosition.push(item.id);
         continue;
       }
 
-      const created = await tx.eventAgendaItem.create({
-        data: { eventId, ...data },
+      // Placeholder: id baru diisi setelah `createMany` di bawah.
+      agendaIdByPosition.push(0);
+    }
+
+    const newAgenda = agenda.filter((item, position) => {
+      return agendaIdByPosition[position] === 0;
+    });
+    if (newAgenda.length) {
+      await tx.eventAgendaItem.createMany({
+        data: newAgenda.map((item) => ({ eventId, ...toData(item) })),
       });
-      keptAgendaIds.add(created.id);
-      agendaIdByPosition.push(created.id);
+      // `EventAgendaItem` tidak punya kunci unik alami, jadi id baru dicocokkan
+      // lewat kombinasi kolom yang dikirim (diambil sekumpulan, lalu dipakai
+      // satu kali per sesi).
+      const inserted = await tx.eventAgendaItem.findMany({
+        where: { eventId, id: { notIn: [...existingAgendaIds] } },
+        select: {
+          id: true,
+          title: true,
+          kind: true,
+          startTime: true,
+          endTime: true,
+          sortOrder: true,
+        },
+      });
+      const usedIds = new Set<number>();
+      const newPositions = agenda
+        .map((item, position) => ({ item, position }))
+        .filter(({ position }) => agendaIdByPosition[position] === 0);
+
+      for (const { item, position } of newPositions) {
+        const match = inserted.find(
+          (row) =>
+            !usedIds.has(row.id) &&
+            row.title === item.title &&
+            row.kind === item.kind &&
+            row.startTime.getTime() === item.startTime.getTime() &&
+            row.endTime.getTime() === item.endTime.getTime() &&
+            row.sortOrder === item.sortOrder,
+        );
+        if (!match) continue;
+        usedIds.add(match.id);
+        keptAgendaIds.add(match.id);
+        agendaIdByPosition[position] = match.id;
+      }
     }
 
     // Pivot sesi yang dikirim dibangun ulang dari `speakerKeys`.
@@ -438,6 +508,9 @@ async function saveAgendaAndSpeakers(
       // pivot untuk sesi yang memang tidak menyebut orang (mis. break).
       if (agendaKindHidesSpeakers(item.kind)) continue;
 
+      // Kunci pivot adalah (agendaItemId, speakerId): orang yang tercantum
+      // dua kali di satu sesi akan melanggar PK, jadi baris ganda dibuang.
+      const seenSpeakerIds = new Set<number>();
       const links = item.speakers
         .map(({ key, role }, order) => ({
           speakerId: speakerIdByKey.get(key),
@@ -452,7 +525,12 @@ async function saveAgendaAndSpeakers(
             role: AgendaSpeakerRole;
             sortOrder: number;
           } => typeof link.speakerId === "number",
-        );
+        )
+        .filter((link) => {
+          if (seenSpeakerIds.has(link.speakerId)) return false;
+          seenSpeakerIds.add(link.speakerId);
+          return true;
+        });
       if (links.length === 0) continue;
 
       await tx.eventAgendaSpeaker.createMany({
@@ -662,7 +740,7 @@ export async function POST(req: Request) {
       });
 
       return created;
-    });
+    }, EVENT_WRITE_TRANSACTION);
 
     return NextResponse.json({
       success: true,
@@ -841,7 +919,7 @@ export async function PUT(req: Request) {
       }
 
       return updated;
-    });
+    }, EVENT_WRITE_TRANSACTION);
 
     return NextResponse.json({
       success: true,
