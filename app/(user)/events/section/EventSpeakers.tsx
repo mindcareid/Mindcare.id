@@ -17,13 +17,6 @@ type EventSpeakersProps = {
   event: EventDetail;
 };
 
-/**
- * Daftar pembicara event MindCare.
- *
- * Tiap kartu punya `id="speaker-<id>"` yang dibidik oleh nama pembicara di
- * susunan acara. `scroll-mt-24` dipasang supaya anchor tidak mentok di tepi
- * atas viewport (pola yang sama dengan daftar isi artikel).
- */
 export default function EventSpeakers({ event }: EventSpeakersProps) {
   if (event.publisherType !== "PLATFORM" || event.speakers.length === 0) {
     return null;
@@ -35,7 +28,7 @@ export default function EventSpeakers({ event }: EventSpeakersProps) {
         <SectionHeader title="Speakers" underline />
       </div>
 
-      <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {event.speakers.map((speaker) => {
           const roleLines = (speaker.titleLines ?? "")
             .split("\n")
