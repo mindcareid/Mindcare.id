@@ -167,7 +167,7 @@ export default function HeroWipeSlideshow({
       onBlurCapture={() => setPaused(false)}
       className={cn(
         "relative isolate flex w-full flex-col overflow-hidden bg-brand-navy-950",
-        "min-h-[35rem] sm:min-h-[36rem]",
+        "min-h-screen sm:aspect-4/3 sm:min-h-0 lg:aspect-video lg:h-screen",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
@@ -184,14 +184,6 @@ export default function HeroWipeSlideshow({
           />
         </div>
 
-        {/*
-          Lapisan reveal selalu terpasang (tanpa mount/unmount saat transisi),
-          jadi gambarnya sudah ter-decode dan tidak ada lonjakan paint di awal
-          animasi. Saat idle ia berada di luar jendela klip, jadi tidak terlihat.
-          `loading="eager"` dipakai karena IntersectionObserver menganggap
-          elemen yang sudah digeser keluar layar sebagai belum terlihat, jadi
-          mode lazy akan memuat gambar justru saat wipe dimulai.
-        */}
         {canAnimate && incoming && (
           <motion.div
             aria-hidden="true"
@@ -265,7 +257,7 @@ export default function HeroWipeSlideshow({
           {heading && (
             <h1
               className={cn(
-                "text-balance break-words font-heading text-[30px] font-semibold leading-[1.08] tracking-[-0.01em] text-white sm:text-[40px] md:text-[44px] lg:text-[56px]",
+                "text-balance wrap-break-words font-heading text-[30px] font-semibold leading-[1.08] tracking-[-0.01em] text-white sm:text-[40px] md:text-[44px] lg:text-[56px]",
                 eyebrow && "mt-2.5 sm:mt-3",
               )}
             >
@@ -274,7 +266,7 @@ export default function HeroWipeSlideshow({
           )}
 
           {description && (
-            <p className="mt-3 max-w-2xl text-pretty break-words text-[15px] leading-[1.6] text-white/90 sm:mt-5 sm:text-base md:text-lg md:leading-relaxed">
+            <p className="mt-3 max-w-2xl text-pretty wrap-break-words text-[15px] leading-[1.6] text-white/90 sm:mt-5 sm:text-base md:text-lg md:leading-relaxed">
               {description}
             </p>
           )}
