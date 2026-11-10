@@ -11,8 +11,6 @@ import ImageUploadField, {
 const inputClass =
   "w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 
-const HERO_ASPECT = 16 / 7;
-
 async function destroyAssets(publicIds: string[]) {
   const unique = Array.from(new Set(publicIds.filter(Boolean)));
   await Promise.all(
@@ -26,7 +24,6 @@ async function destroyAssets(publicIds: string[]) {
   );
 }
 
-/** Dipakai saat unmount, ketika navigasi bisa membatalkan request biasa. */
 function destroyAssetsOnLeave(publicIds: string[]) {
   const unique = Array.from(new Set(publicIds.filter(Boolean)));
   for (const publicId of unique) {
@@ -79,13 +76,8 @@ export default function HeroForm({ id, defaultValues }: HeroFormProps) {
   // publicId yang tersimpan di DB saat form dibuka. Ini satu-satunya aset yang
   // tidak boleh dihapus selama belum ada penyimpanan yang berhasil.
   const originalPublicIdRef = useRef(defaultValues?.publicId || null);
-  // Aset yang sudah digantikan/dihapus selama sesi ini tetapi belum tentu
-  // tersimpan, jadi penghapusannya ditunda.
   const discardedRef = useRef<string[]>([]);
-  // publicId yang sedang tampil, dibaca saat unmount.
   const currentPublicIdRef = useRef(image.publicId);
-  // Menandai bahwa ada penyimpanan berhasil, supaya pembersihan saat unmount
-  // tidak ikut menghapus aset yang baru saja tersimpan.
   const savedRef = useRef(false);
 
   useEffect(() => {
@@ -95,11 +87,7 @@ export default function HeroForm({ id, defaultValues }: HeroFormProps) {
   const handleDiscard = (publicIds: string[]) => {
     discardedRef.current.push(...publicIds);
   };
-
-  // Pembersihan terakhir: pengguna bisa meninggalkan halaman lewat menu, bukan
-  // tombol Cancel. Aset yang diunggah sesi ini tidak boleh tertinggal.
   useEffect(() => {
-    // Aset asli tidak berubah selama form hidup, jadi aman dibaca di sini.
     const original = originalPublicIdRef.current;
 
     return () => {
@@ -156,9 +144,6 @@ export default function HeroForm({ id, defaultValues }: HeroFormProps) {
       if (!res.ok) {
         throw new Error(json?.error || "Could not save the slide");
       }
-
-      // Data sudah tersimpan: baru sekarang aset lama boleh dihapus. Kalau
-      // gagal, efeknya hanya aset tersisa di Cloudinary, bukan gambar rusak.
       savedRef.current = true;
       const stale = discardedRef.current;
       discardedRef.current = [];
@@ -179,15 +164,12 @@ export default function HeroForm({ id, defaultValues }: HeroFormProps) {
   const handleCancel = async () => {
     setCancelling(true);
     try {
-      // Batal: DB tidak berubah, jadi aset asli harus tetap ada. Yang dibuang
-      // hanya gambar yang diunggah selama sesi ini.
       const original = originalPublicIdRef.current;
       const orphans = discardedRef.current.filter((pid) => pid !== original);
       if (image.publicId && image.publicId !== original) {
         orphans.push(image.publicId);
       }
       discardedRef.current = [];
-      // Pembersihan sudah ditangani di sini.
       savedRef.current = true;
 
       await destroyAssets(orphans);
@@ -201,11 +183,12 @@ export default function HeroForm({ id, defaultValues }: HeroFormProps) {
       <div className="space-y-5 rounded-xl border border-border bg-card p-6 shadow-card">
         <ImageUploadField
           label="Slide image"
-          hint={`Shown full width on the homepage. Wide images work best, for example 1920x840. It is resized and saved as WebP.`}
+          hint="4:3 image (1600x1200 max), WebP, normally under 100 KB."
           entityType="hero"
-          aspect={HERO_ASPECT}
-          maxWidth={1920}
-          maxHeight={860}
+          aspect={4 / 3}
+          shape="wide"
+          maxWidth={1600}
+          maxHeight={1200}
           value={image}
           onChange={(next) => {
             setImage(next);
