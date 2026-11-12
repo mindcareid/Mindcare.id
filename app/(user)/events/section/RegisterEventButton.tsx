@@ -121,6 +121,9 @@ export default function RegisterEventButton({
   const { status: sessionStatus } = useSession();
   const isAuthenticated = sessionStatus === "authenticated";
 
+  const isAuthResolved = sessionStatus !== "loading";
+  const [wasAuthenticated, setWasAuthenticated] = useState(false);
+
   // Satu key per percobaan pendaftaran. Dipakai ulang kalau submit
   // diulang karena jaringan, supaya backend tidak membuat order ganda.
   const idempotencyKeyRef = useRef<string | null>(null);
@@ -279,6 +282,7 @@ export default function RegisterEventButton({
         type="button"
         onClick={() => {
           idempotencyKeyRef.current = null;
+          setWasAuthenticated(isAuthenticated);
           setOpen(true);
         }}
         className={buttonStyles({ size: "lg", className: "w-full" })}
@@ -325,7 +329,7 @@ export default function RegisterEventButton({
                     <br />
                     Your e-ticket has been sent to your email.
                   </p>
-                  {isAuthenticated ? (
+                  {wasAuthenticated ? (
                     <Link
                       href="/dashboard/my-ticket"
                       className={buttonStyles({ className: "mt-6 w-full" })}
@@ -373,7 +377,7 @@ export default function RegisterEventButton({
                     </select>
                   </label>
 
-                  {isFree && !isAuthenticated && (
+                  {isAuthResolved && isFree && !isAuthenticated && (
                     <div className="flex items-start gap-3 rounded-lg border border-secondary/20 bg-brand-lavender-100 p-3.5 mb-4">
                       <Mail
                         className="mt-0.5 size-4 shrink-0 text-secondary"

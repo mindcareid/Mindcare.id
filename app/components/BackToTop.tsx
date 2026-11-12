@@ -1,31 +1,40 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { FaArrowUp } from "react-icons/fa";
-
+import { ArrowUp } from "lucide-react";
 export default function BackToTop({ className }: { className?: string }) {
   const [visible, setVisible] = useState(false);
+
   useEffect(() => {
     const toggleVisible = () => {
-      if (window.scrollY > 400) setVisible(true);
-      else setVisible(false);
+      setVisible(window.scrollY > 400);
     };
-    window.addEventListener("scroll", toggleVisible);
+    toggleVisible();
+
+    window.addEventListener("scroll", toggleVisible, { passive: true });
     return () => window.removeEventListener("scroll", toggleVisible);
   }, []);
+
   const scrollTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
   return (
-    <motion.button
+    <button
+      type="button"
+      aria-label="Back to top"
       onClick={scrollTop}
-      initial={{ opacity: 0, y: 50 }}
-      animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-      transition={{ duration: 0.3 }}
-      className={className}
+      className={[
+        className,
+        "transition-all duration-300",
+        visible
+          ? "pointer-events-auto opacity-100 translate-y-0"
+          : "pointer-events-none opacity-0 translate-y-12",
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
-      <FaArrowUp />
-    </motion.button>
+      <ArrowUp className="size-5" aria-hidden="true" />
+    </button>
   );
 }
