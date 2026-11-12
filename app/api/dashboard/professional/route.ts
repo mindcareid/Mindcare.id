@@ -9,6 +9,7 @@ import {
 } from "@/lib/validations/apply";
 import { mailConfig, sendListingReviewEmail } from "@/lib/mail";
 import { runAfterResponse } from "@/lib/afterResponse";
+import { revalidateProfessionalCache } from "@/lib/publicCache";
 import z from "zod";
 
 export const dynamic = "force-dynamic";
@@ -151,6 +152,7 @@ export async function PATCH(req: NextRequest) {
       },
       select: { id: true },
     });
+    revalidateProfessionalCache({ slug: current.slug });
     if (replacedPublicId) {
       try {
         await cloudinary.uploader.destroy(replacedPublicId, {

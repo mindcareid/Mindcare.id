@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { EditCareCentreSchema } from "@/lib/validations/apply";
 import { mailConfig, sendListingReviewEmail } from "@/lib/mail";
 import { runAfterResponse } from "@/lib/afterResponse";
+import { revalidateCareCentreCache } from "@/lib/publicCache";
 import z from "zod";
 import { Prisma } from "@prisma/client";
 
@@ -152,6 +153,7 @@ export async function PATCH(req: NextRequest) {
         });
       }
     });
+    revalidateCareCentreCache({ slug: current.slug });
 
     if (
       requiresReview &&

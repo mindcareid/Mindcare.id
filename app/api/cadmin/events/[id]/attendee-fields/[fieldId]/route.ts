@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { revalidateEventCacheById } from "@/lib/events/cache";
 
 /* ================= GET ONE ================= */
 
@@ -50,6 +51,8 @@ export async function PUT(
     },
   });
 
+  await revalidateEventCacheById(updated.eventId);
+
   return NextResponse.json(updated);
 }
 
@@ -59,9 +62,11 @@ export async function DELETE(
   _req: Request,
   { params }: { params: { eventId: string; fieldId: string } }
 ) {
-  await prisma.eventAttendeeField.delete({
+  const removed = await prisma.eventAttendeeField.delete({
     where: { id: params.fieldId },
   });
+
+  await revalidateEventCacheById(removed.eventId);
 
   return NextResponse.json({ success: true });
 }

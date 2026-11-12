@@ -4,6 +4,10 @@ import { getAdminUser, parseDateOnly } from "@/lib/adminGuard";
 import { createNotification } from "@/lib/notification-service";
 import { mailConfig, sendListingReviewEmail } from "@/lib/mail";
 import { runAfterResponse } from "@/lib/afterResponse";
+import {
+  revalidateProfessionalCache,
+  revalidateProfessionalDetail,
+} from "@/lib/publicCache";
 import z from "zod";
 import { Prisma } from "@prisma/client";
 
@@ -102,6 +106,12 @@ export async function PATCH(
         { message: "Application already reviewed" },
         { status: 400 },
       );
+    }
+
+    if (action === "APPROVE") {
+      revalidateProfessionalCache({ slug: professional.slug });
+    } else {
+      revalidateProfessionalDetail(professional.slug);
     }
 
     if (professional.userId) {

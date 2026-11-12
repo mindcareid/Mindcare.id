@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { getAdminUser } from "@/lib/adminGuard";
 import { sponsorTierSchema } from "@/lib/validations/sponsor";
 import { listAdminSponsorTiers } from "@/lib/sponsors/queries";
+import { revalidateEventCacheById } from "@/lib/events/cache";
 
 type Params = { params: { id: string } };
 
@@ -102,6 +103,8 @@ export async function POST(req: Request, { params }: Params) {
     select: { id: true, name: true },
   });
 
+  await revalidateEventCacheById(eventId);
+
   return NextResponse.json(
     { message: "Package created", data: created },
     { status: 201 },
@@ -157,6 +160,8 @@ export async function PATCH(req: Request, { params }: Params) {
     select: { id: true, name: true },
   });
 
+  await revalidateEventCacheById(eventId);
+
   return NextResponse.json({ message: "Package updated", data: updated });
 }
 
@@ -200,5 +205,8 @@ export async function DELETE(req: Request, { params }: Params) {
   }
 
   await prisma.eventSponsorTier.delete({ where: { id: tierId } });
+
+  await revalidateEventCacheById(eventId);
+
   return NextResponse.json({ message: "Package deleted" });
 }

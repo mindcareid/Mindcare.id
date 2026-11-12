@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from "@/lib/prisma";
+import { revalidateHeroCache } from "@/lib/publicCache";
 export const dynamic = "force-dynamic";
 
 /**
@@ -49,6 +50,7 @@ export async function POST(req: Request) {
       },
     });
 
+    revalidateHeroCache();
     return NextResponse.json(hero);
   } catch (error) {
     console.error("POST Hero Error:", error);
@@ -79,6 +81,7 @@ export async function PUT(req: Request) {
       },
     });
 
+    revalidateHeroCache();
     return NextResponse.json(hero);
   } catch (error) {
     console.error("PUT Hero Error:", error);
@@ -97,6 +100,7 @@ export async function DELETE(req: Request) {
       where: { id },
     });
 
+    revalidateHeroCache();
     return NextResponse.json({ message: "Hero deleted" });
   } catch (error) {
     console.error("DELETE Hero Error:", error);

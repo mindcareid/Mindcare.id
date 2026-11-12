@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { revalidateEventCacheById } from "@/lib/events/cache";
 
 /* ================= HELPERS ================= */
 
@@ -124,6 +125,8 @@ export async function POST(
             : Prisma.JsonNull,
       },
     });
+
+    await revalidateEventCacheById(eventId);
 
     return NextResponse.json(field, { status: 201 });
   } catch (error) {
