@@ -1,5 +1,5 @@
 "use client";
-import PhoneInput from "react-phone-number-input";
+import PhoneInput from "@/app/components/PhoneInput";
 import "react-phone-number-input/style.css";
 
 type AttendeeValue = string | number | boolean | null;
