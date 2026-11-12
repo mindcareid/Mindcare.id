@@ -189,6 +189,7 @@ export default function HeroForm({ id, defaultValues }: HeroFormProps) {
           shape="wide"
           maxWidth={1600}
           maxHeight={1200}
+          allowSkipCrop
           value={image}
           onChange={(next) => {
             setImage(next);

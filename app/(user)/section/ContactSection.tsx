@@ -1,7 +1,7 @@
 "use client";
 
 import { contactUserSchema, ContactUserFormData } from "@/lib/validations/auth";
-import PhoneInput from "react-phone-number-input";
+import PhoneInput from "@/app/components/PhoneInput";
 import "react-phone-number-input/style.css";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";

@@ -118,6 +118,7 @@ export default function PlatformForm({
           shape="square"
           maxWidth={512}
           maxHeight={512}
+          allowSkipCrop
           value={logo}
           deferDelete
           onDiscard={(publicIds) => {

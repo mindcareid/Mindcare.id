@@ -412,6 +412,7 @@ export default function EditProfessionalForm({
           shape="square"
           maxWidth={512}
           maxHeight={512}
+          allowSkipCrop
           value={{
             url: watch("photoUrl") || null,
             publicId: watch("publicId") || null,

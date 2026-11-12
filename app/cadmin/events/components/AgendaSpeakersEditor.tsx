@@ -369,6 +369,7 @@ export default function AgendaSpeakersEditor({
                           shape="square"
                           maxWidth={600}
                           maxHeight={750}
+                          allowSkipCrop
                           value={{
                             url: speaker.photoUrl || null,
                             publicId: speaker.photoPublicId || null,

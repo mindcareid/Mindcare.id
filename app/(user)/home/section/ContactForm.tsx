@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import PhoneInput from "react-phone-number-input";
+import PhoneInput from "@/app/components/PhoneInput";
 import "react-phone-number-input/style.css";
 import { toast } from "sonner";
 import { Send } from "lucide-react";

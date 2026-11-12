@@ -305,6 +305,7 @@ export default function CreateEventForm({
           shape="wide"
           maxWidth={1600}
           maxHeight={1200}
+          allowSkipCrop
           value={{ url: coverUrl || null, publicId: coverPublicId || null }}
           onChange={({ url, publicId }) => {
             setValue("coverUrl", url ?? "", { shouldValidate: true });

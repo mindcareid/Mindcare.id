@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getCroppedImage } from "@/lib/cropImage";
+import { getCroppedImage, resizeImage } from "@/lib/cropImage";
 import { uploadToCloudinary } from "@/lib/cloudinary/upload";
 import type { UploadFolderImage } from "@/lib/cloudinary/types/upload";
 import Image from "next/image";
@@ -28,12 +28,11 @@ type ImageUploadFieldProps = {
   required?: boolean;
   error?: string;
   /**
-   * Saat true, komponen tidak menghapus aset lama (replace maupun remove);
-   * aset yang tak lagi terpakai dikembalikan ke pemanggil lewat `onDiscard`
-   * supaya pemanggil menghapusnya setelah data benar-benar tersimpan. Dipakai
-   * form yang punya tombol Cancel: menghapus saat upload membuat gambar yang
-   * tersimpan di DB ikut hilang kalau pengguna batal.
+   * Saat true, pengguna bisa memilih untuk melewati langkah crop dan
+   * mengunggah foto apa adanya (tetap di-resize & di-encode ke WebP).
    */
+  allowSkipCrop?: boolean;
+
   deferDelete?: boolean;
   /** Aset yang tidak lagi terpakai (hanya saat `deferDelete`). */
   onDiscard?: (publicIds: string[]) => void;
@@ -54,6 +53,7 @@ export default function ImageUploadField({
   disabled = false,
   required = false,
   error,
+  allowSkipCrop = false,
   deferDelete = false,
   onDiscard,
 }: ImageUploadFieldProps) {
@@ -98,15 +98,10 @@ export default function ImageUploadField({
     setImageSrc(dataUrl);
   }
 
-  async function handleApplyCrop() {
-    if (!imageSrc || !croppedArea) return;
+  async function uploadBlob(blob: Blob) {
     setBusy(true);
     setMessage(null);
     try {
-      const blob = await getCroppedImage(imageSrc, croppedArea, {
-        maxWidth: resolvedMaxWidth,
-        maxHeight: resolvedMaxHeight,
-      });
       const uploaded = await uploadToCloudinary(
         blob,
         entityType,
@@ -123,6 +118,36 @@ export default function ImageUploadField({
       );
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleApplyCrop() {
+    if (!imageSrc || !croppedArea) return;
+    try {
+      const blob = await getCroppedImage(imageSrc, croppedArea, {
+        maxWidth: resolvedMaxWidth,
+        maxHeight: resolvedMaxHeight,
+      });
+      await uploadBlob(blob);
+    } catch (err) {
+      setMessage(
+        err instanceof Error ? err.message : "Upload failed. Please try again.",
+      );
+    }
+  }
+
+  async function handleSkipCrop() {
+    if (!imageSrc) return;
+    try {
+      const blob = await resizeImage(imageSrc, {
+        maxWidth: resolvedMaxWidth,
+        maxHeight: resolvedMaxHeight,
+      });
+      await uploadBlob(blob);
+    } catch (err) {
+      setMessage(
+        err instanceof Error ? err.message : "Upload failed. Please try again.",
+      );
     }
   }
 
@@ -286,17 +311,29 @@ export default function ImageUploadField({
                   Resized to {resolvedMaxWidth}x{resolvedMaxHeight} max and
                   saved as WebP (JPEG fallback) — normally under 100 KB.
                 </p>
-                <button
-                  type="button"
-                  onClick={handleApplyCrop}
-                  disabled={busy || !croppedArea}
-                  className={cn(
-                    "inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50",
-                  )}
-                >
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  {busy ? "Uploading..." : "Save image"}
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {allowSkipCrop ? (
+                    <button
+                      type="button"
+                      onClick={handleSkipCrop}
+                      disabled={busy}
+                      className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
+                    >
+                      Use original
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={handleApplyCrop}
+                    disabled={busy || !croppedArea}
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50",
+                    )}
+                  >
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {busy ? "Uploading..." : "Save image"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

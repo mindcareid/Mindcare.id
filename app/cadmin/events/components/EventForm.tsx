@@ -627,6 +627,7 @@ function EventForm({ id, defaultValues, categories }: EventFormProps) {
         shape="wide"
         maxWidth={1600}
         maxHeight={1200}
+        allowSkipCrop
         value={{
           url: form.coverImage || null,
           publicId: form.publicId || null,

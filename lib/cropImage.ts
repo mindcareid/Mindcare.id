@@ -55,6 +55,55 @@ export async function getCroppedImage(
   return canvasToBlob(canvas, mimeType, quality);
 }
 
+/**
+ * Menyeragamkan file asli tanpa crop: mengecilkan (kalau perlu) ke batas
+ * `maxWidth`/`maxHeight` dengan rasio asli, lalu meng-encode ke WebP
+ * (JPEG fallback). Berguna saat pengguna tidak ingin crop.
+ */
+export async function resizeImage(
+  imageSrc: string,
+  options: Omit<CropOutputOptions, "maxWidth" | "maxHeight"> & {
+    maxWidth?: number;
+    maxHeight?: number;
+  } = {},
+): Promise<Blob> {
+  const {
+    maxWidth = 512,
+    maxHeight = 512,
+    mimeType = "image/webp",
+    quality = 0.85,
+  } = options;
+
+  const image = await loadImage(imageSrc);
+  const scale = Math.min(
+    1,
+    maxWidth / image.naturalWidth,
+    maxHeight / image.naturalHeight,
+  );
+  const outputWidth = Math.max(1, Math.round(image.naturalWidth * scale));
+  const outputHeight = Math.max(1, Math.round(image.naturalHeight * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("No canvas context");
+
+  if (mimeType === "image/jpeg") {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, outputWidth, outputHeight);
+  }
+  ctx.drawImage(image, 0, 0, outputWidth, outputHeight);
+
+  if (mimeType === "image/webp") {
+    const webp = await canvasToBlob(canvas, "image/webp", quality);
+    if (webp.type === "image/webp") return webp;
+    return canvasToBlob(canvas, "image/jpeg", quality);
+  }
+
+  return canvasToBlob(canvas, mimeType, quality);
+}
+
 function canvasToBlob(
   canvas: HTMLCanvasElement,
   type: string,

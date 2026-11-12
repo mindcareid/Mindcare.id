@@ -272,6 +272,7 @@ export default function CareCentreForm({
             shape="wide"
             maxWidth={800}
             maxHeight={600}
+            allowSkipCrop
             value={{
               url: watch("photo") || null,
               publicId: watch("photoPublicId") || null,

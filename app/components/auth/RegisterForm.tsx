@@ -6,7 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { registerSchema, RegisterFormData } from "@/lib/validations/auth";
-import PhoneInput from "react-phone-number-input";
+import PhoneInput from "@/app/components/PhoneInput";
 import "react-phone-number-input/style.css";
 import TermsUser from "../../auth/component/TermsUser";
 import { LuEye, LuEyeClosed } from "react-icons/lu";

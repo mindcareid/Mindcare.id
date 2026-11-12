@@ -402,6 +402,7 @@ export default function SolutionForm({
           shape="square"
           maxWidth={512}
           maxHeight={512}
+          allowSkipCrop
           value={{
             url: watch("logo") || null,
             publicId: watch("logoPublicId") || null,
@@ -420,6 +421,7 @@ export default function SolutionForm({
           shape="wide"
           maxWidth={1600}
           maxHeight={1200}
+          allowSkipCrop
           value={{
             url: watch("coverImage") || null,
             publicId: watch("coverPublicId") || null,
