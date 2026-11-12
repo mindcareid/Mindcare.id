@@ -12,6 +12,11 @@ export const mailConfig = {
     process.env.CONTACT_FORWARDEMAIL,
     process.env.CONTACT_FORWARD,
   ].filter(Boolean) as string[],
+
+  sponsorBcc: (process.env.SPONSOR_BCC_EMAILS ?? "")
+    .split(",")
+    .map((email) => email.trim())
+    .filter(Boolean),
 };
 
 export function isMailConfigured(): boolean {

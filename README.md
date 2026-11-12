@@ -467,6 +467,7 @@ Email:
 |---|---|
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | SMTP transport |
 | `CONTACT_FORWARD`, `CONTACT_FORWARDEMAIL` | Contact form forwarding |
+| `SPONSOR_BCC_EMAILS` | Comma-separated BCC recipients for sponsor application emails |
 
 Payments and orders:
 

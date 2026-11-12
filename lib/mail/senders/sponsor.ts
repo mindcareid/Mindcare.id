@@ -11,6 +11,7 @@ export async function sendSponsorApplicationEmail(
   return EmailService.send({
     from: mailConfig.from,
     to: data.to,
+    bcc: mailConfig.sponsorBcc,
     replyTo: mailConfig.supportEmail,
 
     subject: `Sponsorship request received — ${data.referenceNo}`,
