@@ -8,6 +8,7 @@ import { motion, useInView, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Container from "./Container";
 import { buttonStyles } from "./buttonStyles";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export type HeroSlide = {
   src: string;
@@ -168,7 +169,7 @@ export default function HeroWipeSlideshow({
       className={cn(
         "relative isolate flex w-full flex-col overflow-hidden bg-brand-navy-950",
         // "h-[calc(100svh-64px)] min-h-140",
-        "min-h-[35rem] sm:min-h-[36rem]",
+        "min-h-140 sm:min-h-144",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
@@ -249,17 +250,10 @@ export default function HeroWipeSlideshow({
           }}
           className="max-w-2xl text-white"
         >
-          {eyebrow && (
-            <p className="text-sm font-semibold uppercase tracking-[0.08em] text-white/80">
-              {eyebrow}
-            </p>
-          )}
-
           {heading && (
             <h1
               className={cn(
-                "text-balance wrap-break-words font-heading text-[30px] font-semibold leading-[1.08] tracking-[-0.01em] text-white sm:text-[40px] md:text-[44px] lg:text-[56px]",
-                eyebrow && "mt-2.5 sm:mt-3",
+                "text-balance wrap-break-words font-heading text-[30px] font-semibold leading-[1.10] tracking-[-0.01em] text-primary sm:text-[40px] md:text-[44px] lg:text-[56px]",
               )}
             >
               {heading}
@@ -267,7 +261,7 @@ export default function HeroWipeSlideshow({
           )}
 
           {description && (
-            <p className="mt-3 max-w-2xl text-pretty wrap-break-words text-[15px] leading-[1.6] text-white/90 sm:mt-5 sm:text-base md:text-lg md:leading-relaxed">
+            <p className="mt-3 max-w-2xl text-pretty wrap-break-words text-[15px] leading-[1.6] text-primary sm:mt-5 sm:text-base md:text-lg md:leading-relaxed">
               {description}
             </p>
           )}
@@ -277,7 +271,11 @@ export default function HeroWipeSlideshow({
               {shownSlide.ctaText && shownSlide.ctaHref ? (
                 <Link
                   href={shownSlide.ctaHref}
-                  className={buttonStyles({ size: "lg" })}
+                  className={buttonStyles({
+                    size: "md",
+                    className:
+                      "rounded-full border-white/70 bg-radial-[at_0%_0%] from-[#2779ff] via-[#975eff] to-[#64389b]/30 text-white transition-colors duration-500 hover:bg-white/20 hover:text-primary",
+                  })}
                 >
                   {shownSlide.ctaText}
                 </Link>
@@ -346,21 +344,7 @@ export default function HeroWipeSlideshow({
                 aria-label="Previous slide"
                 className="flex size-11 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M15 18l-6-6 6-6"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <ArrowLeft />
               </button>
               <button
                 type="button"
@@ -368,21 +352,7 @@ export default function HeroWipeSlideshow({
                 aria-label="Next slide"
                 className="flex size-11 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M9 6l6 6-6 6"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <ArrowRight />
               </button>
             </div>
           </div>
