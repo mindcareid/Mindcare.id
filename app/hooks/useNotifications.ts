@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { notificationKeys } from "@/lib/notification-query";
 import type { Notification } from "@/types/notification";
 import type { ApiResponse } from "@/types/api";
@@ -19,18 +20,18 @@ async function fetchNotifications(): Promise<Notification[]> {
 }
 
 export function useNotifications() {
+  const { status } = useSession();
+  const authenticated = status === "authenticated";
+
   const query = useQuery({
     queryKey: notificationKeys.all,
     queryFn: fetchNotifications,
+    enabled: authenticated,
 
     staleTime: 1000 * 60, // 1 menit
-
     gcTime: 1000 * 60 * 10, // 10 menit
-
     refetchOnWindowFocus: false,
-
     refetchOnReconnect: true,
-
     retry: 2,
 
     placeholderData: (previousData) => previousData,
@@ -42,7 +43,6 @@ export function useNotifications() {
 
       return {
         notifications,
-
         unreadCount,
       };
     },
@@ -50,17 +50,11 @@ export function useNotifications() {
 
   return {
     notifications: query.data?.notifications ?? [],
-
     unreadCount: query.data?.unreadCount ?? 0,
-
     isLoading: query.isLoading,
-
     isFetching: query.isFetching,
-
     isError: query.isError,
-
     error: query.error,
-
     refetch: query.refetch,
   };
 }

@@ -1,14 +1,9 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-} from "react";
-import { socket } from "@/lib/socket";
+import { createContext, useContext, useEffect, useState } from "react";
+import type { Socket } from "socket.io-client";
 import { useSession } from "next-auth/react";
-
-const SocketContext = createContext(socket);
+const SocketContext = createContext<Socket | null>(null);
 
 export default function SocketProvider({
   children,
@@ -16,47 +11,58 @@ export default function SocketProvider({
   children: React.ReactNode;
 }) {
   const { data: session, status } = useSession();
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const userId = session?.user?.id;
 
   useEffect(() => {
-    if (status !== "authenticated" || !session?.user?.id) {
+    // Logout / session hilang: `return` kosong membuat cleanup effect
+    // sebelumnya berjalan (disconnect + setSocket(null)).
+    if (status !== "authenticated" || !userId) {
       return;
     }
 
-    if (!socket.connected) {
-      socket.connect();
-    }
+    let active = true;
+    let current: Socket | undefined;
+    let cleanup: (() => void) | undefined;
+    import("@/lib/socket")
+      .then(({ socket }) => {
+        if (!active) return;
 
-    const onConnect = () => {
-      console.log("Connected:", socket.id);
+        current = socket;
+        setSocket(socket);
 
-      socket.emit("register", {
-        userId: session.user.id,
+        if (!socket.connected) {
+          socket.connect();
+        }
+
+        const onConnect = () => {
+          socket.emit("register", { userId });
+        };
+
+        socket.on("connect", onConnect);
+        cleanup = () => {
+          socket.off("connect", onConnect);
+        };
+
+        // Koneksi mungkin sudah terbuka sebelum listener terpasang.
+        if (socket.connected) onConnect();
+      })
+      .catch((err) => {
+        console.error("Socket load failed", err);
       });
-    };
-
-    const onDisconnect = () => {
-      console.log("Disconnected");
-    };
-
-    const onError = (err: Error) => {
-      console.error(err);
-    };
-
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-    socket.on("connect_error", onError);
 
     return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-      socket.off("connect_error", onError);
+      active = false;
+      cleanup?.();
+      // Jangan biarkan koneksi (dan user terdaftar) hidup setelah
+      // provider unmount atau user berganti.
+      current?.disconnect();
+      setSocket(null);
     };
-  }, [status, session?.user?.id]);
+  }, [status, userId]);
 
   return (
-    <SocketContext.Provider value={socket}>
-      {children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
   );
 }
 

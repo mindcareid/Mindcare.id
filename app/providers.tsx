@@ -9,12 +9,23 @@ import type { Session } from "next-auth";
 import SocketProvider from "@/providers/SocketProvider";
 import NotificationProvider from "@/providers/NotificationProvider";
 
+/**
+ * Provider klien global.
+ *
+ * Ini SATU-SATUNYA `SessionProvider` aplikasi. Area yang punya session
+ * dari server (dashboard) meneruskan session lewat `SessionBootstrap`
+ * (lihat `app/components/SessionBootstrap.tsx`), sehingga hanya ada
+ * satu sumber kebenaran untuk `status` session. Halaman publik yang
+ * tidak mengirim `session` akan mengambilnya sekali dari
+ * `/api/auth/session`.
+ */
 export default function Providers({
   children,
   session,
 }: {
   children: React.ReactNode;
-  session: Session | null;
+  /** Session dari server, atau `undefined` untuk fetch sekali di klien. */
+  session?: Session | null;
 }) {
   const queryClient = getQueryClient();
 
@@ -22,16 +33,13 @@ export default function Providers({
     <SessionProvider session={session}>
       <QueryClientProvider client={queryClient}>
         <SocketProvider>
-          <NotificationProvider>
-            {children}
-          </NotificationProvider>
+          <NotificationProvider>{children}</NotificationProvider>
 
-          <Toaster
+              <Toaster
             position="top-right"
             richColors
             toastOptions={{ className: "z-[9999]" }}
           />
-
         </SocketProvider>
 
         {process.env.NODE_ENV === "development" && (
