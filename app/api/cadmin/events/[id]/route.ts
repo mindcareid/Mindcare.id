@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import slugify from "slugify";
 import { EventStatus } from "@prisma/client";
 import { parseProposal } from "@/lib/events/proposalInput";
+import { revalidateEventCache } from "@/lib/events/cache";
 
 export async function GET(
   req: Request,
@@ -59,8 +60,9 @@ export async function PATCH(
       isPublished,
       status: isPublished ? EventStatus.PUBLISHED : EventStatus.DRAFT,
     },
-    select: { id: true, isPublished: true, status: true },
+    select: { id: true, slug: true, isPublished: true, status: true },
   });
+  revalidateEventCache(event.slug);
 
   return NextResponse.json({ success: true, data: event });
 }
@@ -99,29 +101,44 @@ export async function PUT(
     );
   }
 
-  const event = await prisma.event.update({
-    where: { id: Number(id) },
-    data: {
-      title: body.title,
-      slug: body.slug ?? slugify(body.title, { lower: true }),
-      description: body.description,
-      location: body.location,
-      startDate: new Date(body.startDate),
-      endDate: new Date(body.endDate),
-      price: Number(body.price),
-      quota: body.quota ? Number(body.quota) : null,
-      categoryId: Number(body.categoryId),
-      isPublished: Boolean(body.isPublished),
-      coverImage: body.coverImage,
-      publicId: body.publicId,
-      ...(parsedProposal && parsedProposal.ok
-        ? {
-            proposalUrl: parsedProposal.url,
-            proposalPublicId: parsedProposal.publicId,
-          }
-        : {}),
-    },
+  // Slug lama dan update dibaca/ditulis dalam satu transaksi supaya slug
+  // yang dipakai untuk invalidasi cache selalu slug yang benar-benar
+  // digantikan oleh update ini (tidak tertinggal request lain).
+  const { previous, event } = await prisma.$transaction(async (tx) => {
+    const previous = await tx.event.findUnique({
+      where: { id: Number(id) },
+      select: { slug: true },
+    });
+
+    const event = await tx.event.update({
+      where: { id: Number(id) },
+      data: {
+        title: body.title,
+        slug: body.slug ?? slugify(body.title, { lower: true }),
+        description: body.description,
+        location: body.location,
+        startDate: new Date(body.startDate),
+        endDate: new Date(body.endDate),
+        price: Number(body.price),
+        quota: body.quota ? Number(body.quota) : null,
+        categoryId: Number(body.categoryId),
+        isPublished: Boolean(body.isPublished),
+        coverImage: body.coverImage,
+        publicId: body.publicId,
+        ...(parsedProposal && parsedProposal.ok
+          ? {
+              proposalUrl: parsedProposal.url,
+              proposalPublicId: parsedProposal.publicId,
+            }
+          : {}),
+      },
+    });
+
+    return { previous, event };
   });
+
+  revalidateEventCache(previous?.slug, event.slug);
+
   return NextResponse.json({ success: true, data: event });
 }
 
@@ -135,10 +152,12 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  await prisma.event.update({
+  const removed = await prisma.event.update({
     where: { id: Number(id) },
     data: { deletedAt: new Date() },
+    select: { slug: true },
   });
+  revalidateEventCache(removed.slug);
 
   return NextResponse.json({ success: true, message: "Event Deleted" });
 }

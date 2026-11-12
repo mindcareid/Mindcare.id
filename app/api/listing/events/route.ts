@@ -7,6 +7,7 @@ import slugify from "slugify";
 import z from "zod";
 import { toUtc } from "@/lib/date";
 import { EventPublisherType } from "@prisma/client";
+import { revalidateEventCache } from "@/lib/events/cache";
 
 type ListingType = "professional" | "care-centre";
 
@@ -32,9 +33,7 @@ async function resolveOwnedListing(
       },
       select: { id: true },
     });
-    return professional
-      ? { type: "professional", id: professional.id }
-      : null;
+    return professional ? { type: "professional", id: professional.id } : null;
   }
 
   if (type === "care-centre") {
@@ -150,6 +149,7 @@ export async function POST(req: Request) {
         industries: { include: { industry: true } },
       },
     });
+    revalidateEventCache(event.slug);
 
     return NextResponse.json(
       { message: "Event published", data: event },

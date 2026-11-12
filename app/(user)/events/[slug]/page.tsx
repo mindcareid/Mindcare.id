@@ -2,10 +2,15 @@ import type { Metadata } from "next";
 
 import { notFound } from "next/navigation";
 
-import { getEventBySlug, getRelatedEvents } from "../data/events";
+import {
+  getEventBySlug,
+  getPublicEventSlugs,
+  getRelatedEvents,
+} from "../data/events";
 
 import EventDetail from "./EventDetail";
 import { toEventPlainText } from "@/lib/events/serializers";
+import { EVENT_CACHE_REVALIDATE } from "@/lib/events/cache";
 
 type EventPageProps = {
   params: {
@@ -13,23 +18,23 @@ type EventPageProps = {
   };
 };
 
-/*
- * ============================================================
- * PAGE RENDERING
- * ============================================================
- *
- * Root layout memakai getServerSession (membaca cookie), jadi
- * route ini tidak boleh dipaksa statis. Dibiarkan dinamis agar
- * tidak muncul DYNAMIC_SERVER_USAGE di production.
- */
+export const revalidate = EVENT_CACHE_REVALIDATE;
 
-export const dynamic = "force-dynamic";
-
-/*
- * ============================================================
- * METADATA
- * ============================================================
+/**
+ * Pre-render slug publik saat build. DB bisa saja tidak terjangkau dari
+ * environment build (atau query lambat/bermasalah), jadi kegagalan di
+ * sini tidak boleh menggagalkan seluruh deploy: kembalikan array kosong
+ * dan biarkan halaman dibuat on-demand lewat ISR.
  */
+export async function generateStaticParams() {
+  try {
+    const slugs = await getPublicEventSlugs();
+    return slugs.map((slug) => ({ slug }));
+  } catch (error) {
+    console.error("[EVENT_STATIC_PARAMS]", error);
+    return [];
+  }
+}
 
 export async function generateMetadata({
   params,
@@ -40,8 +45,7 @@ export async function generateMetadata({
   if (!event) {
     return {
       title: "Event Not Found | MindCare",
-      description:
-        "The event you are looking for could not be found.",
+      description: "The event you are looking for could not be found.",
     };
   }
 
@@ -73,9 +77,7 @@ export async function generateMetadata({
     },
 
     twitter: {
-      card: event.coverImage
-        ? "summary_large_image"
-        : "summary",
+      card: event.coverImage ? "summary_large_image" : "summary",
       title: event.title,
       description,
       ...(event.coverImage
@@ -87,43 +89,16 @@ export async function generateMetadata({
   };
 }
 
-/*
- * ============================================================
- * PAGE
- * ============================================================
- */
-
-export default async function EventPage({
-  params,
-}: EventPageProps) {
+export default async function EventPage({ params }: EventPageProps) {
   const event = await getEventBySlug(params.slug);
 
   if (!event) {
     notFound();
   }
-
-  /*
-   * Ambil waktu SATU KALI untuk seluruh render.
-   *
-   * Jangan membuat new Date() di masing-masing component.
-   */
   const now = new Date();
-
-  /*
-   * Related events sudah menggunakan Date,
-   * bukan string ISO.
-   */
-  const related = await getRelatedEvents(
-    event.slug,
-    3,
-    now,
-  );
+  const related = await getRelatedEvents(event.slug, 3, now);
 
   return (
-    <EventDetail
-      event={event}
-      related={related}
-      now={now.toISOString()}
-    />
+    <EventDetail event={event} related={related} now={now.toISOString()} />
   );
 }

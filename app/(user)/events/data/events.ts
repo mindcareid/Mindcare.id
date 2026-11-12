@@ -1,9 +1,17 @@
 import { EventStatus, OrderStatus, Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
 import { PLATFORM_NAME, PLATFORM_SLUG } from "@/lib/events/constants";
-import { getPublicSponsorTiers, normalizeBenefits } from "@/lib/sponsors/queries";
+import {
+  getPublicSponsorTiers,
+  normalizeBenefits,
+} from "@/lib/sponsors/queries";
 import type { SponsorBenefit } from "@/lib/sponsors/shared";
+import {
+  EVENT_CACHE_REVALIDATE,
+  eventTag,
+} from "@/lib/events/cache";
 
 const eventListInclude = {
   category: true,
@@ -274,17 +282,98 @@ export async function getEvents(): Promise<EventListItem[]> {
   );
 }
 
+export async function getPublicEventSlugs(): Promise<string[]> {
+  const rows = await prisma.event.findMany({
+    where: publicEventWhere,
+    select: { slug: true },
+  });
+
+  return rows.map((row) => row.slug);
+}
+
 /**
- * Detail event untuk halaman publik.
- *
- * `withTiers: false` dipakai `generateMetadata`: metadata tidak memakai paket
- * sponsor, dan halaman ini memanggil fungsi ini dua kali per request (metadata
- * + komponen). Tanpa flag ini, query paket ikut berjalan dua kali pada setiap
- * tampilan halaman event.
+ * Factory cache di-memoize per (slug, withTiers) agar `unstable_cache`
+ * tidak dialokasikan ulang pada setiap request, sementara tag per-slug
+ * tetap bisa dipakai untuk invalidasi.
  */
+const eventBySlugCache = new Map<
+  string,
+  () => Promise<EventDetail | null>
+>();
+
+function getCachedEventBySlug(slug: string, withTiers: boolean) {
+  const key = `${slug}:${withTiers}`;
+  let cached = eventBySlugCache.get(key);
+
+  if (!cached) {
+    cached = unstable_cache(
+      () => loadEventBySlug(slug, withTiers),
+      ["event-by-slug", slug, String(withTiers)],
+      {
+        revalidate: EVENT_CACHE_REVALIDATE,
+        tags: [eventTag(slug)],
+      },
+    );
+    eventBySlugCache.set(key, cached);
+  }
+
+  return cached;
+}
+
 export async function getEventBySlug(
   slug: string,
   { withTiers = true }: { withTiers?: boolean } = {},
+): Promise<EventDetail | null> {
+  const cached = await getCachedEventBySlug(slug, withTiers)();
+
+  if (!cached) {
+    return null;
+  }
+  return reviveEventDates(cached);
+}
+const DATE_KEYS = new Set([
+  "startDate",
+  "endDate",
+  "startTime",
+  "endTime",
+  "createdAt",
+  "updatedAt",
+  "deletedAt",
+  "publishedAt",
+]);
+
+function reviveEventDates(event: EventDetail): EventDetail {
+  return reviveDatesDeep(event) as EventDetail;
+}
+
+function reviveDatesDeep<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => reviveDatesDeep(item)) as unknown as T;
+  }
+
+  if (value && typeof value === "object" && !(value instanceof Date)) {
+    const result: Record<string, unknown> = {};
+
+    for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+      if (DATE_KEYS.has(key) && typeof raw === "string") {
+        const parsed = new Date(raw);
+        // Jangan ubah nilai yang bukan tanggal valid (mis. null).
+        result[key] = Number.isNaN(parsed.getTime()) ? raw : parsed;
+        continue;
+      }
+
+      result[key] = reviveDatesDeep(raw);
+    }
+
+    return result as T;
+  }
+
+  return value;
+}
+
+async function loadEventBySlug(
+  slug: string,
+  withTiers: boolean,
 ): Promise<EventDetail | null> {
   const event = await prisma.event.findFirst({
     where: {
@@ -305,9 +394,6 @@ export async function getEventBySlug(
       select: { proposalUrl: true },
     }),
   ]);
-
-  // Sponsorship hanya untuk event platform. Event profesional/care centre
-  // tidak punya paket dan tidak boleh menampilkan section ini.
   const tiers =
     withTiers && event.publisherType === "PLATFORM"
       ? await getPublicSponsorTiers(event.id)
@@ -364,13 +450,58 @@ export async function getUpcomingEvents(
   );
 }
 
+/**
+ * Related events di-cache (bukan ISR, karena `now` berubah tiap request)
+ * dengan tag yang sama dengan detail event, agar setiap mutasi event
+ * ikut menyegarkan daftar "event terkait". Jumlah registrasi bisa
+ * berubah tanpa mutasi event, jadi waktu dibulatkan ke jendela
+ * `EVENT_CACHE_REVALIDATE`.
+ */
+const relatedEventsCache = new Map<
+  string,
+  () => Promise<EventListItem[]>
+>();
+
+function getCachedRelatedEvents(
+  slug: string,
+  limit: number,
+  timeBucket: number,
+) {
+  const key = `${slug}:${limit}:${timeBucket}`;
+  let cached = relatedEventsCache.get(key);
+
+  if (!cached) {
+    cached = unstable_cache(
+      () => loadRelatedEvents(slug, limit, new Date(timeBucket)),
+      ["event-related", slug, String(limit), String(timeBucket)],
+      {
+        revalidate: EVENT_CACHE_REVALIDATE,
+        tags: [eventTag(slug)],
+      },
+    );
+    relatedEventsCache.set(key, cached);
+  }
+
+  return cached;
+}
+
 export async function getRelatedEvents(
   slug: string,
   limit = 3,
   now = new Date(),
 ): Promise<EventListItem[]> {
   const safeLimit = Math.min(Math.max(limit, 1), 20);
+  const bucketMs = EVENT_CACHE_REVALIDATE * 1000;
+  const timeBucket = Math.floor(now.getTime() / bucketMs) * bucketMs;
 
+  return getCachedRelatedEvents(slug, safeLimit, timeBucket)();
+}
+
+async function loadRelatedEvents(
+  slug: string,
+  safeLimit: number,
+  now: Date,
+): Promise<EventListItem[]> {
   const currentEvent = await prisma.event.findFirst({
     where: {
       slug,
@@ -446,14 +577,6 @@ export async function getRelatedEvents(
     serializeEvent(event, counts.get(event.id) ?? 0),
   );
 }
-
-/*
- * ============================================================
- * EVENT FACETS
- * ============================================================
- *
- * Digunakan oleh event listing/filter.
- */
 
 export async function getEventFacets() {
   const [categories, focusAreas, formatRows] = await Promise.all([

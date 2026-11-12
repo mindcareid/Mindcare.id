@@ -23,12 +23,8 @@ import {
   isPublicIdInEntityFolder,
 } from "@/lib/cloudinary/asset";
 import { parseProposal } from "@/lib/events/proposalInput";
+import { revalidateEventCache } from "@/lib/events/cache";
 
-/**
- * Opsi `$transaction` untuk simpan event + speaker + agenda. Default Prisma
- * hanya 5 detik; di Vercel (latency ke DB tinggi, pool kecil) simpan banyak
- * speaker/agenda mudah melewatinya dan berakhir P2028 "Transaction not found".
- */
 const EVENT_WRITE_TRANSACTION = { maxWait: 15_000, timeout: 60_000 } as const;
 
 function resolveTimeZone(body: Record<string, unknown>): string {
@@ -742,6 +738,10 @@ export async function POST(req: Request) {
       return created;
     }, EVENT_WRITE_TRANSACTION);
 
+    // Event baru mungkin langsung PUBLISHED; patahkan cache slug agar
+    // tidak menyajikan 404 yang ter-cache untuk halaman ini.
+    revalidateEventCache(event.slug);
+
     return NextResponse.json({
       success: true,
       message: "Event created successfully",
@@ -810,7 +810,7 @@ export async function PUT(req: Request) {
 
     const current = await prisma.event.findFirst({
       where: { id: Number(id), deletedAt: null },
-      select: { publisherType: true },
+      select: { publisherType: true, slug: true },
     });
     if (!current) {
       return NextResponse.json(
@@ -921,6 +921,9 @@ export async function PUT(req: Request) {
       return updated;
     }, EVENT_WRITE_TRANSACTION);
 
+    // Slug bisa berubah: patahkan cache untuk slug lama dan slug baru.
+    revalidateEventCache(current.slug, event.slug);
+
     return NextResponse.json({
       success: true,
       message: "Event updated successfully",
@@ -964,6 +967,14 @@ export async function DELETE(req: Request) {
       );
     }
 
+    // Ambil slug sebelum soft delete agar cache halaman detail bisa
+    // dipatahkan; tanpa ini halaman publik masih menampilkan event
+    // yang sudah dihapus hingga revalidate berikutnya.
+    const target = await prisma.event.findFirst({
+      where: { id: Number(id), deletedAt: null },
+      select: { slug: true },
+    });
+
     const { count } = await prisma.event.updateMany({
       where: { id: Number(id), deletedAt: null },
       data: { deletedAt: new Date() },
@@ -975,6 +986,8 @@ export async function DELETE(req: Request) {
         { status: 404 },
       );
     }
+
+    revalidateEventCache(target?.slug);
 
     return NextResponse.json({
       success: true,

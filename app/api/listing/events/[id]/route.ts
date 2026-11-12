@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/auth";
 import { UpdateEventSchema } from "@/lib/validations/auth";
 import z from "zod";
 import { toUtc } from "@/lib/date";
+import { revalidateEventCache } from "@/lib/events/cache";
+import { EventStatus } from "@prisma/client";
 
 type Params = { params: { id: string } };
 
@@ -77,8 +79,15 @@ export async function PATCH(req: Request, { params }: Params) {
       updateData.coverImage = data.coverImage || null;
     if (data.publicId !== undefined)
       updateData.publicId = data.publicId || null;
-    if (data.isPublished !== undefined)
+    if (data.isPublished !== undefined) {
+      // Filter publik (`publicEventWhere`) memakai `status`, bukan
+      // `isPublished`. Tanpa sinkronisasi ini, event yang di-unpublish
+      // lewat listing tetap tampil di halaman publik.
       updateData.isPublished = data.isPublished;
+      updateData.status = data.isPublished
+        ? EventStatus.PUBLISHED
+        : EventStatus.DRAFT;
+    }
     if (data.industryIds !== undefined) {
       updateData.industries = {
         deleteMany: {},
@@ -94,6 +103,8 @@ export async function PATCH(req: Request, { params }: Params) {
         industries: { include: { industry: true } },
       },
     });
+
+    revalidateEventCache(updated.slug);
 
     return NextResponse.json({
       message: "Event updated",
