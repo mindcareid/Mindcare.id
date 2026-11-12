@@ -6,11 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FiMenu, FiX, FiChevronDown } from "react-icons/fi";
-import {
-  LayoutGrid,
-  ShieldCheck,
-  LogOut,
-} from "lucide-react";
+import { LayoutGrid, ShieldCheck, LogOut } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { NotificationBell } from "@/app/components/notifications";
 import { Menu } from "../data/menu";
@@ -21,7 +17,6 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [hidden, setHidden] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const isAdmin = Boolean(session?.user?.adminRole);
@@ -34,24 +29,8 @@ export default function Navbar() {
       : pathname === path || pathname.startsWith(path + "/");
 
   useEffect(() => {
-    let lastY = window.scrollY;
-
     const handleScroll = () => {
-      const y = window.scrollY;
-      const delta = y - lastY;
-
-      setScrolled(y > 8);
-
-      // Selalu tampil di dekat atas halaman
-      if (y < 64) {
-        setHidden(false);
-      } else if (Math.abs(delta) > 6) {
-        // Turun -> sembunyi, naik -> muncul
-        setHidden(delta > 0);
-      }
-
-      // Jangan update lastY saat selisih masih kecil (mencegah flicker)
-      if (Math.abs(delta) > 6) lastY = y;
+      setScrolled(window.scrollY > 8);
     };
 
     const handleSize = () => {
@@ -64,6 +43,8 @@ export default function Navbar() {
       }
     };
 
+    handleScroll();
+
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", handleSize);
     window.addEventListener("keydown", handleKey);
@@ -72,47 +53,62 @@ export default function Navbar() {
       window.removeEventListener("resize", handleSize);
       window.removeEventListener("keydown", handleKey);
     };
-  }, []);
+  }, [pathname]);
+  const onHero = !scrolled;
 
   return (
     <>
-      <motion.header
-        initial={false}
-        animate={{ y: hidden && !isOpen ? "-100%" : "0%" }}
-        transition={{ duration: 0.28, ease: "easeInOut" }}
-        className={`sticky top-0 z-50 w-full bg-card/95 backdrop-blur transition-shadow ${
-          scrolled ? "border-b border-border shadow-search" : ""
+      <header
+        className={`fixed inset-x-0 top-0 z-50 w-full transition-[background-color,border-color,box-shadow,backdrop-filter] duration-500 ease-out ${
+          onHero
+            ? "bg-transparent text-primary"
+            : " border-border bg-white text-primary shadow-search"
         }`}
       >
-        <Container className="flex h-16 items-center justify-between gap-4">
+        <Container
+          className={`flex h-16 items-center justify-between gap-4 transition-colors duration-500 ease-out ${
+            onHero ? "text-white" : "text-foreground"
+          }`}
+        >
           <Link
             href="/"
             aria-label="MindCare.id, ke beranda"
-            className="relative flex h-12 w-36 shrink-0 items-center md:w-44"
+            className={`relative flex shrink-0 items-center transition-all duration-500 ease-out ${
+              onHero ? "h-12 md:w-48" : "h-12 md:w-44"
+            } w-40`}
           >
-            <Image
-              src="/images/logo/mindcare-logo.png"
-              alt="MindCare.id"
-              fill
-              sizes="176px"
-              priority
-              className="object-contain object-left"
-            />
+            <span
+              className={`relative h-full w-full rounded-lg transition-colors duration-500 ease-out ${
+                onHero
+                  ? "bg-transparent px-2.5 py-1 "
+                  : "bg-white/0 px-0 py-0 shadow-none"
+              }`}
+            >
+              <Image
+                src="/images/logo/mindcare-logo.png"
+                alt="MindCare.id"
+                fill
+                sizes="192px"
+                priority
+                className="object-contain object-left"
+              />
+            </span>
           </Link>
 
-          <nav
-            className="hidden items-center gap-1 lg:flex"
-            aria-label="Navigasi utama"
-          >
+          <nav className="hidden items-center gap-1 lg:flex">
             {Menu.map((link) => (
               <Link
                 key={link.link}
                 href={link.link}
                 aria-current={isActive(link.link) ? "page" : undefined}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                className={`rounded-full px-3 py-2 text-sm font-medium transition-colors duration-300 ${
                   isActive(link.link)
-                    ? "bg-brand-lavender-100 text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? onHero
+                      ? "text-white shadow-sm bg-radial-[at_0%_0%] from-[#2779ff] via-[#975eff] to-[#64389b]/30.5 "
+                      : "bg-brand-lavender-100 text-primary "
+                    : onHero
+                      ? "text-primary bg-transparent hover:text-black "
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground "
                 }`}
               >
                 {link.title}
@@ -121,7 +117,11 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-1 md:gap-2">
-            {status === "authenticated" && <NotificationBell />}
+            {status === "authenticated" && (
+              <div className={onHero ? "[&_button]:text-black " : undefined}>
+                <NotificationBell />
+              </div>
+            )}
 
             <div className="hidden items-center gap-3 lg:flex">
               {status === "authenticated" ? (
@@ -135,7 +135,9 @@ export default function Navbar() {
                     aria-haspopup="menu"
                     aria-expanded={userMenuOpen}
                     onClick={() => setUserMenuOpen((open) => !open)}
-                    className="flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-muted"
+                    className={`flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors duration-500 ${
+                      onHero ? "hover:bg-white/10" : "hover:bg-muted"
+                    }`}
                   >
                     <span className="relative size-8 shrink-0">
                       {session.user?.photo ? (
@@ -152,13 +154,17 @@ export default function Navbar() {
                         </span>
                       )}
                     </span>
-                    <span className="max-w-32 truncate text-sm font-medium text-foreground">
+                    <span
+                      className={`max-w-32 truncate text-sm font-medium ${
+                        onHero ? "text-black" : "text-foreground"
+                      }`}
+                    >
                       {session.user?.name}
                     </span>
                     <FiChevronDown
-                      className={`size-4 text-muted-foreground transition-transform ${
-                        userMenuOpen ? "rotate-180" : ""
-                      }`}
+                      className={`size-4 transition-transform ${
+                        onHero ? "text-black" : "text-muted-foreground"
+                      } ${userMenuOpen ? "rotate-180" : ""}`}
                     />
                   </button>
 
@@ -196,7 +202,16 @@ export default function Navbar() {
                   </AnimatePresence>
                 </div>
               ) : (
-                <Link href="/auth/login" className={buttonStyles({ size: "md" })}>
+                <Link
+                  href="/auth/login"
+                  className={buttonStyles({
+                    size: "md",
+                    variant: onHero ? "outline" : "primary",
+                    className: onHero
+                      ? "border-white/70 text-white bg-radial-[at_0%_0%] from-[#2779ff] via-[#975eff] to-[#64389b]/30.5  transition-colors duration-500 hover:bg-white/20 hover:text-black rounded-full"
+                      : "transition-colors duration-500 rounded-full",
+                  })}
+                >
                   Join MindCare.id
                 </Link>
               )}
@@ -207,13 +222,21 @@ export default function Navbar() {
               onClick={() => setIsOpen((open) => !open)}
               aria-label={isOpen ? "Tutup menu" : "Buka menu"}
               aria-expanded={isOpen}
-              className="rounded-md p-2 text-foreground transition-colors hover:bg-muted lg:hidden"
+              className={`rounded-md p-2 transition-colors duration-500 lg:hidden ${
+                onHero
+                  ? "text-primary hover:bg-white/25"
+                  : "text-foreground hover:bg-muted"
+              }`}
             >
-              {isOpen ? <FiX className="size-5" /> : <FiMenu className="size-5" />}
+              {isOpen ? (
+                <FiX className="size-5" />
+              ) : (
+                <FiMenu className="size-5" />
+              )}
             </button>
           </div>
         </Container>
-      </motion.header>
+      </header>
 
       <AnimatePresence>
         {isOpen && (
@@ -233,7 +256,10 @@ export default function Navbar() {
               className="fixed inset-x-0 top-16 z-50 border-b border-border bg-card shadow-card-hover lg:hidden"
             >
               <Container className="max-h-[calc(100vh-4rem)] overflow-y-auto py-4">
-                <nav className="flex flex-col gap-1" aria-label="Navigasi seluler">
+                <nav
+                  className="flex flex-col gap-1"
+                  aria-label="Navigasi seluler"
+                >
                   {Menu.map((link) => (
                     <Link
                       key={link.link}
@@ -283,7 +309,10 @@ export default function Navbar() {
                       <Link
                         href="/auth/login"
                         onClick={() => setIsOpen(false)}
-                        className={buttonStyles({ size: "lg", variant: "outline" })}
+                        className={buttonStyles({
+                          size: "lg",
+                          variant: "outline",
+                        })}
                       >
                         Sign in
                       </Link>

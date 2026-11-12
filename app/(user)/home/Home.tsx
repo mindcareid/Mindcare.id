@@ -53,23 +53,30 @@ export default function Home({
 
   return (
     <div className="min-h-screen">
-      {heroSlides.length > 0 ? (
-        <HeroWipeSlideshow
-          slides={heroSlides}
-          eyebrow="MindCare.id"
-          defaultTitle="Mental health support, all in one place"
-          defaultDescription="Psychologists, psychiatrists, and counselling centres across Indonesia, together with the programmes, events, and articles that go with them."
-          defaultActions={heroActions}
-        />
-      ) : (
-        <PageHero
-          eyebrow="MindCare.id"
-          title="Mental health support, all in one place"
-          subtitle="Psychologists, psychiatrists, and counselling centres across Indonesia, together with the programmes, events, and articles that go with them."
-        >
-          {heroActions}
-        </PageHero>
-      )}
+      {/* Hero memanjang ke belakang navbar transparan. -mt-16 menutup
+          padding pt-16 milik <main> sehingga gambar mulai di y=0 dan navbar
+          mengambang di atasnya. pt-16 di dalam hero (bukan pembungkus) hanya
+          membuat ruang untuk navbar; gambar & overlay tetap ikut memanjang. */}
+      <div className="-mt-16">
+        {heroSlides.length > 0 ? (
+          <HeroWipeSlideshow
+            slides={heroSlides}
+            eyebrow="MindCare.id"
+            defaultTitle="Mental health support, all in one place"
+            defaultDescription="Psychologists, psychiatrists, and counselling centres across Indonesia, together with the programmes, events, and articles that go with them."
+            defaultActions={heroActions}
+            className="pt-16"
+          />
+        ) : (
+          <PageHero
+            eyebrow="MindCare.id"
+            title="Mental health support, all in one place"
+            subtitle="Psychologists, psychiatrists, and counselling centres across Indonesia, together with the programmes, events, and articles that go with them."
+          >
+            {heroActions}
+          </PageHero>
+        )}
+      </div>
       <HomeSection
         title="Meet the professionals"
         description="Psychologists, psychiatrists, and counsellors with the areas they support and the cities they practise in."

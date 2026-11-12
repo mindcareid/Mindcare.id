@@ -167,7 +167,8 @@ export default function HeroWipeSlideshow({
       onBlurCapture={() => setPaused(false)}
       className={cn(
         "relative isolate flex w-full flex-col overflow-hidden bg-brand-navy-950",
-        "min-h-screen sm:aspect-4/3 sm:min-h-0 lg:aspect-video lg:h-screen",
+        // "h-[calc(100svh-64px)] min-h-140",
+        "min-h-[35rem] sm:min-h-[36rem]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
@@ -233,11 +234,11 @@ export default function HeroWipeSlideshow({
       </div>
 
       <div
-        className="pointer-events-none absolute inset-0 bg-linear-to-t from-brand-navy-950/90 via-brand-navy-950/55 to-brand-navy-950/15"
+        className="pointer-events-none absolute inset-0 "
         aria-hidden="true"
       />
 
-      <Container className="relative flex flex-1 flex-col justify-end pt-20 pb-8 sm:pt-28 sm:pb-10 lg:pt-32 lg:pb-12">
+      <Container className="relative flex flex-1 flex-col justify-end  pb-8 sm:pb-10 ">
         <motion.div
           key={indicatorIndex}
           initial={reduceMotion ? false : { opacity: 0 }}

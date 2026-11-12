@@ -11,7 +11,10 @@ export default function UserLayout({
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <NavbarMobile />
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      {/* Navbar transparan menimpa hero di semua halaman (fixed), jadi beri
+          ruang setinggi navbar agar konten tidak tertutup. Home menimpa
+          kembali padding ini agar hero-nya memanjang ke belakang navbar. */}
+      <main className="flex-1 pt-16 pb-20 md:pb-0">{children}</main>
       <Footer />
     </div>
   );
