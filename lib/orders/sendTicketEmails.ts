@@ -4,10 +4,23 @@ import { mailConfig } from "@/lib/mail/config";
 import { createTicketToken } from "@/lib/tickets/token";
 import { formatDate, formatTimeOnly } from "@/lib/utils/FormatDate";
 
+/**
+ * Ticket emails are paused: tickets are still created and stay reachable from
+ * "/tickets/<token>" and the dashboard, but nothing is sent. Set
+ * TICKET_EMAILS_ENABLED=true in the environment to resume delivery.
+ */
+function ticketEmailsEnabled(): boolean {
+  return process.env.TICKET_EMAILS_ENABLED === "true";
+}
+
 function asString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 export async function sendOrderTicketEmails(orderId: string): Promise<void> {
+  if (!ticketEmailsEnabled()) {
+    return;
+  }
+
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: { tickets: true, event: true },

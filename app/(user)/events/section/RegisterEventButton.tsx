@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoClose } from "react-icons/io5";
-import { Loader2, CheckCircle2, AlertTriangle, Mail } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
-import React from "react";
+import { emailsMatch, isValidEmail } from "@/lib/emailValidation";
 
 export type AttendeeFieldInput = {
   id: string;
@@ -37,6 +37,15 @@ type FieldDef = {
 };
 
 type Attendee = Record<string, string>;
+
+const EMAIL_CONFIRM_KEY = "emailConfirm";
+
+const INPUT_TYPE_BY_FIELD_TYPE: Record<string, string> = {
+  EMAIL: "email",
+  PHONE: "tel",
+  NUMBER: "number",
+  DATE: "date",
+};
 
 const priceFormatter = new Intl.NumberFormat("id-ID", {
   style: "currency",
@@ -103,6 +112,43 @@ function parseOptions(options: unknown): { label: string; value: string }[] {
     );
 }
 
+function findAttendeeError(attendees: Attendee[], fields: FieldDef[]) {
+  for (let index = 0; index < attendees.length; index++) {
+    const attendee = attendees[index];
+    const attendeeLabel = `Attendee ${index + 1}`;
+
+    for (const field of fields) {
+      if (!field.required || attendee[field.key]?.trim()) {
+        continue;
+      }
+
+      if (field.key === "email") {
+        return `Enter an email address for ${attendeeLabel}.`;
+      }
+
+      return `"${field.label.replace(" (optional)", "")}" is required for ${attendeeLabel}.`;
+    }
+
+    const email = attendee.email ?? "";
+
+    if (!isValidEmail(email)) {
+      return `Enter a valid email address for ${attendeeLabel}.`;
+    }
+
+    const emailConfirm = attendee[EMAIL_CONFIRM_KEY] ?? "";
+
+    if (!emailConfirm.trim()) {
+      return `Retype the email address for ${attendeeLabel}.`;
+    }
+
+    if (!emailsMatch(email, emailConfirm)) {
+      return `The two email addresses do not match for ${attendeeLabel}.`;
+    }
+  }
+
+  return null;
+}
+
 export default function RegisterEventButton({
   eventId,
   title,
@@ -118,6 +164,7 @@ export default function RegisterEventButton({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [guestTicketUrls, setGuestTicketUrls] = useState<string[]>([]);
 
   const { status: sessionStatus } = useSession();
   const isAuthenticated = sessionStatus === "authenticated";
@@ -184,39 +231,17 @@ export default function RegisterEventButton({
   async function handleSubmit() {
     setError(null);
 
-    for (let i = 0; i < attendees.length; i++) {
-      const attendee = attendees[i];
+    const validationError = findAttendeeError(attendees, fields);
 
-      for (const field of fields) {
-        if (field.required && !attendee[field.key]?.trim()) {
-          setError(
-            `"${field.label.replace(" (optional)", "")}" is required.`,
-          );
-          return;
-        }
-      }
-
-      // Validate email format
-      const email = attendee.email?.trim() ?? "";
-      const emailConfirm = attendee.emailConfirm?.trim() ?? "";
-
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      if (!emailRegex.test(email)) {
-        setError(`Please enter a valid email address for Attendee ${i + 1}.`);
-        return;
-      }
-
-      if (email.toLowerCase() !== emailConfirm.toLowerCase()) {
-        setError(`Email addresses do not match for Attendee ${i + 1}.`);
-        return;
-      }
+    if (validationError) {
+      setError(validationError);
+      return;
     }
 
     setSubmitting(true);
     const cleanAttendees = attendees.map((attendee) => {
       const data = { ...attendee };
-      delete data.emailConfirm;
+      delete data[EMAIL_CONFIRM_KEY];
       return data;
     });
 
@@ -264,6 +289,13 @@ export default function RegisterEventButton({
       }
 
       idempotencyKeyRef.current = null;
+      setGuestTicketUrls(
+        Array.isArray(data.guestTicketUrls)
+          ? data.guestTicketUrls.filter(
+              (url: unknown): url is string => typeof url === "string",
+            )
+          : [],
+      );
       setSuccess(true);
     } catch {
       setError("Something went wrong. Please try again.");
@@ -276,6 +308,7 @@ export default function RegisterEventButton({
     if (submitting) return;
     setOpen(false);
     setSuccess(false);
+    setGuestTicketUrls([]);
     setError(null);
   }
 
@@ -353,8 +386,12 @@ export default function RegisterEventButton({
                   <CheckCircle2 className="mx-auto text-green-600" size={56} />
                   <p className="mt-4 text-sm text-muted-foreground">
                     Your {isFree ? "registration" : "payment"} is confirmed.
-                    <br />
-                    Your e-ticket has been sent to your email.
+                    {wasAuthenticated && (
+                      <>
+                        <br />
+                        Your tickets are waiting in My tickets.
+                      </>
+                    )}
                   </p>
                   {wasAuthenticated ? (
                     <Link
@@ -363,10 +400,32 @@ export default function RegisterEventButton({
                     >
                       View my tickets
                     </Link>
+                  ) : guestTicketUrls.length > 0 ? (
+                    <div className="mt-6 space-y-2 text-left">
+                      <p className="text-xs text-muted-foreground">
+                        No email is sent. Open your{" "}
+                        {guestTicketUrls.length > 1 ? "tickets" : "ticket"} now,
+                        then bookmark the page — this link is the only copy.
+                      </p>
+                      {guestTicketUrls.map((url, index) => (
+                        <Link
+                          key={url}
+                          href={url}
+                          className={buttonStyles({
+                            variant: "outline",
+                            className: "w-full",
+                          })}
+                        >
+                          {guestTicketUrls.length > 1
+                            ? `Open ticket ${index + 1}`
+                            : "Open my ticket"}
+                        </Link>
+                      ))}
+                    </div>
                   ) : (
                     <p className="mt-6 text-xs text-muted-foreground">
-                      Keep that email, it contains your ticket and a link to
-                      open it anytime.
+                      Your registration is saved. Tickets are issued to the
+                      email address you entered.
                     </p>
                   )}
                 </div>
@@ -405,19 +464,20 @@ export default function RegisterEventButton({
                   </label>
 
                   {isAuthResolved && isFree && !isAuthenticated && (
-                    <div className="flex items-start gap-3 rounded-lg border border-secondary/20 bg-brand-lavender-100 p-3.5 mb-4">
-                      <Mail
+                    <div className="mb-4 flex items-start gap-3 rounded-lg border border-secondary/20 bg-brand-lavender-100 p-3.5">
+                      <AlertTriangle
                         className="mt-0.5 size-4 shrink-0 text-secondary"
                         aria-hidden="true"
                       />
 
                       <div className="space-y-1">
                         <p className="text-sm font-medium text-foreground">
-                          Important information
+                          Check the email address
                         </p>
                         <p className="text-xs leading-relaxed text-foreground/80">
-                          Your e-ticket and ticket code will be sent to this
-                          email address. Please ensure your email is correct.
+                          Tickets are tied to this email address. No email is
+                          sent, so open your tickets from the link shown after
+                          you register.
                         </p>
                       </div>
                     </div>
@@ -434,7 +494,7 @@ export default function RegisterEventButton({
                         </legend>
 
                         {fields.map((field) => (
-                          <React.Fragment key={field.key}>
+                          <Fragment key={field.key}>
                             <label className="block">
                               <span className="mb-1 block text-xs font-medium text-muted-foreground">
                                 {field.label}
@@ -457,12 +517,7 @@ export default function RegisterEventButton({
                                 </select>
                               ) : (
                                 <input
-                                  type={
-                                    field.type === "EMAIL" ? "email" :
-                                    field.type === "PHONE" ? "tel" :
-                                    field.type === "NUMBER" ? "number" :
-                                    field.type === "DATE" ? "date" : "text"
-                                  }
+                                  type={INPUT_TYPE_BY_FIELD_TYPE[field.type] ?? "text"}
                                   value={attendee[field.key] ?? ""}
                                   onChange={(e) =>
                                     updateAttendee(index, field.key, e.target.value)
@@ -472,42 +527,39 @@ export default function RegisterEventButton({
                               )}
                             </label>
 
-                            {/* RETYPE EMAIL - tepat di bawah Email */}
                             {field.key === "email" && (
                               <label className="block">
                                 <span className="mb-1 block text-xs font-medium text-muted-foreground">
-                                  Retype Email
+                                  Retype email
                                 </span>
 
                                 <input
-                                  type="text"
-                                  inputMode="email"
-                                  value={attendee.emailConfirm ?? ""}
-                                  onChange={(e) =>
-                                    updateAttendee(index, "emailConfirm", e.target.value)
-                                  }
-                                  onPaste={(e) => e.preventDefault()}
-                                  onDrop={(e) => e.preventDefault()}
-                                  onContextMenu={(e) => e.preventDefault()}
-                                  autoComplete="new-password"
+                                  type="email"
+                                  name={`email-confirm-${index}`}
+                                  autoComplete="off"
                                   autoCorrect="off"
                                   autoCapitalize="none"
                                   spellCheck={false}
-                                  data-form-type="other"
-                                  name={`confirm_email_${index}`}
-                                  id={`confirm_email_${index}`}
-                                  placeholder="Retype your email address"
+                                  value={attendee[EMAIL_CONFIRM_KEY] ?? ""}
+                                  onChange={(e) =>
+                                    updateAttendee(
+                                      index,
+                                      EMAIL_CONFIRM_KEY,
+                                      e.target.value,
+                                    )
+                                  }
+                                  onPaste={(e) => e.preventDefault()}
+                                  onDrop={(e) => e.preventDefault()}
                                   className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                                 />
 
                                 <p className="mt-1 text-xs text-muted-foreground">
-                                  Please type your email address again.
+                                  Type the same address again, no pasting.
                                 </p>
                               </label>
                             )}
-                          </React.Fragment>
+                          </Fragment>
                         ))}
-
                       </fieldset>
                     ))}
                   </div>

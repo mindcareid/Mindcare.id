@@ -7,6 +7,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sendOrderTicketEmails } from "@/lib/orders/sendTicketEmails";
 import { OrderError } from "@/lib/orders/OrderError";
+import { isValidEmail, normalizeEmail } from "@/lib/emailValidation";
+import { createTicketToken } from "@/lib/tickets/token";
 import { rateLimit } from "@/lib/rateLimit";
 
 type AttendeeData = Record<string, string | number | boolean | null>;
@@ -19,7 +21,10 @@ type BuyOrderBody = {
 type OrderWithEvent = Order & { event: Event };
 
 class ExistingInvoiceError extends Error {
-  constructor(public invoiceUrl: string) {
+  constructor(
+    public orderId: string,
+    public invoiceUrl: string,
+  ) {
     super("Existing pending order");
     this.name = "ExistingInvoiceError";
   }
@@ -74,8 +79,30 @@ async function createInvoiceResponse({
   });
 }
 
+/**
+ * Guests have no dashboard, and ticket emails are paused, so their paid tickets
+ * are handed back as signed links for the same order they just registered.
+ */
+async function findGuestTicketUrls(
+  orderId: string,
+  guestEmail: string | null,
+): Promise<string[]> {
+  if (!guestEmail) {
+    return [];
+  }
+
+  const tickets = await prisma.ticket.findMany({
+    where: { orderId, attendeeEmail: guestEmail, order: { status: "PAID" } },
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+
+  return tickets.map((ticket) => `/tickets/${createTicketToken(ticket.id)}`);
+}
+
 async function replayExistingOrder(
   order: OrderWithEvent,
+  guestTicketUrls?: string[],
 ): Promise<NextResponse> {
   if (order.invoiceUrl) {
     return NextResponse.json({
@@ -83,6 +110,7 @@ async function replayExistingOrder(
       invoiceUrl: order.invoiceUrl,
       message:
         "Invoice already created. Please complete payment to activate tickets.",
+      guestTicketUrls,
     });
   }
 
@@ -91,6 +119,7 @@ async function replayExistingOrder(
       success: true,
       free: true,
       message: "Tickets already created for this registration.",
+      guestTicketUrls,
     });
   }
 
@@ -114,9 +143,12 @@ async function replayExistingOrder(
 }
 
 export async function POST(req: Request) {
+  let userId: number | null = null;
+  let guestEmail: string | null = null;
+
   try {
     const session = await getServerSession(authOptions);
-    const userId = session?.user?.id ? Number(session.user.id) : null;
+    userId = session?.user?.id ? Number(session.user.id) : null;
 
     if (userId && !session?.user.emailVerified) {
       return NextResponse.json(
@@ -179,16 +211,35 @@ export async function POST(req: Request) {
       );
     }
 
-    const normalizedAttendees = attendees.map((a) => ({
-      ...a,
-      email:
-        typeof a.email === "string" ? a.email.trim().toLowerCase() : a.email,
-    }));
+    const normalizedAttendees = attendees.map((attendee) => {
+      const data = { ...attendee };
+      delete data.emailConfirm;
 
-    const guestEmail = userId
-      ? null
-      : typeof normalizedAttendees[0]?.email === "string"
-        ? normalizedAttendees[0].email
+      return {
+        ...data,
+        email:
+          typeof data.email === "string"
+            ? data.email.trim().toLowerCase()
+            : data.email,
+      };
+    });
+
+    const invalidEmailIndex = normalizedAttendees.findIndex(
+      (a) => typeof a.email !== "string" || !isValidEmail(a.email),
+    );
+
+    if (invalidEmailIndex !== -1) {
+      return NextResponse.json(
+        {
+          message: `Attendee ${invalidEmailIndex + 1} needs a valid email address.`,
+        },
+        { status: 400 },
+      );
+    }
+
+    guestEmail =
+      !userId && typeof normalizedAttendees[0]?.email === "string"
+        ? normalizeEmail(normalizedAttendees[0].email)
         : null;
 
     if (!userId && !guestEmail) {
@@ -218,7 +269,10 @@ export async function POST(req: Request) {
           );
         }
 
-        return replayExistingOrder(existing);
+        return replayExistingOrder(
+          existing,
+          await findGuestTicketUrls(existing.id, guestEmail),
+        );
       }
     }
 
@@ -288,11 +342,14 @@ export async function POST(req: Request) {
               invoiceUrl: { not: null },
             },
             orderBy: { createdAt: "desc" },
-            select: { invoiceUrl: true },
+            select: { id: true, invoiceUrl: true },
           });
 
           if (existingPendingOrder?.invoiceUrl) {
-            throw new ExistingInvoiceError(existingPendingOrder.invoiceUrl);
+            throw new ExistingInvoiceError(
+              existingPendingOrder.id,
+              existingPendingOrder.invoiceUrl,
+            );
           }
 
           if (event.quota !== null) {
@@ -393,7 +450,10 @@ export async function POST(req: Request) {
             ? existing.userId === userId
             : existing.userId === null && existing.guestEmail === guestEmail)
         ) {
-          return replayExistingOrder(existing);
+          return replayExistingOrder(
+            existing,
+            await findGuestTicketUrls(existing.id, guestEmail),
+          );
         }
       }
       if (
@@ -422,6 +482,9 @@ export async function POST(req: Request) {
         success: true,
         free: true,
         message: `Tickets successfully created for free event! (${ticketCount})`,
+        guestTicketUrls: userId
+          ? undefined
+          : await findGuestTicketUrls(order.id, guestEmail),
       });
     }
 
@@ -439,6 +502,9 @@ export async function POST(req: Request) {
         invoiceUrl: error.invoiceUrl,
         message:
           "You already have an unpaid invoice for this event. Complete it or wait for it to expire.",
+        guestTicketUrls: userId
+          ? undefined
+          : await findGuestTicketUrls(error.orderId, guestEmail),
       });
     }
 

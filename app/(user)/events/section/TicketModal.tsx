@@ -36,14 +36,12 @@ export default function TicketFormatModal({
 
               <p>
                 After completing your booking through the website, your e-ticket
-                will be sent to your email and can also be accessed from the{" "}
-                <b>Booking Menu</b> on your dashboard.
+                can be accessed from the <b>Ticket Menu</b> on your dashboard.
               </p>
 
               <p className="italic">
                 Setelah menyelesaikan pemesanan melalui website, e-ticket kamu
-                akan dikirim ke email dan juga dapat diakses melalui menu{" "}
-                <b>Booking</b> di dashboard user.
+                dapat diakses melalui menu <b>Ticket</b> di dashboard user.
               </p>
             </div>
 

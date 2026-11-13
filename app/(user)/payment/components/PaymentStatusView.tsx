@@ -211,7 +211,7 @@ export default function PaymentStatusView({
           tone="success"
           Icon={CheckCircle2}
           title="Payment received"
-          description="Your tickets are ready. We have sent the e-ticket with its QR code to your email."
+          description="Your tickets are ready. Open them below with the ticket code and QR code for check-in."
         />
         {orderRef && <OrderRef value={orderRef} />}
         <Actions>
