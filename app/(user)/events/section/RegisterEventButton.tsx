@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { IoClose } from "react-icons/io5";
 import { Loader2, CheckCircle2, AlertTriangle, Mail } from "lucide-react";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
+import React from "react";
 
 export type AttendeeFieldInput = {
   id: string;
@@ -188,13 +189,36 @@ export default function RegisterEventButton({
 
       for (const field of fields) {
         if (field.required && !attendee[field.key]?.trim()) {
-          setError(`"${field.label.replace(" (optional)", "")}" is required.`);
+          setError(
+            `"${field.label.replace(" (optional)", "")}" is required.`,
+          );
           return;
         }
+      }
+
+      // Validate email format
+      const email = attendee.email?.trim() ?? "";
+      const emailConfirm = attendee.emailConfirm?.trim() ?? "";
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailRegex.test(email)) {
+        setError(`Please enter a valid email address for Attendee ${i + 1}.`);
+        return;
+      }
+
+      if (email.toLowerCase() !== emailConfirm.toLowerCase()) {
+        setError(`Email addresses do not match for Attendee ${i + 1}.`);
+        return;
       }
     }
 
     setSubmitting(true);
+    const cleanAttendees = attendees.map((attendee) => {
+      const data = { ...attendee };
+      delete data.emailConfirm;
+      return data;
+    });
 
     try {
       const res = await fetch("/api/orders/buy", {
@@ -203,7 +227,10 @@ export default function RegisterEventButton({
           "Content-Type": "application/json",
           "Idempotency-Key": getOrCreateIdempotencyKey(),
         },
-        body: JSON.stringify({ eventId, attendees }),
+        body: JSON.stringify({
+          eventId,
+          attendees: cleanAttendees,
+        }),
       });
 
       if (res.status === 401) {
@@ -407,59 +434,80 @@ export default function RegisterEventButton({
                         </legend>
 
                         {fields.map((field) => (
-                          <label key={field.key} className="block">
-                            <span className="mb-1 block text-xs font-medium text-muted-foreground">
-                              {field.label}
-                            </span>
+                          <React.Fragment key={field.key}>
+                            <label className="block">
+                              <span className="mb-1 block text-xs font-medium text-muted-foreground">
+                                {field.label}
+                              </span>
 
-                            {field.type === "SELECT" ? (
-                              <select
-                                value={attendee[field.key] ?? ""}
-                                onChange={(e) =>
-                                  updateAttendee(
-                                    index,
-                                    field.key,
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                              >
-                                <option value="">Select…</option>
-                                {parseOptions(field.options).map((option) => (
-                                  <option
-                                    key={option.value}
-                                    value={option.value}
-                                  >
-                                    {option.label}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <input
-                                type={
-                                  field.type === "EMAIL"
-                                    ? "email"
-                                    : field.type === "PHONE"
-                                      ? "tel"
-                                      : field.type === "NUMBER"
-                                        ? "number"
-                                        : field.type === "DATE"
-                                          ? "date"
-                                          : "text"
-                                }
-                                value={attendee[field.key] ?? ""}
-                                onChange={(e) =>
-                                  updateAttendee(
-                                    index,
-                                    field.key,
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                              />
+                              {field.type === "SELECT" ? (
+                                <select
+                                  value={attendee[field.key] ?? ""}
+                                  onChange={(e) =>
+                                    updateAttendee(index, field.key, e.target.value)
+                                  }
+                                  className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                >
+                                  <option value="">Select…</option>
+                                  {parseOptions(field.options).map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  type={
+                                    field.type === "EMAIL" ? "email" :
+                                    field.type === "PHONE" ? "tel" :
+                                    field.type === "NUMBER" ? "number" :
+                                    field.type === "DATE" ? "date" : "text"
+                                  }
+                                  value={attendee[field.key] ?? ""}
+                                  onChange={(e) =>
+                                    updateAttendee(index, field.key, e.target.value)
+                                  }
+                                  className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                />
+                              )}
+                            </label>
+
+                            {/* RETYPE EMAIL - tepat di bawah Email */}
+                            {field.key === "email" && (
+                              <label className="block">
+                                <span className="mb-1 block text-xs font-medium text-muted-foreground">
+                                  Retype Email
+                                </span>
+
+                                <input
+                                  type="text"
+                                  inputMode="email"
+                                  value={attendee.emailConfirm ?? ""}
+                                  onChange={(e) =>
+                                    updateAttendee(index, "emailConfirm", e.target.value)
+                                  }
+                                  onPaste={(e) => e.preventDefault()}
+                                  onDrop={(e) => e.preventDefault()}
+                                  onContextMenu={(e) => e.preventDefault()}
+                                  autoComplete="new-password"
+                                  autoCorrect="off"
+                                  autoCapitalize="none"
+                                  spellCheck={false}
+                                  data-form-type="other"
+                                  name={`confirm_email_${index}`}
+                                  id={`confirm_email_${index}`}
+                                  placeholder="Retype your email address"
+                                  className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                />
+
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  Please type your email address again.
+                                </p>
+                              </label>
                             )}
-                          </label>
+                          </React.Fragment>
                         ))}
+
                       </fieldset>
                     ))}
                   </div>
