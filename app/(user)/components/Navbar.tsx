@@ -206,12 +206,20 @@ export default function Navbar() {
                   href="/auth/login"
                   className={buttonStyles({
                     size: "md",
-                    variant: onHero ? "outline" : "primary",
-                    className: onHero
-                      ? "border-white/70 text-white bg-radial-[at_0%_0%] from-[#2779ff] via-[#975eff] to-[#64389b]/30.5  transition-colors duration-500 hover:bg-white/20 hover:text-black rounded-full"
-                      : "transition-colors duration-500 rounded-full",
+                    variant: "primary",
+                    className: `relative isolate overflow-hidden rounded-full border transition-[color,border-color] duration-500 ease-out ${
+                      onHero
+                        ? "border-white/70 text-white"
+                        : "border-transparent"
+                    }`,
                   })}
                 >
+                  <span
+                    aria-hidden
+                    className={`absolute inset-0 -z-10 bg-radial-[at_0%_0%] from-[#2779ff] via-[#975eff] to-[#64389b] transition-opacity duration-500 ease-out ${
+                      onHero ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
                   Join MindCare.id
                 </Link>
               )}

@@ -24,6 +24,55 @@ const priceFormatter = new Intl.NumberFormat("id-ID", {
   maximumFractionDigits: 0,
 });
 
+function RegistrationAction({
+  event,
+  now,
+  className,
+}: EventDetailRailProps & { className: string }) {
+  const ended = hasEnded(event, now);
+  const soldOut = !ended && event.soldOut;
+  const remaining =
+    !ended && event.remaining !== null ? Math.max(event.remaining, 0) : null;
+
+  if (event.externalUrl) {
+    return (
+      <Link
+        href={event.externalUrl}
+        target="_blank"
+        rel="noreferrer noopener"
+        className={buttonStyles({ size: "lg", className })}
+      >
+        Register now
+      </Link>
+    );
+  }
+
+  return (
+    <RegisterEventButton
+      eventId={event.id}
+      title={event.title}
+      price={event.price}
+      remaining={remaining}
+      soldOut={soldOut}
+      ended={ended}
+      className={className}
+      attendeeFields={event.attendeeFields.map((field) => ({
+        id: field.id,
+        label: field.label,
+        key: field.key,
+        type: field.type,
+        required: field.required,
+        options: field.options,
+      }))}
+    />
+  );
+}
+
+/** Tombol daftar yang tampil tepat di bawah poster hero, khusus mobile. */
+export function EventDetailMobileCta({ event, now }: EventDetailRailProps) {
+  return <RegistrationAction event={event} now={now} className="w-full" />;
+}
+
 export default function EventDetailRail({ event, now }: EventDetailRailProps) {
   const ended = hasEnded(event, now);
   const soldOut = !ended && event.soldOut;
@@ -35,7 +84,6 @@ export default function EventDetailRail({ event, now }: EventDetailRailProps) {
     (event.format === "ONLINE" || event.format === "HYBRID" ? "Online" : null);
 
   const isFree = event.price <= 0;
-  const hasExternal = event.externalUrl;
 
   return (
     <div className="space-y-6">
@@ -73,33 +121,10 @@ export default function EventDetailRail({ event, now }: EventDetailRailProps) {
           )}
         </dl>
 
-        {hasExternal ? (
-          <Link
-            href={event.externalUrl as string}
-            target="_blank"
-            rel="noreferrer noopener"
-            className={buttonStyles({ size: "lg", className: "w-full" })}
-          >
-            Register now
-          </Link>
-        ) : (
-          <RegisterEventButton
-            eventId={event.id}
-            title={event.title}
-            price={event.price}
-            remaining={remaining}
-            soldOut={soldOut}
-            ended={ended}
-            attendeeFields={event.attendeeFields.map((field) => ({
-              id: field.id,
-              label: field.label,
-              key: field.key,
-              type: field.type,
-              required: field.required,
-              options: field.options,
-            }))}
-          />
-        )}
+        {/* Mobile sudah punya tombol daftar di atas konten, jadi di sini hanya desktop. */}
+        <div className="hidden lg:block">
+          <RegistrationAction event={event} now={now} className="w-full" />
+        </div>
 
         {event.canDownloadProposal && (
           <DownloadProposalButton
@@ -109,21 +134,15 @@ export default function EventDetailRail({ event, now }: EventDetailRailProps) {
           />
         )}
 
-        {/*
-         * Pintu masuk "Apply as sponsor". Section Sponsorship ada jauh di
-         * bawah halaman, jadi tanpa tombol di sini pengunjung tidak tahu
-         * fiturnya ada. Gaya `outline` disengaja: `Register now` tetap aksi
-         * utama, tombol ini alternatif, bukan pesaingnya.
-         *
-         * Hanya muncul kalau event belum berakhir DAN punya paket aktif —
-         * tombol yang mengantar ke halaman "Sponsorship is not open" lebih
-         * buruk daripada tidak ada tombol.
-         */}
         {!ended && event.sponsorTiers.length > 0 && (
           <Link
             href={`/events/${event.slug}/sponsor`}
             className={cn(
-              buttonStyles({ variant: "outline", size: "lg", className: "w-full" }),
+              buttonStyles({
+                variant: "outline",
+                size: "lg",
+                className: "w-full",
+              }),
               "justify-center",
             )}
           >

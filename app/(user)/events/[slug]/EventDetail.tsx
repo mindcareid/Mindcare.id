@@ -9,7 +9,9 @@ import EventAgenda from "../section/EventAgenda";
 import EventSponsorship from "../section/EventSponsorship";
 import EventSpeakers from "../section/EventSpeakers";
 import EventHostCard from "../section/EventHostCard";
-import EventDetailRail from "../section/EventDetailRail";
+import EventDetailRail, {
+  EventDetailMobileCta,
+} from "../section/EventDetailRail";
 import EventsCardGrid from "../section/EventsCardGrid";
 
 import type {
@@ -31,7 +33,11 @@ export default function EventDetail({ event, related, now }: EventDetailProps) {
       <EventHero event={event} now={now} />
 
       <Container className="pb-24">
-        <div className="mt-10 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] ">
+        <div className="mt-6 lg:hidden">
+          <EventDetailMobileCta event={event} now={now} />
+        </div>
+
+        <div className="mt-8 grid grid-cols-1 gap-12 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_22rem] ">
           <div className="space-y-16">
             <EventAbout event={event} />
             <EventAgenda event={event} linkSpeakers={!ended} />

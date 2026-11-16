@@ -26,6 +26,7 @@ type RegisterEventButtonProps = {
   soldOut: boolean;
   ended: boolean;
   attendeeFields: AttendeeFieldInput[];
+  className?: string;
 };
 
 type FieldDef = {
@@ -157,6 +158,7 @@ export default function RegisterEventButton({
   soldOut,
   ended,
   attendeeFields,
+  className = "w-full",
 }: RegisterEventButtonProps) {
   const [open, setOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -317,7 +319,7 @@ export default function RegisterEventButton({
       <button
         type="button"
         disabled
-        className={buttonStyles({ size: "lg", className: "w-full" })}
+        className={buttonStyles({ size: "lg", className })}
       >
         Registration closed
       </button>
@@ -329,7 +331,7 @@ export default function RegisterEventButton({
       <button
         type="button"
         disabled
-        className={buttonStyles({ size: "lg", className: "w-full" })}
+        className={buttonStyles({ size: "lg", className })}
       >
         Sold out
       </button>
@@ -345,7 +347,7 @@ export default function RegisterEventButton({
           setWasAuthenticated(isAuthenticated);
           setOpen(true);
         }}
-        className={buttonStyles({ size: "lg", className: "w-full" })}
+        className={buttonStyles({ size: "lg", className })}
       >
         {isFree ? "Register now" : `Register — ${priceFormatter.format(price)}`}
       </button>
