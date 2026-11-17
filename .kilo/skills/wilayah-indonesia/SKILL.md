@@ -19,9 +19,12 @@ EMSIFA tidak selalu sama dengan data lama di DB (lihat bagian Gotcha).
 - Skema: `Province { id, name }` dan `Regency { id, name, provinceId }` di
   `prisma/schema.prisma`. `id` adalah kode BPS (`32`, `32.73`).
 - Data tersimpan: `prisma/data/wilayah.json` (38 provinsi + 514 kab/kota).
-- Ambil/perbarui data mentah: `node scripts/fetch-wilayah.mjs`.
+  File ini adalah sumber kebenaran lokal; tidak ada script fetch di repo, jadi
+  pembaruan dilakukan dengan menggantinya secara manual dari static API EMSIFA
+  (lihat bagian 2) lalu menjalankan seed.
 - Isi DB: `npm run seed` (atau `node prisma/seed.mjs`). Idempoten (upsert).
-- Backfill baris lama ke kode: `node scripts/backfill-wilayah-codes.mjs`.
+- Baris lama yang belum punya kode wilayah diisi manual lewat SQL/admin;
+  repo tidak lagi menyertakan script backfill.
 - Opsi untuk form: `getWilayahOptions()` di `lib/wilayah.ts` (server only).
 - Komponen dropdown: `app/apply/component/WilayahSelect.tsx` (Provinsi lalu
   Kota, controlled, native `<select>`).

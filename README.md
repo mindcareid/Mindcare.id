@@ -499,7 +499,7 @@ Cron and realtime:
 There is no automated test suite and no `test` script. The available checks are:
 
 - `npm run lint` for static checks.
-- Ad-hoc scripts under `scripts/`: `check-data-invariants.mjs`, `check-photo-behavior.cjs`, `check-photo-upload.mjs`, `check-tailwind-classes.mjs`, plus `test-events.cjs` at the repository root.
+- `npx tsc --noEmit` for type checking.
 - Manual click-through of the listed flows.
 
 If a test framework is added later, wire it into a `test` script so it can be run in one command.
