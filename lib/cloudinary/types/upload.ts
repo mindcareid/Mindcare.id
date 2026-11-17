@@ -12,6 +12,7 @@ export const UPLOAD_FOLDER_ENTITIES = [
   "whyus",
   "platform",
   "event-proposals",
+  "event-sponsor-logos",
 ] as const;
 
 export type UploadFolderImage = (typeof UPLOAD_FOLDER_ENTITIES)[number];

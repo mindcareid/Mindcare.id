@@ -120,13 +120,19 @@ export const sponsorApplicationSchema = z.object({
     .string()
     .trim()
     .min(2, "Company name is required")
-    .max(SPONSOR_LIMITS.companyName, "Company name cannot exceed 255 characters"),
+    .max(
+      SPONSOR_LIMITS.companyName,
+      "Company name cannot exceed 255 characters",
+    ),
 
   address: z
     .string()
     .trim()
     .min(5, "Company address is required")
-    .max(SPONSOR_LIMITS.address, "Company address cannot exceed 2000 characters"),
+    .max(
+      SPONSOR_LIMITS.address,
+      "Company address cannot exceed 2000 characters",
+    ),
 
   countryCode: countryCodeSchema,
 
@@ -189,3 +195,42 @@ export const sponsorApplicationSchema = z.object({
 export const updateSponsorStatusSchema = z.object({
   status: z.enum(["PENDING", "REVIEWED", "ARCHIVED"]),
 });
+
+export const sponsorSchema = z.object({
+  tierId: z
+    .number({ error: "Choose a package" })
+    .int()
+    .positive("Choose a package"),
+
+  name: z
+    .string()
+    .trim()
+    .min(2, "Sponsor name is required")
+    .max(150, "Sponsor name cannot exceed 150 characters"),
+
+  logoUrl: z
+    .string()
+    .trim()
+    .min(1, "Upload a logo")
+    .max(500, "Logo URL is too long"),
+
+  logoPublicId: z
+    .string()
+    .trim()
+    .min(1, "Upload a logo")
+    .max(255, "Logo public id is too long"),
+  websiteUrl: z
+    .string()
+    .trim()
+    .max(SPONSOR_LIMITS.website, "Website cannot exceed 500 characters")
+    .refine(
+      (value) => value === "" || SPONSOR_WEBSITE_PATTERN.test(value),
+      "Enter a full URL, e.g. https://example.com",
+    )
+    .transform((value) => (value === "" ? null : value)),
+
+  isActive: z.boolean().default(true),
+  sortOrder: z.number().int().min(0).max(999).default(0),
+});
+
+export type SponsorInput = z.infer<typeof sponsorSchema>;

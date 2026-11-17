@@ -19,22 +19,7 @@ import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 import { cn } from "@/lib/utils";
 import { priceLines } from "@/lib/sponsors/money";
 import { type SponsorTierAdmin } from "@/lib/sponsors/shared";
-
-/*
- * ============================================================
- * ADMIN â€” PAKET SPONSOR PER EVENT
- * ============================================================
- *
- * Satu event punya beberapa paket (Diamond, Gold, ...). Setiap paket punya
- * daftar benefit bebas: judul + keterangan.
- *
- * Yang dijaga ketat di sini:
- * - Harga USD TIDAK dihitung otomatis dari kurs. Admin mengetik sendiri angka
- *   dollar yang mau ditampilkan; kurs hanya dicatat untuk audit. Menghitung
- *   otomatis membuat harga di halaman berubah tiap hari tanpa ada yang edit.
- * - Paket yang sudah dipakai pengajuan tidak bisa dihapus (server menolaknya
- *   dengan 409); tombolnya berubah jadi "turn off".
- */
+import SponsorLogosManager from "./SponsorLogosManager";
 
 type BenefitDraft = { title: string; detail: string };
 
@@ -61,16 +46,6 @@ const emptyDraft = (sortOrder: number): TierDraft => ({
   benefits: [{ title: "", detail: "" }],
 });
 
-/**
- * Baca angka dari input admin.
- *
- * Input WAJIB berupa digit saja. Sebelumnya fungsi ini membuang semua karakter
- * non-digit, sehingga "1.650.000,50" menjadi 165000050 dan "-500" menjadi 500 —
- * dua-duanya lolos validasi server dan berubah menjadi harga publik yang sah
- * tapi keliru. Sekarang nilai yang mengandung pemisah, tanda, atau desimal
- * ditolak (mengembalikan NaN) supaya form bisa menampilkan kesalahan, bukan
- * menyimpan angka yang berbeda dari yang diketik.
- */
 function toNumberOrNull(value: string): number | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
@@ -121,11 +96,6 @@ function firstError(errors: Record<string, string[] | undefined> | undefined) {
   return undefined;
 }
 
-/**
- * Pesan kesalahan angka, atau null bila semua isian angka berupa digit saja.
- * Dipisahkan dari `draftToPayload` supaya form bisa menolak input sebelum
- * dikirim, bukan setelah server menerima angka yang sudah berubah.
- */
 function firstInvalidNumber(draft: TierDraft): string | null {
   const fields: [string, string][] = [
     ["Price", draft.priceAmount],
@@ -144,7 +114,9 @@ function firstInvalidNumber(draft: TierDraft): string | null {
 }
 
 export default function SponsorTiersManager({ eventId }: { eventId: number }) {
-  const [event, setEvent] = useState<{ id: number; title: string } | null>(null);
+  const [event, setEvent] = useState<{ id: number; title: string } | null>(
+    null,
+  );
   const [tiers, setTiers] = useState<SponsorTierAdmin[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -154,29 +126,30 @@ export default function SponsorTiersManager({ eventId }: { eventId: number }) {
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
 
-  const load = useCallback(async (active?: { current: boolean }) => {
-    try {
-      const res = await fetch(`/api/cadmin/events/${eventId}/sponsor-tiers`, {
-        cache: "no-store",
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.message || "Could not load packages");
-      if (active && !active.current) return;
-      setEvent(json.event ?? null);
-      setTiers(json.data ?? []);
-      setLoadError(null);
-    } catch (error) {
-      if (active && !active.current) return;
-      setLoadError(error instanceof Error ? error.message : "Could not load packages");
-    } finally {
-      if (!active || active.current) setLoading(false);
-    }
-  }, [eventId]);
+  const load = useCallback(
+    async (active?: { current: boolean }) => {
+      try {
+        const res = await fetch(`/api/cadmin/events/${eventId}/sponsor-tiers`, {
+          cache: "no-store",
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message || "Could not load packages");
+        if (active && !active.current) return;
+        setEvent(json.event ?? null);
+        setTiers(json.data ?? []);
+        setLoadError(null);
+      } catch (error) {
+        if (active && !active.current) return;
+        setLoadError(
+          error instanceof Error ? error.message : "Could not load packages",
+        );
+      } finally {
+        if (!active || active.current) setLoading(false);
+      }
+    },
+    [eventId],
+  );
 
-  // Pemuatan data dijalankan sebagai callback (bukan statement langsung di
-  // badan efek). Aturan react-hooks/set-state-in-effect memperlakukan
-  // pemanggilan langsung sebagai setState sinkron; lewat callback, semua
-  // perubahan state terjadi setelah await.
   useEffect(() => {
     const active = { current: true };
     const run = () => {
@@ -189,7 +162,10 @@ export default function SponsorTiersManager({ eventId }: { eventId: number }) {
   }, [load]);
 
   const nextSortOrder = useMemo(
-    () => (tiers.length > 0 ? Math.max(...tiers.map((tier) => tier.sortOrder)) + 1 : 0),
+    () =>
+      tiers.length > 0
+        ? Math.max(...tiers.map((tier) => tier.sortOrder)) + 1
+        : 0,
     [tiers],
   );
 
@@ -259,7 +235,9 @@ export default function SponsorTiersManager({ eventId }: { eventId: number }) {
 
       if (!res.ok) {
         throw new Error(
-          firstError(json.errors) || json.message || "Could not save the package",
+          firstError(json.errors) ||
+            json.message ||
+            "Could not save the package",
         );
       }
 
@@ -267,7 +245,9 @@ export default function SponsorTiersManager({ eventId }: { eventId: number }) {
       cancel();
       await load();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not save the package");
+      toast.error(
+        error instanceof Error ? error.message : "Could not save the package",
+      );
     } finally {
       setSaving(false);
     }
@@ -293,10 +273,13 @@ export default function SponsorTiersManager({ eventId }: { eventId: number }) {
         },
       );
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.message || "Could not update the package");
+      if (!res.ok)
+        throw new Error(json.message || "Could not update the package");
       await load();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not update the package");
+      toast.error(
+        error instanceof Error ? error.message : "Could not update the package",
+      );
     } finally {
       setBusyId(null);
     }
@@ -321,11 +304,14 @@ export default function SponsorTiersManager({ eventId }: { eventId: number }) {
         { method: "DELETE" },
       );
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.message || "Could not delete the package");
+      if (!res.ok)
+        throw new Error(json.message || "Could not delete the package");
       toast.success("Package deleted");
       await load();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not delete the package");
+      toast.error(
+        error instanceof Error ? error.message : "Could not delete the package",
+      );
     } finally {
       setBusyId(null);
     }
@@ -351,7 +337,10 @@ export default function SponsorTiersManager({ eventId }: { eventId: number }) {
             Sponsorship packages
           </h1>
           <p className="text-sm text-destructive">{loadError}</p>
-          <Link href="/cadmin/events" className={buttonStyles({ variant: "outline" })}>
+          <Link
+            href="/cadmin/events"
+            className={buttonStyles({ variant: "outline" })}
+          >
             Back to events
           </Link>
         </div>
@@ -376,7 +365,10 @@ export default function SponsorTiersManager({ eventId }: { eventId: number }) {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Link href="/cadmin/events" className={buttonStyles({ variant: "outline" })}>
+            <Link
+              href="/cadmin/events"
+              className={buttonStyles({ variant: "outline" })}
+            >
               Back
             </Link>
             <Link
@@ -386,7 +378,11 @@ export default function SponsorTiersManager({ eventId }: { eventId: number }) {
               <ClipboardList className="h-4 w-4" />
               Applications
             </Link>
-            <Button icon={Plus} onClick={startCreate} disabled={editingId !== null}>
+            <Button
+              icon={Plus}
+              onClick={startCreate}
+              disabled={editingId !== null}
+            >
               Add package
             </Button>
           </div>
@@ -413,7 +409,9 @@ export default function SponsorTiersManager({ eventId }: { eventId: number }) {
 
         {tiers.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-card px-6 py-12 text-center">
-            <p className="text-sm font-medium text-foreground">No packages yet</p>
+            <p className="text-sm font-medium text-foreground">
+              No packages yet
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Add the first package (Diamond, Gold, Booth Only, â€¦) to open
               sponsorship for this event.
@@ -454,10 +452,27 @@ export default function SponsorTiersManager({ eventId }: { eventId: number }) {
                     </div>
 
                     <p className="text-sm font-medium text-foreground">
-                      {priceLines({ amount: tier.priceAmount, currency: tier.currency, displayUsd: tier.displayUsd }).primary}
-                      {priceLines({ amount: tier.priceAmount, currency: tier.currency, displayUsd: tier.displayUsd }).secondary ? (
+                      {
+                        priceLines({
+                          amount: tier.priceAmount,
+                          currency: tier.currency,
+                          displayUsd: tier.displayUsd,
+                        }).primary
+                      }
+                      {priceLines({
+                        amount: tier.priceAmount,
+                        currency: tier.currency,
+                        displayUsd: tier.displayUsd,
+                      }).secondary ? (
                         <span className="ml-2 text-xs font-normal text-muted-foreground">
-                          {priceLines({ amount: tier.priceAmount, currency: tier.currency, displayUsd: tier.displayUsd }).secondary} (estimate)
+                          {
+                            priceLines({
+                              amount: tier.priceAmount,
+                              currency: tier.currency,
+                              displayUsd: tier.displayUsd,
+                            }).secondary
+                          }{" "}
+                          (estimate)
                         </span>
                       ) : null}
                     </p>
@@ -502,7 +517,10 @@ export default function SponsorTiersManager({ eventId }: { eventId: number }) {
                           {benefit.title}
                         </span>
                         {benefit.detail ? (
-                          <span className="text-muted-foreground"> â€” {benefit.detail}</span>
+                          <span className="text-muted-foreground">
+                            {" "}
+                            â€” {benefit.detail}
+                          </span>
                         ) : null}
                       </li>
                     ))}
@@ -522,14 +540,19 @@ export default function SponsorTiersManager({ eventId }: { eventId: number }) {
           Prices and USD estimates are saved as typed. The public page never
           recalculates them.
         </p>
+
+        <SponsorLogosManager
+          eventId={eventId}
+          tiers={tiers.map((tier) => ({
+            id: tier.id,
+            name: tier.name,
+            isActive: tier.isActive,
+          }))}
+        />
       </div>
     </div>
   );
 }
-
-/* ============================================================
- * EDITOR
- * ============================================================ */
 
 function TierEditor({
   title,
@@ -565,7 +588,9 @@ function TierEditor({
       className="space-y-5 rounded-xl border border-border bg-card p-5"
     >
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-heading text-lg font-semibold text-foreground">{title}</h2>
+        <h2 className="font-heading text-lg font-semibold text-foreground">
+          {title}
+        </h2>
         <button
           type="button"
           onClick={onCancel}
@@ -584,7 +609,9 @@ function TierEditor({
           <input
             className={inputClass}
             value={draft.name}
-            onChange={(event) => onChange({ ...draft, name: event.target.value })}
+            onChange={(event) =>
+              onChange({ ...draft, name: event.target.value })
+            }
             placeholder="Gold Sponsor"
           />
         </label>
@@ -596,7 +623,9 @@ function TierEditor({
           <input
             className={inputClass}
             value={draft.priceAmount}
-            onChange={(event) => onChange({ ...draft, priceAmount: event.target.value })}
+            onChange={(event) =>
+              onChange({ ...draft, priceAmount: event.target.value })
+            }
             inputMode="numeric"
             placeholder="50000000"
           />
@@ -609,7 +638,9 @@ function TierEditor({
           <input
             className={inputClass}
             value={draft.displayUsd}
-            onChange={(event) => onChange({ ...draft, displayUsd: event.target.value })}
+            onChange={(event) =>
+              onChange({ ...draft, displayUsd: event.target.value })
+            }
             inputMode="numeric"
             placeholder="3030"
           />
@@ -625,7 +656,9 @@ function TierEditor({
           <input
             className={inputClass}
             value={draft.fxRateUsed}
-            onChange={(event) => onChange({ ...draft, fxRateUsed: event.target.value })}
+            onChange={(event) =>
+              onChange({ ...draft, fxRateUsed: event.target.value })
+            }
             inputMode="numeric"
             placeholder="16500"
           />
@@ -635,11 +668,15 @@ function TierEditor({
         </label>
 
         <label className="space-y-1.5">
-          <span className="block text-sm font-medium text-foreground">Order</span>
+          <span className="block text-sm font-medium text-foreground">
+            Order
+          </span>
           <input
             className={inputClass}
             value={draft.sortOrder}
-            onChange={(event) => onChange({ ...draft, sortOrder: event.target.value })}
+            onChange={(event) =>
+              onChange({ ...draft, sortOrder: event.target.value })
+            }
             inputMode="numeric"
             placeholder="0"
           />
@@ -666,7 +703,9 @@ function TierEditor({
         <input
           type="checkbox"
           checked={draft.isActive}
-          onChange={(event) => onChange({ ...draft, isActive: event.target.checked })}
+          onChange={(event) =>
+            onChange({ ...draft, isActive: event.target.checked })
+          }
           className="h-4 w-4 rounded-sm border-border accent-primary focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <span className="text-sm text-foreground">
@@ -677,7 +716,12 @@ function TierEditor({
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground">Benefits</h3>
-          <Button variant="outline" size="sm" icon={Plus} onClick={onAddBenefit}>
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Plus}
+            onClick={onAddBenefit}
+          >
             Add benefit
           </Button>
         </div>
@@ -688,14 +732,18 @@ function TierEditor({
               <input
                 className={inputClass}
                 value={benefit.title}
-                onChange={(event) => onBenefitChange(index, { title: event.target.value })}
+                onChange={(event) =>
+                  onBenefitChange(index, { title: event.target.value })
+                }
                 placeholder="Seminar Sessions"
                 aria-label={`Benefit ${index + 1} title`}
               />
               <input
                 className={inputClass}
                 value={benefit.detail}
-                onChange={(event) => onBenefitChange(index, { detail: event.target.value })}
+                onChange={(event) =>
+                  onBenefitChange(index, { detail: event.target.value })
+                }
                 placeholder="20 Minutes"
                 aria-label={`Benefit ${index + 1} detail`}
               />
@@ -712,8 +760,8 @@ function TierEditor({
         </ul>
 
         <p className="text-xs text-muted-foreground">
-          Leave a detail empty when the benefit has no extra note. Empty rows are
-          ignored when saving.
+          Leave a detail empty when the benefit has no extra note. Empty rows
+          are ignored when saving.
         </p>
       </div>
 

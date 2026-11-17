@@ -203,6 +203,18 @@ export async function DELETE(req: Request, { params }: Params) {
       { status: 409 },
     );
   }
+  const sponsored = await prisma.eventSponsor.count({ where: { tierId } });
+  if (sponsored > 0) {
+    return NextResponse.json(
+      {
+        message: `Cannot delete: ${sponsored} sponsor logo${
+          sponsored > 1 ? "s are" : " is"
+        } assigned to this package. Move them to another package first.`,
+        code: "TIER_HAS_SPONSORS",
+      },
+      { status: 409 },
+    );
+  }
 
   await prisma.eventSponsorTier.delete({ where: { id: tierId } });
 

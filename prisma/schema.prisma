@@ -836,6 +836,7 @@ model Event {
   speakers       EventSpeaker[]
   proposalLeads  EventProposalDownload[]
   sponsorTiers   EventSponsorTier[]
+  sponsors       EventSponsor[] @relation("EventSponsorEvent")
   sponsorApplications EventSponsorApplication[]
 
   @@index([professionalId, status, startDate])
@@ -1002,11 +1003,29 @@ model EventSponsorTier {
   sortOrder Int     @default(0)
 
   applications EventSponsorApplication[]
+  sponsors     EventSponsor[] @relation("EventSponsorTier")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([eventId, isActive, sortOrder])
+}
+model EventSponsor {
+  id Int @id @default(autoincrement())
+  eventId Int
+  event   Event @relation("EventSponsorEvent", fields: [eventId], references: [id], onDelete: Restrict)
+  tierId Int
+  tier   EventSponsorTier @relation("EventSponsorTier", fields: [tierId], references: [id], onDelete: Restrict)
+  name String @db.VarChar(150)
+  logoUrl      String @db.VarChar(500)
+  logoPublicId String @db.VarChar(255)
+  websiteUrl String? @db.VarChar(500)
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([tierId])
+  @@index([eventId, isActive, tierId, sortOrder])
 }
 
 model EventSponsorApplication {
@@ -1351,8 +1370,8 @@ model ProfessionalAreaOfSupport {
 
 // Data referensi wilayah administratif Indonesia (BPS): provinsi dan
 // kabupaten/kota. Dipakai untuk dropdown di form pendaftaran. `id` adalah
-// kode BPS (mis. "32", "32.73"). Sumber: EMSIFA static API, disimpan lokal
-// lewat scripts/fetch-wilayah.mjs dan di-seed lewat prisma/seed.ts.
+// kode BPS (mis. "32", "32.73"). Sumber: EMSIFA static API, disimpan lokal di
+// prisma/data/wilayah.json dan di-seed lewat prisma/seed.mjs.
 model Province {
   id   String @id @db.VarChar(10)
   name String @db.VarChar(100)

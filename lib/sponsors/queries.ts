@@ -3,6 +3,7 @@ import { Prisma, type EventSponsorApplication } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import {
   SPONSOR_PAGE_SIZE,
+  type EventSponsorAdmin,
   type SponsorApplicationFilters,
   type SponsorBenefit,
 } from "@/lib/sponsors/shared";
@@ -14,15 +15,10 @@ export const SPONSOR_PUBLIC_EVENT_WHERE = {
   deletedAt: null,
 };
 
-/**
- * Satu-satunya definisi "event sudah berakhir" untuk sponsorship.
- *
- * Sebelumnya halaman form memakai `endDate: { gt: now }` (berakhir saat
- * `endDate <= now`) sementara API memakai `endDate < now`, sehingga tepat pada
- * detik `endDate` halaman sudah menutup section tapi API masih menerima
- * pengajuan. Kedua sisi sekarang memanggil fungsi ini.
- */
-export function isSponsorshipEnded(endDate: Date, now: Date = new Date()): boolean {
+export function isSponsorshipEnded(
+  endDate: Date,
+  now: Date = new Date(),
+): boolean {
   return endDate.getTime() <= now.getTime();
 }
 
@@ -83,14 +79,6 @@ export async function listAdminSponsorTiers(eventId: number) {
   }));
 }
 
-/**
- * Pilihan event untuk dropdown filter admin.
- *
- * Dibatasi pada event terbaru, bukan seluruh riwayat: dropdown tidak berguna
- * untuk event bertahun-tahun lalu, dan daftar ini dimuat setiap kali admin
- * mengubah filter/pencarian. Tanpa batas, biayanya tumbuh terus seiring
- * bertambahnya event.
- */
 export const SPONSOR_EVENT_FILTER_LIMIT = 100;
 
 export async function listPlatformEventsForFilter() {
@@ -102,11 +90,88 @@ export async function listPlatformEventsForFilter() {
   });
 }
 
+export type PublicSponsorGroup = {
+  tierId: number;
+  tierName: string;
+  tierSortOrder: number;
+  sponsors: {
+    id: number;
+    name: string;
+    logoUrl: string;
+    websiteUrl: string | null;
+  }[];
+};
+
+export async function getPublicSponsorGroups(
+  eventId: number,
+): Promise<PublicSponsorGroup[]> {
+  const tiers = await prisma.eventSponsorTier.findMany({
+    where: { eventId, sponsors: { some: { isActive: true } } },
+    orderBy: [{ sortOrder: "asc" }, { priceAmount: "desc" }, { id: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      sortOrder: true,
+      sponsors: {
+        where: { isActive: true },
+        orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+        select: {
+          id: true,
+          name: true,
+          logoUrl: true,
+          websiteUrl: true,
+        },
+      },
+    },
+  });
+
+  return tiers.map((tier) => ({
+    tierId: tier.id,
+    tierName: tier.name,
+    tierSortOrder: tier.sortOrder,
+    sponsors: tier.sponsors,
+  }));
+}
+
+export async function listAdminEventSponsors(
+  eventId: number,
+): Promise<EventSponsorAdmin[]> {
+  const rows = await prisma.eventSponsor.findMany({
+    where: { eventId },
+    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      tierId: true,
+      name: true,
+      logoUrl: true,
+      logoPublicId: true,
+      websiteUrl: true,
+      isActive: true,
+      sortOrder: true,
+      tier: { select: { name: true } },
+    },
+  });
+
+  return rows.map(({ tier, ...sponsor }) => ({
+    ...sponsor,
+    tierName: tier.name,
+  }));
+}
+
+export async function listSponsorTierOptions(eventId: number) {
+  return prisma.eventSponsorTier.findMany({
+    where: { eventId },
+    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+    select: { id: true, name: true, isActive: true },
+  });
+}
+
 const listSelect = {
   id: true,
   referenceNo: true,
   status: true,
   companyName: true,
+  website: true,
   countryCode: true,
   picFirstName: true,
   picLastName: true,
@@ -164,14 +229,6 @@ export async function loadSponsorApplications(
   return { rows, total };
 }
 
-/**
- * Jumlah per status untuk kartu ringkasan.
- *
- * `status` filter SENGAJA diabaikan: kartu ringkasan dipakai untuk berpindah
- * status, jadi angkanya harus selalu mencerminkan semua status. Tanpa catatan
- * ini, angka kartu tampak bertentangan dengan "Total N" pada tabel yang
- * terfilter. `scopedTotal` disertakan supaya UI bisa menyebut cakupannya.
- */
 export async function loadSponsorSummary(
   filters: Pick<SponsorApplicationFilters, "eventId" | "search">,
 ) {
@@ -260,17 +317,6 @@ export async function loadSponsorApplicationsForExport(
   return { tooMany: false as const, total, rows };
 }
 
-/**
- * Cek silang negara & telepon terhadap tabel `Country`.
- *
- * `countryCode` harus ada di daftar, dan kode panggil nomor telepon harus
- * salah satu kode milik negara itu. Tanpa cek kedua, "negara Singapore"
- * dengan nomor "+62..." akan lolos dan baru ketahuan saat tim sponsor
- * menelepon.
- *
- * `lookup` bisa diganti supaya aturan ini bisa diuji tanpa database; bawaan
- * membaca tabel Country. Aturannya sendiri tidak bergantung pada Prisma.
- */
 export async function validateCountryAndPhone(
   { countryCode, phone }: { countryCode: string; phone: string },
   lookup: (
@@ -293,16 +339,10 @@ export async function validateCountryAndPhone(
       message: "Select the country from the list",
     };
   }
-
-  // Jangan menebak batas kode lewat regex: kode panggil panjangnya 1–3 digit
-  // dan bersambung langsung dengan nomor ("+62" + "812..."). Yang benar adalah
-  // MENGUJI kode-kode milik negara ini terhadap awalan nomor. Percobaan
-  // regex greedy pernah menangkap "6281" dan menolak nomor Indonesia sah.
-  //
-  // Aturan bentuk nomor dan pencocokan kode panggil tinggal di
-  // `lib/sponsors/phone.ts` supaya klien dan server memakai logika yang sama.
   const isE164 = E164_PATTERN.test(phone);
-  const dialCodeMatches = phoneStartsWithAnyDialCode(phone, [country.callingCode]);
+  const dialCodeMatches = phoneStartsWithAnyDialCode(phone, [
+    country.callingCode,
+  ]);
 
   if (!isE164 || !dialCodeMatches) {
     return {

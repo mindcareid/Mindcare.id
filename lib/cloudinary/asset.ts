@@ -70,9 +70,7 @@ export function isPublicIdInEntityFolder(
 ): boolean {
   return publicIdBelongsToFolder(publicId, FolderImage[entityType].path);
 }
-export function resourceTypeForPublicId(
-  publicId: string,
-): "image" | "raw" {
+export function resourceTypeForPublicId(publicId: string): "image" | "raw" {
   const inRawFolder = UPLOAD_FOLDER_ENTITIES.some(
     (entity) =>
       FolderImage[entity].resourceType === "raw" &&
@@ -89,6 +87,25 @@ function publicIdBelongsToFolder(publicId: string, folder: string): boolean {
     normalized.startsWith(`${normalizedFolder}/`)
   );
 }
+export function urlMatchesPublicId(url: string, publicId: string): boolean {
+  const normalized = publicId.replace(/^\/+|\/+$/g, "");
+  if (!normalized) return false;
+
+  let pathname: string;
+  try {
+    pathname = new URL(url).pathname;
+  } catch {
+    return false;
+  }
+
+  const escaped = normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const suffix = new RegExp(
+    `/image/upload/(?:[^/]+/)*?v?\\d*/?${escaped}(?:\\.\\w+)?$`,
+  );
+
+  return suffix.test(pathname);
+}
+
 export function canDestroyPublicId(
   publicId: string,
   userRole: string | undefined,

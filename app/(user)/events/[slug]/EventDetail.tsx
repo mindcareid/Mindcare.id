@@ -6,6 +6,7 @@ import { hasEnded } from "../data/eventTime";
 import EventHero from "../section/EventHero";
 import EventAbout from "../section/EventAbout";
 import EventAgenda from "../section/EventAgenda";
+import EventSponsors from "../section/EventSponsors";
 import EventSponsorship from "../section/EventSponsorship";
 import EventSpeakers from "../section/EventSpeakers";
 import EventHostCard from "../section/EventHostCard";
@@ -40,6 +41,7 @@ export default function EventDetail({ event, related, now }: EventDetailProps) {
         <div className="mt-8 grid grid-cols-1 gap-12 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_22rem] ">
           <div className="space-y-16">
             <EventAbout event={event} />
+            <EventSponsors event={event} />
             <EventAgenda event={event} linkSpeakers={!ended} />
             <EventSpeakers event={event} />
             <EventHostCard event={event} />

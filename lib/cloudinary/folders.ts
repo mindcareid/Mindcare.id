@@ -85,6 +85,10 @@ export const FolderImage: Record<UploadFolderImage, FolderConfig> = {
     allowedRoles: ADMIN_ONLY,
     resourceType: "raw",
   },
+  "event-sponsor-logos": {
+    path: appDataPath("Events", "Sponsors"),
+    allowedRoles: ADMIN_ONLY,
+  },
 };
 export const LEGACY_DELETE_ONLY_FOLDERS: {
   folder: string;

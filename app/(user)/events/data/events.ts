@@ -4,14 +4,13 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { PLATFORM_NAME, PLATFORM_SLUG } from "@/lib/events/constants";
 import {
+  getPublicSponsorGroups,
   getPublicSponsorTiers,
   normalizeBenefits,
+  type PublicSponsorGroup,
 } from "@/lib/sponsors/queries";
 import type { SponsorBenefit } from "@/lib/sponsors/shared";
-import {
-  EVENT_CACHE_REVALIDATE,
-  eventTag,
-} from "@/lib/events/cache";
+import { EVENT_CACHE_REVALIDATE, eventTag } from "@/lib/events/cache";
 
 const eventListInclude = {
   category: true,
@@ -169,6 +168,7 @@ export type EventDetail = Omit<EventDetailPayload, "focusAreas"> & {
     displayUsd: number | null;
     benefits: SponsorBenefit[];
   }[];
+  sponsorGroups: PublicSponsorGroup[];
 };
 
 const publicEventWhere = {
@@ -241,6 +241,7 @@ function serializeEventDetail(
   registeredCount: number,
   hasProposal: boolean,
   sponsorTiers: EventDetail["sponsorTiers"],
+  sponsorGroups: EventDetail["sponsorGroups"],
 ): EventDetail {
   const remaining =
     event.quota === null ? null : Math.max(event.quota - registeredCount, 0);
@@ -256,6 +257,7 @@ function serializeEventDetail(
     soldOut,
     canDownloadProposal: event.publisherType === "PLATFORM" && hasProposal,
     sponsorTiers,
+    sponsorGroups,
   };
 }
 
@@ -296,10 +298,7 @@ export async function getPublicEventSlugs(): Promise<string[]> {
  * tidak dialokasikan ulang pada setiap request, sementara tag per-slug
  * tetap bisa dipakai untuk invalidasi.
  */
-const eventBySlugCache = new Map<
-  string,
-  () => Promise<EventDetail | null>
->();
+const eventBySlugCache = new Map<string, () => Promise<EventDetail | null>>();
 
 function getCachedEventBySlug(slug: string, withTiers: boolean) {
   const key = `${slug}:${withTiers}`;
@@ -399,6 +398,11 @@ async function loadEventBySlug(
       ? await getPublicSponsorTiers(event.id)
       : [];
 
+  const sponsorGroups =
+    withTiers && event.publisherType === "PLATFORM"
+      ? await getPublicSponsorGroups(event.id)
+      : [];
+
   return serializeEventDetail(
     event,
     registeredCount,
@@ -411,6 +415,7 @@ async function loadEventBySlug(
       displayUsd: tier.displayUsd,
       benefits: normalizeBenefits(tier.benefits),
     })),
+    sponsorGroups,
   );
 }
 
@@ -457,10 +462,7 @@ export async function getUpcomingEvents(
  * berubah tanpa mutasi event, jadi waktu dibulatkan ke jendela
  * `EVENT_CACHE_REVALIDATE`.
  */
-const relatedEventsCache = new Map<
-  string,
-  () => Promise<EventListItem[]>
->();
+const relatedEventsCache = new Map<string, () => Promise<EventListItem[]>>();
 
 function getCachedRelatedEvents(
   slug: string,

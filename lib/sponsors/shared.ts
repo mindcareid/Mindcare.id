@@ -37,6 +37,21 @@ export type SponsorTierAdmin = {
   applicationCount: number;
 };
 
+export type EventSponsorAdmin = {
+  id: number;
+  tierId: number;
+  tierName: string;
+  name: string;
+  logoUrl: string;
+  logoPublicId: string;
+  websiteUrl: string | null;
+  isActive: boolean;
+  sortOrder: number;
+};
+export const SPONSOR_LOGO_HEIGHT = 60;
+export const SPONSOR_LOGO_MAX_WIDTH = 240;
+export const SPONSOR_LOGO_GAP = 56;
+
 export const SPONSOR_PAGE_SIZE = 25;
 export const SPONSOR_MAX_EXPORT_ROWS = 10000;
 
