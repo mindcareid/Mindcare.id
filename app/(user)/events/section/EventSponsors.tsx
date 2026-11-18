@@ -33,7 +33,7 @@ export default function EventSponsors({ event }: { event: EventDetail }) {
                   <Image
                     src={sponsor.logoUrl}
                     alt={`${sponsor.name} logo`}
-                    title={sponsor.name}
+                    width={SPONSOR_LOGO_MAX_WIDTH}
                     height={SPONSOR_LOGO_HEIGHT}
                     style={{
                       height: SPONSOR_LOGO_HEIGHT,

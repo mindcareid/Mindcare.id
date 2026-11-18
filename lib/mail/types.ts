@@ -63,6 +63,9 @@ export interface SendSponsorApplicationEmailParams {
   referenceNo: string;
   companyName: string;
   picName: string;
+  picPosition: string;
+  picPhone: string;
+  picEmail: string;
   eventTitle: string;
   eventDate: string;
   eventLocation: string;

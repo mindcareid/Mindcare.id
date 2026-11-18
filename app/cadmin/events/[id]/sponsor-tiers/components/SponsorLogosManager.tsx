@@ -598,6 +598,8 @@ function PublicSizePreview({ src, alt }: { src: string; alt: string }) {
       <Image
         src={src}
         alt={`${alt} preview at public size`}
+        width={SPONSOR_LOGO_MAX_WIDTH}
+        height={SPONSOR_LOGO_HEIGHT}
         style={{
           height: SPONSOR_LOGO_HEIGHT,
           width: "auto",

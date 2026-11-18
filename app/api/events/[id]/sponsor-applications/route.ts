@@ -287,6 +287,9 @@ export async function POST(
       picName: [input.picTitle, input.picFirstName, input.picLastName]
         .filter(Boolean)
         .join(" "),
+      picPosition: input.picPosition,
+      picPhone: input.picPhone,
+      picEmail: input.picEmail,
       eventTitle: event.title,
       eventDate: formatDate(event.startDate, timeZone),
       eventLocation:

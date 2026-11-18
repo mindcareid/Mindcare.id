@@ -16,6 +16,9 @@ export function sponsorApplicationTemplate({
   referenceNo,
   companyName,
   picName,
+  picPosition,
+  picPhone,
+  picEmail,
   eventTitle,
   eventDate,
   eventLocation,
@@ -58,6 +61,54 @@ export function sponsorApplicationTemplate({
         </table>
       `
       : "";
+
+  const contactCard = `
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px; border:1px solid ${mailTheme.border}; border-radius:8px; border-collapse:separate; overflow:hidden;">
+        <tr>
+          <td colspan="2" style="padding:0 14px; height:3px; background:${mailTheme.primary}; line-height:3px; font-size:0;">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style="padding:14px 14px 4px; font-family:Arial,Helvetica,sans-serif; font-size:13px; font-weight:600; color:${mailTheme.text}; width:38%;">
+            Name
+          </td>
+          <td style="padding:14px 14px 4px; font-family:Arial,Helvetica,sans-serif; font-size:13px; font-weight:600; color:${mailTheme.text};">
+            ${escapeHtml(picName)}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 14px 4px; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:${mailTheme.textMuted}; width:38%;">
+            Position
+          </td>
+          <td style="padding:10px 14px 4px; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:${mailTheme.text};">
+            ${escapeHtml(picPosition)}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 14px 4px; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:${mailTheme.textMuted}; width:38%;">
+            Company
+          </td>
+          <td style="padding:10px 14px 4px; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:${mailTheme.text};">
+            ${escapeHtml(companyName)}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 14px 4px; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:${mailTheme.textMuted}; width:38%;">
+            No. Handphone
+          </td>
+          <td style="padding:10px 14px 4px; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:${mailTheme.text};">
+            ${escapeHtml(picPhone)}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 14px 14px; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:${mailTheme.textMuted}; width:38%;">
+            Email
+          </td>
+          <td style="padding:10px 14px 14px; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:${mailTheme.text};">
+            ${escapeHtml(picEmail)}
+          </td>
+        </tr>
+      </table>
+    `;
 
   return emailLayout({
     title: `Sponsorship request received — ${referenceNo}`,
@@ -128,9 +179,10 @@ export function sponsorApplicationTemplate({
           { label: "Event", value: escapeHtml(eventTitle) },
           { label: "Date", value: escapeHtml(eventDate) },
           { label: "Location", value: escapeHtml(eventLocation) },
-          { label: "Company", value: escapeHtml(companyName) },
         ],
       })}
+
+      ${contactCard}
 
       ${benefitsHtml}
 
