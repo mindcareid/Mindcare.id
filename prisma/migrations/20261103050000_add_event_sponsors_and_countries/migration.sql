@@ -51,6 +51,8 @@ CREATE TABLE `EventSponsorApplication` (
     `displayUsdSnapshot` INTEGER NULL,
     `emailSentAt` DATETIME(3) NULL,
     `emailError` VARCHAR(500) NULL,
+    `ip` VARCHAR(64) NULL,
+    `userAgent` VARCHAR(500) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
