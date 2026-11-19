@@ -6,10 +6,10 @@ import {
 } from "@/lib/sponsors/shared";
 import type { EventDetail } from "../data/events";
 import Image from "next/image";
+import { GroupSponsors } from "@/lib/events/groupsponsor";
+
 export default function EventSponsors({ event }: { event: EventDetail }) {
-  const groups = (event.sponsorGroups ?? []).filter(
-    (group) => group.sponsors.length > 0,
-  );
+  const groups = GroupSponsors(event.sponsorGroups ?? []);
 
   if (groups.length === 0) return null;
 
@@ -19,9 +19,9 @@ export default function EventSponsors({ event }: { event: EventDetail }) {
 
       <div className="mt-8 space-y-10">
         {groups.map((group) => (
-          <div key={group.tierId}>
+          <div key={group.key}>
             <h3 className="text-sm font-semibold text-foreground">
-              {group.tierName}
+              {group.label}
             </h3>
 
             <ul
