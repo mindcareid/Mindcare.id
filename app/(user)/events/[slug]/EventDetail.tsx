@@ -6,6 +6,7 @@ import { hasEnded } from "../data/eventTime";
 import EventHero from "../section/EventHero";
 import EventAbout from "../section/EventAbout";
 import EventAgenda from "../section/EventAgenda";
+import EventWorkshops from "../section/EventWorkshops";
 import EventSponsors from "../section/EventSponsors";
 import EventSponsorship from "../section/EventSponsorship";
 import EventSpeakers from "../section/EventSpeakers";
@@ -43,6 +44,7 @@ export default function EventDetail({ event, related, now }: EventDetailProps) {
             <EventAbout event={event} />
             <EventSponsors event={event} />
             <EventAgenda event={event} linkSpeakers={!ended} />
+            <EventWorkshops event={event} />
             <EventSpeakers event={event} />
             <EventHostCard event={event} />
 

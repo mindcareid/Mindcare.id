@@ -64,6 +64,14 @@ const eventDetailInclude = {
   // kalau publisher-nya PLATFORM; lihat design.md bagian 33.
   speakers: { orderBy: { sortOrder: "asc" } },
 
+  // Workshop MindCare (khusus publisher PLATFORM).
+  workshops: {
+    orderBy: { sortOrder: "asc" },
+    include: {
+      speaker: true,
+    },
+  },
+
   focusAreas: {
     include: {
       focusArea: true,
