@@ -12,6 +12,7 @@ import AgendaSpeakersEditor, {
   type AgendaDraft,
   type SpeakerDraft,
 } from "./AgendaSpeakersEditor";
+import WorkshopsEditor, { type WorkshopDraft } from "./WorkshopsEditor";
 import { agendaKindHidesSpeakers } from "@/lib/events/agenda";
 
 /* ================= TYPES ================= */
@@ -42,6 +43,17 @@ type SpeakerDefault = {
   photoPublicId?: string | null;
 };
 
+type WorkshopDefault = {
+  id: number;
+  speakerId: number;
+  title: string;
+  description?: string | null;
+  startTime: string;
+  endTime: string;
+  price?: string | null;
+  link: string;
+};
+
 type EventFormFields = {
   title: string;
   slug: string;
@@ -59,11 +71,31 @@ type EventFormFields = {
   isPublished: boolean;
   categoryId: number;
   publisherType?: string;
+  workshopNote?: string | null;
   agenda?: AgendaDefault[];
   speakers?: SpeakerDefault[];
+  workshops?: WorkshopDefault[];
 };
 
 /* ================= MAPPERS ================= */
+
+function mapWorkshops(
+  values: Partial<EventFormFields> | undefined,
+  tz: string,
+): WorkshopDraft[] {
+  return (values?.workshops ?? []).map((item) => ({
+    key: `workshop-${item.id}`,
+    id: item.id,
+    speakerKey: String(item.speakerId),
+    title: item.title,
+    description: item.description ?? "",
+    date: fromUtcFormat(item.startTime, tz).slice(0, 10),
+    startTime: fromUtcFormat(item.startTime, tz).slice(11, 16),
+    endTime: fromUtcFormat(item.endTime, tz).slice(11, 16),
+    price: item.price ?? "",
+    link: item.link,
+  }));
+}
 
 /** `defaultValues` -> state form. Satu sumber untuk init dan muat ulang. */
 function mapSpeakers(values?: Partial<EventFormFields>): SpeakerDraft[] {
@@ -107,6 +139,7 @@ export default function EventFormWrapper(props: EventFormProps) {
     (props.defaultValues?.agenda ?? [])
       .map((item) => `${item.id}:${item.speakers?.length ?? 0}`)
       .join(","),
+    props.defaultValues?.workshops?.length ?? 0,
   ].join("|");
 
   return <EventForm key={revision} {...props} />;
@@ -145,15 +178,20 @@ function EventForm({ id, defaultValues, categories }: EventFormProps) {
     isPublished: defaultValues?.isPublished ?? false,
     categoryId: Number(defaultValues?.categoryId ?? categories[0]?.id ?? 0),
     publisherType: defaultValues?.publisherType ?? "PLATFORM",
+    workshopNote: defaultValues?.workshopNote ?? "",
   }));
 
-  // Speaker & agenda hanya untuk event MindCare (publisher PLATFORM).
+  // Speaker, agenda, dan workshop hanya untuk event MindCare (publisher PLATFORM).
   const [speakers, setSpeakers] = useState<SpeakerDraft[]>(() =>
     mapSpeakers(defaultValues),
   );
 
   const [agenda, setAgenda] = useState<AgendaDraft[]>(() =>
     mapAgenda(defaultValues, tz),
+  );
+
+  const [workshops, setWorkshops] = useState<WorkshopDraft[]>(() =>
+    mapWorkshops(defaultValues, tz),
   );
 
   const applyServerEvent = (server: Partial<EventFormFields>) => {
@@ -178,10 +216,12 @@ function EventForm({ id, defaultValues, categories }: EventFormProps) {
       isPublished: server.isPublished ?? false,
       categoryId: Number(server.categoryId ?? form.categoryId),
       publisherType: server.publisherType ?? "PLATFORM",
+      workshopNote: server.workshopNote ?? "",
     });
 
     setSpeakers(mapSpeakers(server));
     setAgenda(mapAgenda(server, serverTz));
+    setWorkshops(mapWorkshops(server, serverTz));
     setOpenCard(null);
   };
 
@@ -309,6 +349,45 @@ function EventForm({ id, defaultValues, categories }: EventFormProps) {
         }
       });
 
+      workshops.forEach((item, index) => {
+        const cardKey = `workshop-${item.key}`;
+
+        if (!item.title.trim()) {
+          found.push({
+            cardKey,
+            message: `Workshop ${index + 1}: topic / title is required.`,
+          });
+        }
+        if (!item.speakerKey) {
+          found.push({
+            cardKey,
+            message: `Workshop ${index + 1}: speaker is required.`,
+          });
+        }
+        if (!item.link.trim()) {
+          found.push({
+            cardKey,
+            message: `Workshop ${index + 1}: Google Form URL is required.`,
+          });
+        }
+        if (
+          !item.date ||
+          item.date < eventFirstDay ||
+          item.date > eventLastDay
+        ) {
+          found.push({
+            cardKey,
+            message: `Workshop ${index + 1}: pick a date between ${eventFirstDay} and ${eventLastDay} (the event dates).`,
+          });
+        }
+        if (item.startTime && item.endTime && item.endTime <= item.startTime) {
+          found.push({
+            cardKey,
+            message: `Workshop ${index + 1}: end time must be after start time.`,
+          });
+        }
+      });
+
       setIssues(found);
 
       if (found.length > 0) {
@@ -332,12 +411,15 @@ function EventForm({ id, defaultValues, categories }: EventFormProps) {
       const isPlatform = (form.publisherType ?? "PLATFORM") === "PLATFORM";
       const sendsSpeakers = isPlatform;
       const sendsAgenda = isPlatform;
+      const sendsWorkshops = isPlatform;
 
       const payload = {
         ...form,
+        workshopNote: isPlatform ? form.workshopNote : undefined,
         // Dikelola lewat payload di bawah, bukan diikutkan mentah.
         agenda: undefined,
         speakers: undefined,
+        workshops: undefined,
         ...(sendsSpeakers
           ? {
               speakers: speakers.map((speaker) => ({
@@ -367,6 +449,26 @@ function EventForm({ id, defaultValues, categories }: EventFormProps) {
                   ? `${item.date || fallbackDate}T${item.endTime}`
                   : "",
                 speakers: item.speakers,
+              })),
+            }
+          : {}),
+        ...(sendsWorkshops
+          ? {
+              workshops: workshops.map((item) => ({
+                id: item.id,
+                speakerKey: /^\d+$/.test(item.speakerKey)
+                  ? Number(item.speakerKey)
+                  : item.speakerKey,
+                title: item.title,
+                description: item.description,
+                startTime: item.startTime
+                  ? `${item.date || fallbackDate}T${item.startTime}`
+                  : "",
+                endTime: item.endTime
+                  ? `${item.date || fallbackDate}T${item.endTime}`
+                  : "",
+                price: item.price,
+                link: item.link,
               })),
             }
           : {}),
@@ -473,10 +575,10 @@ function EventForm({ id, defaultValues, categories }: EventFormProps) {
             name="slug"
             value={form.slug}
             readOnly
-            className="w-full border px-3 py-2 rounded bg-gray-50"
+            className="w-full border px-3 py-2 rounded bg-gray-200 cursor-not-allowed disabled:opacity-100 disabled:bg-gray-400"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Dibuat otomatis dan tidak berubah saat edit
+            Auto-generated and cannot be changed when editing.
           </p>
         </div>
 
@@ -718,6 +820,49 @@ function EventForm({ id, defaultValues, categories }: EventFormProps) {
               setAgenda(nextAgenda);
             }}
           />
+
+          <div className="border-t border-border pt-6">
+            <h2 className="text-lg font-semibold">Workshops</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Paid workshop sessions linked to Google Form.
+            </p>
+
+            <div className="mt-4 rounded-lg border border-border bg-muted/20 p-4">
+              <label className="block text-xs font-semibold text-foreground">
+                Session Packages & Pricing Notes
+              </label>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Pricing or package discount details (e.g., 1 session Rp..., 2
+                sessions Rp..., save Rp...). Displayed on the workshop
+                registration card.
+              </p>
+              <textarea
+                name="workshopNote"
+                rows={3}
+                value={form.workshopNote ?? ""}
+                onChange={handleChange}
+                placeholder={
+                  "Contoh:\n1 sesi Rp385.000\n2 sesi Rp750.000 (hemat Rp20.000)\n3 sesi Rp1.110.000 (hemat Rp45.000)"
+                }
+                className="mt-2 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </div>
+
+            <div className="mt-5">
+              <WorkshopsEditor
+                workshops={workshops}
+                speakers={speakers}
+                minDate={form.startDate.slice(0, 10)}
+                maxDate={form.endDate.slice(0, 10)}
+                openKey={openCard}
+                onOpenChange={setOpenCard}
+                issues={Object.fromEntries(
+                  issues.map((issue) => [issue.cardKey, issue.message]),
+                )}
+                onChange={setWorkshops}
+              />
+            </div>
+          </div>
         </section>
       )}
 
@@ -787,10 +932,6 @@ function EventForm({ id, defaultValues, categories }: EventFormProps) {
           </ul>
         </section>
       )}
-
-      {/* ================= ACTIONS ================= */}
-      {/* Lengket di bawah: setelah 10 speaker dan 8 sesi, tombol simpan
-                versi lama berada ribuan piksel di bawah layar. */}
       <div className="sticky bottom-0 z-10 -mx-6 -mb-6 flex flex-wrap items-center gap-3 border-t border-border bg-card/95 px-6 py-3 backdrop-blur">
         <button
           type="submit"
@@ -811,6 +952,8 @@ function EventForm({ id, defaultValues, categories }: EventFormProps) {
         <p className="ml-auto text-xs text-muted-foreground">
           {speakers.length} {speakers.length === 1 ? "speaker" : "speakers"} ·{" "}
           {agenda.length} {agenda.length === 1 ? "session" : "sessions"}
+          {workshops.length > 0 &&
+            ` · ${workshops.length} workshop${workshops.length === 1 ? "" : "s"}`}
           {issues.length > 0 ? ` · ${issues.length} to fix` : ""}
         </p>
       </div>
