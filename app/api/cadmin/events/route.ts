@@ -92,6 +92,19 @@ type AgendaInput = {
   speakers: { key: string; role: AgendaSpeakerRole }[];
 };
 
+type WorkshopInput = {
+  id?: number;
+  clientKey: string | null;
+  speakerKey: string;
+  title: string;
+  description: string | null;
+  startTime: Date;
+  endTime: Date;
+  price: string | null;
+  link: string;
+  sortOrder: number;
+};
+
 function parseSpeakers(
   raw: unknown,
 ): { ok: true; speakers: SpeakerInput[] } | { ok: false; error: string } {
@@ -326,15 +339,116 @@ function parseAgenda(
   return { ok: true, agenda };
 }
 
+function parseWorkshops(
+  raw: unknown,
+  args: {
+    eventDate: Date;
+    timeZone: string;
+    firstDay: string;
+    lastDay: string;
+    speakerKeys: Set<string>;
+  },
+): { ok: true; workshops: WorkshopInput[] } | { ok: false; error: string } {
+  if (raw === undefined) return { ok: true, workshops: [] };
+  if (!Array.isArray(raw)) {
+    return { ok: false, error: "workshops must be an array" };
+  }
+
+  const workshops: WorkshopInput[] = [];
+  const datePart = formatInTimeZone(
+    args.eventDate,
+    args.timeZone,
+    "yyyy-MM-dd",
+  );
+
+  const toDate = (value: unknown): Date | null => {
+    if (typeof value !== "string" || !value.trim()) return null;
+    const rawVal = value.trim();
+    const iso = /^\d{2}:\d{2}$/.test(rawVal) ? `${datePart}T${rawVal}:00` : rawVal;
+    try {
+      return toUtc(iso, args.timeZone);
+    } catch {
+      return null;
+    }
+  };
+
+  for (let index = 0; index < raw.length; index++) {
+    const row = raw[index];
+    if (typeof row !== "object" || row === null) {
+      return { ok: false, error: `Workshop #${index + 1} is not an object` };
+    }
+
+    const item = row as Record<string, unknown>;
+    const title = text(item.title);
+    if (!title) {
+      return { ok: false, error: `Workshop #${index + 1} needs a title / topic` };
+    }
+
+    const key =
+      typeof item.speakerKey === "number"
+        ? String(item.speakerKey)
+        : typeof item.speakerKey === "string"
+          ? item.speakerKey.trim()
+          : "";
+
+    if (!key) {
+      return { ok: false, error: `Workshop "${title}": speaker is required` };
+    }
+
+    if (!args.speakerKeys.has(key)) {
+      return { ok: false, error: `Workshop "${title}": speaker not found` };
+    }
+
+    const formLink = text(item.link);
+    if (!formLink) {
+      return { ok: false, error: `Workshop "${title}": Google Form link is required` };
+    }
+
+    const startTime = toDate(item.startTime);
+    const endTime = toDate(item.endTime);
+
+    if (!startTime || !endTime) {
+      return {
+        ok: false,
+        error: `Workshop "${title}": valid start and end time are required`,
+      };
+    }
+
+    if (endTime.getTime() <= startTime.getTime()) {
+      return {
+        ok: false,
+        error: `Workshop "${title}": end time must be after start time`,
+      };
+    }
+
+    workshops.push({
+      id: Number.isInteger(item.id) ? Number(item.id) : undefined,
+      clientKey:
+        typeof item.id === "string" && item.id.trim() ? item.id.trim() : null,
+      speakerKey: key,
+      title,
+      description: text(item.description),
+      startTime,
+      endTime,
+      price: text(item.price),
+      link: formLink,
+      sortOrder: index,
+    });
+  }
+
+  return { ok: true, workshops };
+}
+
 async function saveAgendaAndSpeakers(
   tx: Prisma.TransactionClient,
   eventId: number,
   params: {
     speakers: SpeakerInput[] | null;
     agenda: AgendaInput[] | null;
+    workshops?: WorkshopInput[] | null;
   },
 ): Promise<void> {
-  const { speakers, agenda } = params;
+  const { speakers, agenda, workshops } = params;
 
   const existingSpeakers = await tx.eventSpeaker.findMany({
     where: { eventId },
@@ -540,6 +654,9 @@ async function saveAgendaAndSpeakers(
       (id) => !keptSpeakerIds.has(id),
     );
     if (staleSpeakers.length) {
+      await tx.eventWorkshop.deleteMany({
+        where: { speakerId: { in: staleSpeakers } },
+      });
       await tx.eventAgendaSpeaker.deleteMany({
         where: { speakerId: { in: staleSpeakers } },
       });
@@ -559,6 +676,54 @@ async function saveAgendaAndSpeakers(
       });
       await tx.eventAgendaItem.deleteMany({
         where: { id: { in: staleAgenda } },
+      });
+    }
+  }
+
+  // ---- workshops ----
+  const existingWorkshops = await tx.eventWorkshop.findMany({
+    where: { eventId },
+    select: { id: true },
+  });
+  const existingWorkshopIds = new Set(existingWorkshops.map((w) => w.id));
+  const keptWorkshopIds = new Set<number>();
+
+  if (workshops) {
+    for (const item of workshops) {
+      const speakerId = speakerIdByKey.get(item.speakerKey);
+      if (!speakerId) continue;
+
+      const data = {
+        speakerId,
+        title: item.title,
+        description: item.description,
+        startTime: item.startTime,
+        endTime: item.endTime,
+        price: item.price,
+        link: item.link,
+        sortOrder: item.sortOrder,
+      };
+
+      if (item.id && existingWorkshopIds.has(item.id)) {
+        await tx.eventWorkshop.update({
+          where: { id: item.id },
+          data,
+        });
+        keptWorkshopIds.add(item.id);
+      } else {
+        const created = await tx.eventWorkshop.create({
+          data: { eventId, ...data },
+        });
+        keptWorkshopIds.add(created.id);
+      }
+    }
+
+    const staleWorkshops = [...existingWorkshopIds].filter(
+      (id) => !keptWorkshopIds.has(id),
+    );
+    if (staleWorkshops.length) {
+      await tx.eventWorkshop.deleteMany({
+        where: { id: { in: staleWorkshops } },
       });
     }
   }
@@ -598,6 +763,9 @@ export async function GET(req: Request) {
                 select: { speakerId: true, role: true },
               },
             },
+          },
+          workshops: {
+            orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }],
           },
         },
       });
@@ -672,6 +840,12 @@ export async function POST(req: Request) {
       );
     }
 
+    const speakerKeys = new Set(
+      parsedSpeakers.speakers
+        .map((speaker) => speaker.clientKey)
+        .filter((key): key is string => Boolean(key)),
+    );
+
     const agendaInput = Array.isArray(body.agenda) ? body.agenda : [];
     const parsedAgenda = parseAgenda(agendaInput, {
       eventDate: startDate,
@@ -682,15 +856,30 @@ export async function POST(req: Request) {
         timeZone,
         "yyyy-MM-dd",
       ),
-      speakerKeys: new Set(
-        parsedSpeakers.speakers
-          .map((speaker) => speaker.clientKey)
-          .filter((key): key is string => Boolean(key)),
-      ),
+      speakerKeys,
     });
     if (!parsedAgenda.ok) {
       return NextResponse.json(
         { success: false, message: parsedAgenda.error },
+        { status: 422 },
+      );
+    }
+
+    const workshopsInput = Array.isArray(body.workshops) ? body.workshops : [];
+    const parsedWorkshops = parseWorkshops(workshopsInput, {
+      eventDate: startDate,
+      timeZone,
+      firstDay: formatInTimeZone(startDate, timeZone, "yyyy-MM-dd"),
+      lastDay: formatInTimeZone(
+        toUtc(body.endDate, timeZone),
+        timeZone,
+        "yyyy-MM-dd",
+      ),
+      speakerKeys,
+    });
+    if (!parsedWorkshops.ok) {
+      return NextResponse.json(
+        { success: false, message: parsedWorkshops.error },
         { status: 422 },
       );
     }
@@ -720,6 +909,10 @@ export async function POST(req: Request) {
           publicId: body.publicId,
           proposalUrl: parsedProposal.url,
           proposalPublicId: parsedProposal.publicId,
+          workshopNote:
+            typeof body.workshopNote === "string"
+              ? body.workshopNote.trim() || null
+              : null,
           status,
           isPublished: status === EventStatus.PUBLISHED,
           publisherType: EventPublisherType.PLATFORM,
@@ -733,6 +926,7 @@ export async function POST(req: Request) {
       await saveAgendaAndSpeakers(tx, created.id, {
         speakers: parsedSpeakers.speakers,
         agenda: parsedAgenda.agenda,
+        workshops: parsedWorkshops.workshops,
       });
 
       return created;
@@ -822,6 +1016,7 @@ export async function PUT(req: Request) {
     const writesAgenda = current.publisherType === EventPublisherType.PLATFORM;
     const sendsSpeakers = writesAgenda && body.speakers !== undefined;
     const sendsAgenda = writesAgenda && body.agenda !== undefined;
+    const sendsWorkshops = writesAgenda && body.workshops !== undefined;
     if (sendsSpeakers !== sendsAgenda) {
       return NextResponse.json(
         {
@@ -835,6 +1030,7 @@ export async function PUT(req: Request) {
 
     let parsedSpeakers: SpeakerInput[] = [];
     let parsedAgenda: AgendaInput[] = [];
+    let parsedWorkshops: WorkshopInput[] = [];
 
     if (sendsSpeakers) {
       const result = parseSpeakers(body.speakers);
@@ -847,6 +1043,12 @@ export async function PUT(req: Request) {
       parsedSpeakers = result.speakers;
     }
 
+    const speakerKeys = new Set(
+      parsedSpeakers
+        .map((speaker) => speaker.clientKey)
+        .filter((key): key is string => Boolean(key)),
+    );
+
     if (sendsAgenda) {
       const result = parseAgenda(body.agenda, {
         eventDate: startDate,
@@ -857,14 +1059,7 @@ export async function PUT(req: Request) {
           timeZone,
           "yyyy-MM-dd",
         ),
-        // `speakerKeys` hanya boleh merujuk speaker yang dikirim di body yang
-        // sama, supaya tautan sesi tidak mungkin mengarah ke orang yang tidak
-        // muncul di daftar.
-        speakerKeys: new Set(
-          parsedSpeakers
-            .map((speaker) => speaker.clientKey)
-            .filter((key): key is string => Boolean(key)),
-        ),
+        speakerKeys,
       });
       if (!result.ok) {
         return NextResponse.json(
@@ -873,6 +1068,27 @@ export async function PUT(req: Request) {
         );
       }
       parsedAgenda = result.agenda;
+    }
+
+    if (sendsWorkshops) {
+      const result = parseWorkshops(body.workshops, {
+        eventDate: startDate,
+        timeZone,
+        firstDay: formatInTimeZone(startDate, timeZone, "yyyy-MM-dd"),
+        lastDay: formatInTimeZone(
+          toUtc(body.endDate, timeZone),
+          timeZone,
+          "yyyy-MM-dd",
+        ),
+        speakerKeys,
+      });
+      if (!result.ok) {
+        return NextResponse.json(
+          { success: false, message: result.error },
+          { status: 422 },
+        );
+      }
+      parsedWorkshops = result.workshops;
     }
 
     const parsedProposal = parseProposal(body);
@@ -908,13 +1124,22 @@ export async function PUT(req: Request) {
                 proposalPublicId: parsedProposal.publicId,
               }
             : {}),
+          ...(body.workshopNote !== undefined
+            ? {
+                workshopNote:
+                  typeof body.workshopNote === "string"
+                    ? body.workshopNote.trim() || null
+                    : null,
+              }
+            : {}),
         },
       });
 
-      if (sendsSpeakers || sendsAgenda) {
+      if (sendsSpeakers || sendsAgenda || sendsWorkshops) {
         await saveAgendaAndSpeakers(tx, updated.id, {
           speakers: sendsSpeakers ? parsedSpeakers : null,
           agenda: sendsAgenda ? parsedAgenda : null,
+          workshops: sendsWorkshops ? parsedWorkshops : null,
         });
       }
 

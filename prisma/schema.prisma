@@ -808,6 +808,7 @@ model Event {
   publisherType EventPublisherType @default(PLATFORM)
   proposalUrl      String? @db.VarChar(1000)
   proposalPublicId String? @db.VarChar(255)
+  workshopNote String? @db.Text
 
   professionalId Int?
   careCentreId   Int?
@@ -838,6 +839,7 @@ model Event {
   sponsorTiers   EventSponsorTier[]
   sponsors       EventSponsor[] @relation("EventSponsorEvent")
   sponsorApplications EventSponsorApplication[]
+  workshops      EventWorkshop[]
 
   @@index([professionalId, status, startDate])
   @@index([careCentreId, status, startDate])
@@ -926,6 +928,7 @@ model EventSpeaker {
   sortOrder Int @default(0)
 
   agendaItems EventAgendaSpeaker[]
+  workshops   EventWorkshop[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -950,6 +953,34 @@ model EventAgendaSpeaker {
   @@id([agendaItemId, speakerId])
   @@index([speakerId])
 }
+
+model EventWorkshop {
+  id          Int          @id @default(autoincrement())
+
+  eventId     Int
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  speakerId   Int
+  speaker     EventSpeaker @relation(fields: [speakerId], references: [id], onDelete: Cascade)
+
+  title       String       @db.VarChar(255)
+  description String?      @db.Text
+
+  startTime   DateTime
+  endTime     DateTime
+
+  price       String?      @db.VarChar(255)
+  link        String       @db.VarChar(500)
+
+  sortOrder   Int          @default(0)
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([eventId, startTime])
+  @@index([speakerId])
+}
+
 model EventProposalDownload {
   id Int @id @default(autoincrement())
 
