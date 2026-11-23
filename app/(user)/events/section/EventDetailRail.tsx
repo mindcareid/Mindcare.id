@@ -13,22 +13,22 @@ import RegisterEventButton from "./RegisterEventButton";
 
 import type { EventDetail } from "../data/events";
 
-type EventDetailRailProps = {
+export type EventDetailRailProps = {
   event: EventDetail;
   now: string;
 };
 
-const priceFormatter = new Intl.NumberFormat("id-ID", {
+export const priceFormatter = new Intl.NumberFormat("id-ID", {
   style: "currency",
   currency: "IDR",
   maximumFractionDigits: 0,
 });
 
-function RegistrationAction({
+export function RegistrationAction({
   event,
   now,
   className,
-}: EventDetailRailProps & { className: string }) {
+}: EventDetailRailProps & { className?: string }) {
   const ended = hasEnded(event, now);
   const soldOut = !ended && event.soldOut;
   const remaining =
@@ -68,7 +68,7 @@ function RegistrationAction({
   );
 }
 
-/** Tombol daftar yang tampil tepat di bawah poster hero, khusus mobile. */
+/** Tombol daftar yang tampil tepat di bawah poster hero, khusus mobile (fallback jika diperlukan). */
 export function EventDetailMobileCta({ event, now }: EventDetailRailProps) {
   return <RegistrationAction event={event} now={now} className="w-full" />;
 }
@@ -120,11 +120,6 @@ export default function EventDetailRail({ event, now }: EventDetailRailProps) {
             />
           )}
         </dl>
-
-        {/* Mobile sudah punya tombol daftar di atas konten, jadi di sini hanya desktop. */}
-        <div className="hidden lg:block">
-          <RegistrationAction event={event} now={now} className="w-full" />
-        </div>
 
         {event.canDownloadProposal && (
           <DownloadProposalButton

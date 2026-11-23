@@ -17,10 +17,10 @@ export default function EventSponsors({ event }: { event: EventDetail }) {
     <div>
       <SectionHeader title="Our Sponsors" underline />
 
-      <div className="mt-8 space-y-10">
+      <div className="mt-4 space-y-6 bg-white/60">
         {groups.map((group) => (
           <div key={group.key}>
-            <h3 className="text-sm font-semibold text-foreground">
+            <h3 className="px-4 py-2 text-sm font-semibold text-foreground">
               {group.label}
             </h3>
 

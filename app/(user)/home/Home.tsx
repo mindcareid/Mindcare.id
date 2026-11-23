@@ -6,6 +6,7 @@ import HeroWipeSlideshow, {
 } from "@/app/components/reusable/HeroWipeSlideshow";
 import { buttonStyles } from "@/app/components/reusable/buttonStyles";
 import HomeSection from "./section/HomeSection";
+import PillarBanner from "./section/PillarBanner";
 import ContactSection from "./section/ContactSection";
 import ProfessionalsGrid from "../professionals/section/ProfessionalsGrid";
 import CareCentresGrid from "../care-centres/section/CareCentresGrid";
@@ -77,6 +78,9 @@ export default function Home({
           </PageHero>
         )}
       </div>
+
+      <PillarBanner />
+
       <HomeSection
         title="Meet the professionals"
         description="Psychologists, psychiatrists, and counsellors with the areas they support and the cities they practise in."

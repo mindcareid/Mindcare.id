@@ -1,22 +1,32 @@
 import { CalendarDays, Clock, MapPin, Video } from "lucide-react";
+import Image from "next/image";
 
 import Container from "@/app/components/reusable/Container";
 import MetaRow from "@/app/components/reusable/MetaRow";
 import Tag from "@/app/components/reusable/Tag";
 import { eventFormatLabel } from "@/lib/events/labels";
 
-import { formatEventDateLong, formatEventTimeRange } from "../data/eventTime";
+import {
+  formatEventDateLong,
+  formatEventTimeRange,
+  hasEnded,
+} from "../data/eventTime";
 
 import type { EventDetail } from "../data/events";
-import Image from "next/image";
+import { RegistrationAction, priceFormatter } from "./EventDetailRail";
 
 type EventHeroProps = {
   event: EventDetail;
   now: string;
 };
 
-export default function EventHero({ event }: EventHeroProps) {
+export default function EventHero({ event, now }: EventHeroProps) {
   const hasCover = Boolean(event.coverImage);
+  const ended = hasEnded(event, now);
+  const soldOut = !ended && event.soldOut;
+  const remaining =
+    !ended && event.remaining !== null ? Math.max(event.remaining, 0) : null;
+  const isFree = event.price <= 0;
 
   return (
     <section className="border-b border-border bg-card">
@@ -55,6 +65,36 @@ export default function EventHero({ event }: EventHeroProps) {
                 },
               ]}
             />
+
+            {/* CTA & Price Info */}
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+              <RegistrationAction
+                event={event}
+                now={now}
+                className="w-full sm:w-auto"
+              />
+
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">Price</span>
+                  <span className="text-lg font-bold text-foreground">
+                    {isFree ? "Free" : priceFormatter.format(event.price)}
+                  </span>
+                </div>
+
+                {!ended && remaining !== null && (
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                      soldOut
+                        ? "bg-destructive/10 text-destructive"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {soldOut ? "Sold out" : `${remaining} spots left`}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
           {hasCover && (
