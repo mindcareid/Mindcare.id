@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import { getAdminUser } from "@/lib/adminGuard";
+import { getSuperadmin } from "@/lib/adminGuard";
 import {
   MAX_EXPORT_ROWS,
   type RegistrationFilters,
@@ -268,9 +268,11 @@ function buildSheet(
  * header beku, auto-filter, dan nomor urut. CSV lama tetap tersedia.
  */
 export async function GET(req: Request) {
-  const admin = await getAdminUser();
-  if (!admin) {
-    return new Response("Forbidden!", { status: 403 });
+  const superadmin = await getSuperadmin();
+  if (!superadmin) {
+    return new Response("Forbidden! Only superadmin can export data.", {
+      status: 403,
+    });
   }
 
   try {

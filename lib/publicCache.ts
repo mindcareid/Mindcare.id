@@ -14,7 +14,7 @@ function revalidateSlugs(
 ) {
   for (const slug of slugs) {
     if (slug) {
-      revalidatePath(`${basePath}/${slug}`);
+      revalidatePath(`${basePath}/${slug}`, "page");
     }
   }
 }
@@ -28,21 +28,26 @@ export function revalidateProfessionalCache(
       entries.map((entry) => entry?.slug),
     );
     revalidatePath("/professionals/[slug]", "page");
-    revalidatePath("/professionals");
-    revalidatePath("/");
+    revalidatePath("/professionals", "page");
+    revalidatePath("/", "layout");
   });
 }
 export function revalidateProfessionalDetail(slug: string | null | undefined) {
   safeRevalidate(() => {
     if (!slug) return;
-    revalidatePath(`/professionals/${slug}`);
+    revalidatePath(`/professionals/${slug}`, "page");
     revalidatePath("/professionals/[slug]", "page");
+    revalidatePath("/professionals", "page");
+    revalidatePath("/", "layout");
   });
 }
 export function revalidateCareCentreDetail(slug: string | null | undefined) {
   safeRevalidate(() => {
     if (!slug) return;
-    revalidatePath(`/care-centres/${slug}`);
+    revalidatePath(`/care-centres/${slug}`, "page");
+    revalidatePath("/care-centres/[slug]", "page");
+    revalidatePath("/care-centres", "page");
+    revalidatePath("/", "layout");
   });
 }
 
@@ -54,18 +59,19 @@ export function revalidateCareCentreCache(
       "/care-centres",
       entries.map((entry) => entry?.slug),
     );
-    revalidatePath("/care-centres");
-    revalidatePath("/");
+    revalidatePath("/care-centres/[slug]", "page");
+    revalidatePath("/care-centres", "page");
+    revalidatePath("/", "layout");
   });
 }
 
 export function revalidateHeroCache() {
   safeRevalidate(() => {
-    revalidatePath("/");
+    revalidatePath("/", "layout");
   });
 }
 export function revalidateHomepageCache() {
   safeRevalidate(() => {
-    revalidatePath("/");
+    revalidatePath("/", "layout");
   });
 }

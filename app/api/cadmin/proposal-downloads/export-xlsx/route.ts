@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 
-import { getAdminUser } from "@/lib/adminGuard";
+import { getSuperadmin } from "@/lib/adminGuard";
 import {
   MAX_EXPORT_ROWS,
   parseFilters,
@@ -66,9 +66,11 @@ function fillBorder(cell: ExcelJS.Cell) {
  * gagal dikirimi email ditandai di kolom "Email Terkirim".
  */
 export async function GET(req: Request) {
-  const admin = await getAdminUser();
-  if (!admin) {
-    return new Response("Forbidden!", { status: 403 });
+  const superadmin = await getSuperadmin();
+  if (!superadmin) {
+    return new Response("Forbidden! Only superadmin can export data.", {
+      status: 403,
+    });
   }
 
   try {

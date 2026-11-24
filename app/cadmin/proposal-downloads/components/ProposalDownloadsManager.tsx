@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Download, Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -69,6 +70,9 @@ export default function ProposalDownloadsManager({
 }: {
   initialEventId?: string;
 }) {
+  const { data: session } = useSession();
+  const isSuperadmin = session?.user?.adminRole === "SUPERADMIN";
+
   const [eventId, setEventId] = useState(initialEventId);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
@@ -155,15 +159,17 @@ export default function ProposalDownloadsManager({
             row received the PDF by email.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={downloadExcel}
-          disabled={loading || rows.length === 0}
-          className={buttonStyles({ variant: "accent", size: "md" })}
-        >
-          <Download className="h-4 w-4" />
-          Export Excel
-        </button>
+        {isSuperadmin && (
+          <button
+            type="button"
+            onClick={downloadExcel}
+            disabled={loading || rows.length === 0}
+            className={buttonStyles({ variant: "accent", size: "md" })}
+          >
+            <Download className="h-4 w-4" />
+            Export Excel
+          </button>
+        )}
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">

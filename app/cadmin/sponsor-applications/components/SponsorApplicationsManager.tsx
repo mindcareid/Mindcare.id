@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   Archive,
   ArrowLeft,
@@ -112,6 +113,9 @@ export default function SponsorApplicationsManager({
 }: {
   initialEventId: string;
 }) {
+  const { data: session } = useSession();
+  const isSuperadmin = session?.user?.adminRole === "SUPERADMIN";
+
   const [eventId, setEventId] = useState(initialEventId);
   const [status, setStatus] = useState<"" | SponsorStatus>("");
   const [searchInput, setSearchInput] = useState("");
@@ -315,17 +319,19 @@ export default function SponsorApplicationsManager({
               <ArrowLeft className="h-4 w-4" />
               Events
             </Link>
-            <a
-              href={exportHref()}
-              className={buttonStyles({
-                variant: "secondary",
-                className: "justify-center",
-              })}
-              download
-            >
-              <Download className="h-4 w-4" />
-              Export Excel
-            </a>
+            {isSuperadmin && (
+              <a
+                href={exportHref()}
+                className={buttonStyles({
+                  variant: "secondary",
+                  className: "justify-center",
+                })}
+                download
+              >
+                <Download className="h-4 w-4" />
+                Export Excel
+              </a>
+            )}
           </div>
         </header>
 

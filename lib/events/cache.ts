@@ -13,13 +13,13 @@ export function revalidateEventCache(
   for (const slug of slugs) {
     if (!slug) continue;
     revalidateTag(eventTag(slug));
-    revalidatePath(`/events/${slug}`);
+    revalidatePath(`/events/${slug}`, "page");
   }
   if (slugs.some(Boolean)) {
     revalidatePath("/events/[slug]", "page");
   }
 
-  revalidatePath("/events");
+  revalidatePath("/events", "page");
   revalidateHomepageCache();
 }
 export async function revalidateEventCacheById(

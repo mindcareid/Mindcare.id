@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   ArrowLeft,
   ChevronDown,
@@ -122,6 +123,9 @@ export default function EventRegistrationsManager({
 }: {
   initialEventId?: string;
 }) {
+  const { data: session } = useSession();
+  const isSuperadmin = session?.user?.adminRole === "SUPERADMIN";
+
   const [eventId, setEventId] = useState(initialEventId);
   const [status, setStatus] = useState<OrderStatus | "">("");
   const [searchInput, setSearchInput] = useState("");
@@ -243,15 +247,17 @@ export default function EventRegistrationsManager({
             )}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={downloadExcel}
-          disabled={loading || rows.length === 0}
-          className={buttonStyles({ variant: "accent", size: "md" })}
-        >
-          <Download className="h-4 w-4" />
-          Export Excel
-        </button>
+        {isSuperadmin && (
+          <button
+            type="button"
+            onClick={downloadExcel}
+            disabled={loading || rows.length === 0}
+            className={buttonStyles({ variant: "accent", size: "md" })}
+          >
+            <Download className="h-4 w-4" />
+            Export Excel
+          </button>
+        )}
       </div>
 
       {/* Ringkasan — mengikuti filter yang sama dengan tabel di bawah. */}

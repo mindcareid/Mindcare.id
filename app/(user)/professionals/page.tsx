@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description:
     "Browse psychologists, psychiatrists, and counsellors across Indonesia. Each listing shows whether we have checked a practice licence.",
 };
-export const revalidate = 3600;
+export const revalidate = 300;
 
 export default async function ProfessionalsPage() {
   const now = new Date().toISOString();

@@ -122,11 +122,7 @@ export async function PATCH(
       );
     }
 
-    if (action === "APPROVE") {
-      revalidateCareCentreCache({ slug: centre.slug });
-    } else {
-      revalidateCareCentreDetail(centre.slug);
-    }
+    revalidateCareCentreCache({ slug: centre.slug });
 
     if (owner) {
       await prisma.careCentreUser.update({

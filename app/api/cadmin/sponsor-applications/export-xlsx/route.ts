@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 
 import prisma from "@/lib/prisma";
-import { getAdminUser } from "@/lib/adminGuard";
+import { getSuperadmin } from "@/lib/adminGuard";
 import {
   SPONSOR_MAX_EXPORT_ROWS,
   SPONSOR_STATUS_LABEL,
@@ -67,9 +67,11 @@ function hairBorder() {
 }
 
 export async function GET(req: Request) {
-  const admin = await getAdminUser();
-  if (!admin) {
-    return new Response("Forbidden!", { status: 403 });
+  const superadmin = await getSuperadmin();
+  if (!superadmin) {
+    return new Response("Forbidden! Only superadmin can export data.", {
+      status: 403,
+    });
   }
 
   try {

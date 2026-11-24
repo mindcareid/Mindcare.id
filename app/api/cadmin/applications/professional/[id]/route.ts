@@ -108,11 +108,7 @@ export async function PATCH(
       );
     }
 
-    if (action === "APPROVE") {
-      revalidateProfessionalCache({ slug: professional.slug });
-    } else {
-      revalidateProfessionalDetail(professional.slug);
-    }
+    revalidateProfessionalCache({ slug: professional.slug });
 
     if (professional.userId) {
       const approved = action === "APPROVE";
